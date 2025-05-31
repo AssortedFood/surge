@@ -73,35 +73,5 @@
     "id": 15,
     "title": "Summer Sweep-Up: Combat & Loot",
     "link": "https://secure.runescape.com/m=news/a=13/summer-sweep-up-combat--loot?oldschool=1"
-  },
-  {
-    "id": 16,
-    "title": "First Post",
-    "link": "https://example.com/1"
-  },
-  {
-    "id": 17,
-    "title": "Second Post",
-    "link": "https://example.com/2"
-  },
-  {
-    "id": 18,
-    "title": "Alpha",
-    "link": "https://site/alpha"
-  },
-  {
-    "id": 19,
-    "title": "Beta",
-    "link": "https://site/beta"
-  },
-  {
-    "id": 20,
-    "title": "One",
-    "link": "https://a/one"
-  },
-  {
-    "id": 21,
-    "title": "Two",
-    "link": "https://a/two"
   }
 ]

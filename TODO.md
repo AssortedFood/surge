@@ -1,17 +1,15 @@
 # TODO
 
-1. something to check the rss page
-    - downloads the page HTML
-    - some function that scrapes the post titles and keeps them in a local array (titles | urls)
-    - compares the current scrape to the existing array
-    - if changed it calls the (3. something that downloads the new rss page content) module on each new post title url
-    - and then update the local array
-    - loop every 60 seconds (extract this to some sort of config.js so its configurable)
-    - oh also we totally need the rss page url to be in the config.js as well
+### 3. something that downloads the new rss page content
+
+- takes an id, checks the seenPosts.json, and fetches the matching URL
+- downloads the url html
+- filters it for content
+- saves that to some file in data/posts/$id - $post_title.md
 
 ### Flow
 
-1. something to check the rss page
+1. ~~something to check the rss page~~
 2. something that flags a change
 3. something that downloads the new rss page content
 4. something that flags matches in the new rss page content against the items list

@@ -1,0 +1,119 @@
+This week's update brings the calm before the Yama Contract storm goes live on Friday!
+
+Heads-up, we've deployed a hotfix to increase the rates at which players can obtain Contracts, here's what's changed:
+
+Additionally, we'll be increasing the buy limit for Contracts on the Grand Exchange next week, but aren't able to do this via hotfix - we can only apologise for the inconvenience and the oversight on our part.
+
+Good luck to all of you chasing your Radiant Oathplate kit today!
+
+Yama
+
+Player Support & Anti-Cheating Stats
+
+Other Changes
+
+PvP Rota
+
+The PvP rota has moved to Period B:
+
+World 390 (AUS) for LMS Competitive has been de-activated with this rota.
+
+World 569 (AUS) for Bounty Hunter has been de-activated with this rota.
+
+The PvP Arena is using 'Max/Med' loadouts in Ranked Duels and Tournaments this week.
+
+After last week's debut of Yama, the Master of Pacts, we�ve absolutely loved watching you dive headfirst into the chaos - testing your might, experimenting with every tactic under the sun, and generally causing quite the scene. Your feedback, wild theories, and relentless grind have been an absolute treat to watch - and nothing brings people together like the shared experience of getting incinerated from orbit when your partner heroically stands on the wrong glyph. Truly inspiring, great for trust exercises, less so for survival.
+
+Thank you to user @einrodd for their wonderful illustration of this.
+
+If you can�t see the image above, click here!
+
+Now, onto today�s update� or lack thereof. Kind of?
+
+This week�s game update is a little quieter than usual - think of it as the eye of the storm. We're using this time to make sure Yama is behaving (or misbehaving) in exactly the right ways. We're ironing out any unexpected bugs, glitches, or pact-related weirdness that might've crept in.
+
+We're also putting the final touches on the release for contracts, which, as you know, are landing this Friday! That means all those contracts you�ve been stockpiling since last week will soon be put to good use. Expect ramped-up fights, beefier rewards, and all sorts of opportunities to flex your combat prowess (or get very swiftly humbled).
+
+We'll be sharing drop/loot mechanics in full next week, though we did provide the OSRS Wiki with specifics in advance so if you're interested in unique rates, head over here.  As you know, last week we made some careful adjustments because the initial drop rates were a bit higher than intended, which risked upsetting the balance with other items like Torva that occupy a similar role.
+
+There are still a handful of changes included with today's update though, which we hope are welcome! Here's a quick rundown and a reminder that we're still working on a whole host of other things that were listed in a blog update last Friday.
+
+We understand a quieter update might feel a bit �meh� to some, but this moment of calm is important as it gives us time to make sure everything is running as it should, and sets the stage for the next round of contract chaos. Sometimes you've gotta sharpen the blade before swinging it, right?
+
+Before you get stuck into Contracts later this week, we've got some important news to share!
+
+While we don't have an exact time in mind at the moment, we're targeting around 11:00 BST for activating these tomorrow. We appreciate that this isn't an ideal time for our US players, but with so many distinct encounters being added we need to make sure we have enough time to fix any issues that may arise.
+
+We know that the initial plan to have Contracts be solo-only wasn't exactly a smash hit with you, so we're adjusting some Contracts to allow for you to tackle them with a friend. We've got a list of which ones you can duo below, but don't worry about remembering them all - the Contracts themselves will tell you which ones you can or can't duo, and give you a rough idea of the most important changes within the fight.
+
+This means that Contracts guaranteeing a piece of Oathplate, the Soulflame Horn or a piece of the Purifying Sigil (used to recolour Oathplate) will still be solo-only.
+
+The Yama encounter for any contract with 'acquisition' in the name is the same, the catch being that for Contracts of Oathplate Acquisition and Harmony Acquisition, you'll need to take him down solo.
+
+Ultimately we think you guys are right, having at least some Contracts being doable in a duo makes sense and it would have been a shame to have all of the hardest variants of the fight being done in isolation. We think for Radiant Oathplate cosmetic contracts, as well as Oathplate and Soulflame Horn contracts, we'd rather steer clear of any potential boosting problems and keep them as prestigious, very challenging encounters for players looking to strut their stuff and flex Radiant Oathplate, or just make a pretty penny. For the less 'expensive' tradeable rewards, we think these are safe to let you tackle with a friend - but only the player who used their Contract will get the reward, so make sure you can trust your partner to split your winnings!
+
+Even if the Contract isn't yours, you'll still be able to get lucky and snag unique drops on any Contract, though regular loot is disabled for all of them except for the Contract of Familiar Acquisition.
+
+Since the Contract of Familiar Acquisition no longer outright guarantees a pet and instead increases the drop chance by 10x for the player who used the Contract (alongside regular loot rolls), we're also happy to see you take this on in twos - this is one of the most interesting fights on the cards, so have fun theorycrafting your setups here, we can't wait to see what you come up with...
+
+It's also worth noting that should you prove successful on any of the following Contracts, then you'll be rewarded with the same Contract again as a drop:
+
+This means that for any contract that doesn't have a guaranteed, tradeable reward - you'll be able to run it back as often as you like, so long as you don't meet your untimely end in Yama's arena.
+
+As always, thanks for your patience, your feedback, and your continued love for the game. We�re super excited to see how you all get on with this levelled-up version of the boss later this week!
+
+In case you missed it, last Sunday, Solomission announced that Deadman Allstars is back for another season!
+
+If you can�t see the video above, click here!
+
+Season 2 features 30 star OSRS creators, with 6 participating as team captains. Teams are still yet to be decided, with the draft starting today at 20:00 BST on the 22nd May.
+
+Tune into different POVs of the competition and check out our website to see who might be live for the draft.
+
+The event starts on the 30th May at 13:00 BST- 8th June; with the finale being streamed on the official OldSchoolRS Twitch channel at 18:00 BST.
+
+What team are you rooting for, and who do you think will come out on top? Be sure to let us know and mark your calendars, we'll see you there...
+
+If you can�t see the image above, click here!
+
+We�re kicking off a new monthly addition to our game update posts - a regular snapshot of Player Support and Anti-Cheating statistics!
+
+These updates will give you a better look at what our Player Support and Anti-cheating team have been up to behind the scenes each month. From the number of bans issued to the amount of GP removed and everything in between, we're sharing a bit more of the ongoing work that helps keep Gielinor fair and fun for everyone.
+
+Each month, we�ll include the latest stats right here in the game update blog, but if you want to check them out yourself, you can head over to our dedicated page: Player Support & Anti-Cheating Stats
+
+Here�s a breakdown of the latest data:
+
+If you can�t see the image above, click here!
+
+Wise Old Man and Gnome Child, now available in beanie keyring form! Treat your car keys to a keyring upgrade, decorate your gaming setup, or attach them to your rucksack for an AFK adventure!
+
+These miniature versions of the popular plushies from Makeship are available to pre-order here now for a limited time! Get them whilst you can.
+
+Did you know you can also vote for Makeship to bring back popular plushie designs you missed out on? Cast your vote here!
+
+CreatorCrafted loves to work with talented artists from the Old School community, and they�ve done it once again with these fierce brand-new Vorkath and King Black Dragon mouse pads, both designed by community artist Amentos.
+
+If you can�t see the image above, click here!
+
+Are you in a PvM mood after Yama�s release? Good! There are plenty of LED signs to choose from, including the Scythe of Vitur, Twisted bow, and Bow of Faerdhinen (comes in 6 different colours!)
+
+If you can�t see the image above, click here!
+
+To top it all off, you can get 10% off your order by using the code �YAMA� at checkout. If you're interested in any of the designs above or want to see what else is on offer, click here to take a look!
+
+Creator Crafted LED signs and mousepads are produced in collaboration with members of the OSRS art community, under license from Jagex.
+
+The PvP rota has moved to Period B:
+
+World 390 (AUS) for LMS Competitive has been de-activated with this rota.
+
+World 569 (AUS) for Bounty Hunter has been de-activated with this rota.
+
+The PvP Arena is using 'Max/Med' loadouts in Ranked Duels and Tournaments this week.
+
+You can also discuss this update on the 2007Scape subreddit, the Steam forums, or the community-led OSRS Discord in the #gameupdate channel. For more info on the above content, check out the official Old School Wiki.
+
+Mods Abe, Abyss, Arcane, Archie, Argo, Ash, Ayiza, BigRig, Blossom, Boko, Bruno, Chilly, Criminal, Crystal, Curse, Daizong, Donkey, Dylan, Ed, Elena, Enigma, Entropi, Errol, Freddie, Fuzz, Gecko, Gengis, Gizmo, Goblin, Grub, Halo, Harold, Hend, Hornet, Husky, Ivory, Jalo, Jamesy, Jerv, Keyser, Kieren, Kirby, Kurotou, Leebleh, Lenny, Light, Liron, Lykos, Ludo, Mack, Manked, Markos, Maylea, Mobius, Moogle, Morty, Moz, Necro, Nin, Nox, Nylu, Ori, Other, Philomel, Pork, Pumpkin, Puppi, Rach, Redfield, Rice, Roq, Roy, Ry, Saiyan, Sarnie, Schmidt, Shogun, Shroom, Sigma, Skylark, Smithy, Sova, Squid, Starry, Suharun, Surma, Sween, Tide, Titania, Titus, TJ, Tomb, Tsourorf, Tyran, Veda, Vegard, West, Wolfy & Yume
+
+The Old School Team.

@@ -1,0 +1,233 @@
+Have your say on new areas, quests and stories from the far shores of Gielinor!
+
+Blog Update - 30th May
+
+Hey everyone! Thanks for such a fantastic response to our latest Sailing blog and all of your feedback so far. We wanted to clarify a few major topics that were raised ahead of our Livestream Q&A on Monday 2nd June. There will also be more opportunities to ask us your questions via the Sailing Discord Stage on Tuesday 3rd June, where you can speak directly with the team.
+
+Question: Sailing is introducing so many new resources to the game, will players get increased bank space?
+
+Answer: We'd like to clarify recent communications regarding bank space. When we said bank storage would be increased, that was our intention and it still very much is. However, parts of our team were not fully aware of potential technical limitations of our current system at the time that message was shared. To clarify, we're actively exploring ways to increase bank space in time for the launch of Sailing. Increasing bank space is very much our preferred solution. However, if we discover that our systems can't safely support more storage, we have prepared some backup plans. That could even include looking into new types of storage via Sailing features like the cargo hold. We remain confident we will be able to increase bank space, but we want to be as transparent as possible with you about any potential risks we may encounter when doing so. We'll continue investigating improvements to the bank system and will keep you updated. Our goal is to make sure you have the space you need and to give you the full context ahead of the upcoming vote.
+
+Question: Are you deliberately locking certain account builds out of the Great Conch by Troubled Tortugans requiring 51 Slayer?
+
+Answer: The requirements are there for thematic reasons. Tortugans are an isolated, endangered species living under threat from the Gryphons and earning their trust should feel meaningful. Much of the content on the Great Conch is tied directly to their culture and way of life, which strongly warrants it to be quest-locked. If we allowed players to access the island without quest completion, all of the content on it would still require completion, rendering this change as having no impact. We understand that some account builds may struggle with meeting certain stat requirements, but stat locks are a core part of how quest progression works in Old School RuneScape. Many niche builds have creative ways to work around limitations, and we're always open to hearing how we can better support that. If there�s strong feedback from the community, we�re open to revisiting this. We�ll keep a close eye on how players respond.
+
+Question: Is the team concerned about adding too many new resources, and have you considered using existing ones instead?
+
+Answer: We�re not adding new resources lightly or without good reason. In the case of Sailing, we think that new resources add meaningful value and fit naturally with the skill. One of the most exciting parts of mastering Sailing is the ability to explore new, undiscovered parts of Gielinor. It's only fitting that these new places contain things you haven�t seen before! That said, we are also making use of many existing resources where it makes sense. For example, you'll use familiar items like nails and planks when constructing ships, which should be a good item sink. We know players enjoy seeing older resources given fresh relevance, and we want to support that where it's thematically appropriate. But we also don�t want to force a material into ship-building if it doesn't feel right. We don't think using Pine Logs are appropriate to build a seaworthy hull, for instance. We also believe adding ship-building parts as new resources can help strengthen the connections between Sailing and the rest of the game. They might help to create opportunities for higher-level skilling content, something players have said is lacking past level 70 or 80. And economically, they can make things more exciting. New resources could be good money early on if you want to focus on gathering them for others who might be rushing to build ships and facilities.
+
+That said, if you have suggestions for existing materials that could make sense in the context of Sailing, let us know. We're not seeking to add any integration that you're not comfortable with. Should the new resources fail the poll, they would be added to Sailing as part of Shipwreck Salvage with no implications on the wider game. We think players would prefer them as new resources as there is a lot more potential there in comparison. But, as always, your ideas help shape our development, so keep them coming. You should have an opportunity to try a more advanced version of ship-building, including Combat and Crew in a future Sailing Beta (which will also be available on mobile). We don't have a date for that yet though, so we'll let you know closer to the time.
+
+AHOY! Beyond this disclaimer lies a treasure trove of concepts we�re exploring for Sailing. While this poll looks to greenlight them all now, not all of them are guaranteed to be available at launch � these seas can be treacherous! As always, your input helps shape our priorities, so be sure to let us know which concepts you like the look of!
+
+The Great Conch
+
+Tortugan Quests
+
+Small Quests and Small Islands
+
+Deep Sea Trawling
+
+Cast your minds back to the first time you stepped foot in Gielinor, arriving at the threshold of Lumbridge Castle with no idea of the amazing adventures awaiting you. The world of Gielinor was your oyster � and that�s the feeling we hope to recapture in Sailing.
+
+In today�s blog you�ll learn about brand-new areas, quests, and even a new training method! To preserve the magic of discovery, we won�t be sharing too many details about the islands you�ll get to explore � just enough to spark your sense of adventure!
+
+Exploration is a key part of the Sailing reward space. As you master the stormy seas of Gielinor, you�ll be able to travel anywhere and everywhere, discovering new bosses, resources, Slayer creatures, training methods, and more. More dangerous locales will be home to more powerful rewards � or not, depending on your feedback!
+
+It�s incredibly important to us that YOU have the opportunity to shape this content, so in the months ahead you can look forward to at least three polls where you�ll have the chance to have your say on Sailing.
+
+The graphic below shows our current polling timeline, although it is subject to change:
+
+If you want a higher resolution look at the image above, click here!
+
+We plan to use the poll system to greenlight concepts much earlier, so we can create a solid slate of exciting content for you all to look forward to. The downside is that giving ourselves more time to plan means we might not always be able to tell you when the feature you�ve voted for is coming to the game. That�s why the big disclaimer up top says that some of the content in today�s blog might launch after Sailing releases. We�re prioritising features based on your feedback, development time, and the scope of each project, but we�ve already put in the work to ensure that Sailing feels fulfilling on launch. Anything that comes later is just another adventure to look forward to, whether that�s three months, six months, or even longer after launch.
+
+Our player-designed island competition is definitely still planned to begin after Sailing releases, though. Once you have the opportunity to sail around Gielinor yourselves, you'll be in a much stronger position to bring your best ideas forward.
+
+Sailing really has so much content to offer and today is just the first step in showing off what we've been working on! Lastly, we want to reassure you that we're open to making changes with community feedback � many new islands don't need to depend on the content that's inside of them, and vice versa. Make sure you fill out the survey at the bottom of this blog to let us know what you think!
+
+If you want a higher resolution look at the image above, click here!
+
+In the warm seas south of Menaphos you�ll find the Great Conch, home of the Tortugans. These beshelled people are currently under threat � but luckily, they have an adventurer like you to help them get to the bottom of it! Befriend the brave Tortugan sailor, Floopa, and you�ll earn the Tortugans� trust. In return, they may reveal a few trade secrets that will help you train your skills.
+
+On a related note, we�re really pleased with the community response to the map update for Menaphos. While we have every intention of opening the gates when the Desert storyline progresses, we�d like to clarify that we�re not adding Menaphos as part of Sailing. It�s a huge undertaking, similar in scale to Varlamore, and we really want to keep it a surprise.
+
+For now, you�ll find that the Great Conch � and all the other Sailing islands � provide plenty of activities to sink your teeth into!
+
+If you want a higher resolution look at the image above, click here!
+
+On the Great Conch you'll find familiar trees like Teak, Mahogany, and Yew, as well as new trees found in the Sacred Grove. This is an area of great importance to the Tortugans, and they're not letting just any noob in! You'll have to prove yourself and get acquainted with their ways of life, first. Only players who take the time to befriend the Tortugans will be rewarded with access.
+
+New trees means new logs � subject to polling, of course! This will be covered in our next poll blog, along with our plans for how these resources will be used and how they�ll impact the wider game. For now, we'll share that Jatoba Logs will mostly be used within the Tortugan questline, while Camphor logs will have wider impacts on Firemaking, Fletching, and ship-building.
+
+Looking to shake up your skilling? The Great Conch will also have Mining, Fishing and Hunter spots spread across the land. Plus, it's got some great views of the ocean. Very relaxing!
+
+We saw how much you liked Bank Crabs, so we'll do you one better. On the Great Conch, we're proposing a new Hunter Training Method: Crab Hunting! This is a brand-new training method which involves catching Crabs using hinged-lid traps. Once caught, you can use a knife on these creatures to obtain meat for Cooking and Herblore. Since all of this is subject to polling, keep an eye out for it in our next poll blog where we'll be taking your feedback and suggestions.
+
+Take your Farming runs one step further! The Great Conch will have an additional Calquat patch, as well as a brand-new farming method: Coral Farming! Coral nurseries are new Farming patches where Coral Fragments can be propagated until they mature. Unlike normal patches, these nurseries are found in the sea. During refinement, we called this a hybrid training method, but since then we think it makes sense for it to sit within Farming only, as you're not directly using a boat for this activity.
+
+Once again, you�ll need to wait for our skilling content and resources poll blog for further details!
+
+In addition to its wealth of skilling content, the Great Conch will also feature various shops, amenities, and new creatures.
+
+So, what do you say?
+
+Would you like us to add the Great Conch, a new island, as described in the blog? New skilling activities, resources, creatures and unique rewards from this island are subject to future polls.
+
+If you want a higher resolution look at the image above, click here!
+
+Immerse yourself (quite literally) in a brand-new storyline where you�ll help the Tortugans combat a mysterious threat.
+
+Tortugans have a peaceful society where everyone is expected to contribute using their special skills � as a fisherman, a scout, a warrior, a gatherer, or a healer. In the course of the Tortugan Quests, written by Mods Ed and Elena, you�ll earn your own place in Tortugan society and help them fight back against their greatest enemy yet.
+
+In the first quest, you�ll meet Floopa, a stranded Tortugan who needs your help to get back to the Great Conch. Through her, you�ll learn more about Tortugan society and the threat posed by the gryphons. But oversized seagulls are far from the only danger lurking on the high seas�
+
+In the second quest you�ll help Floopa overcome her injury while investigating a new threat to the Tortugan way of life.
+
+Should we add a Tortugan quest series consisting of two new quests that focus on the Tortugans? All unique rewards from these quests are subject to future polls.
+
+If you took part in the Sailing Alpha, you might�ve noticed several small islands scattered throughout the ocean. Some of these you may have visited, like The Pandemonium, while others are brand new and waiting to be explored.
+
+When you're not on land, it can easily feel like you're being swallowed up by endless blue tiles if not much content exists around you. In our early play-testing sessions with NDA players we noticed that without any useful landmarks for navigation, players could easily get lost. Having more small islands (instead of fewer large ones) doesn�t just solve this problem � it helps make the ocean feel more alive.
+
+More islands will also support gradual progression from 1 to 99 Sailing, rather than giving you one massive island at level 30 and then having to wait until level 60 for another one.
+
+During the Sailing Alpha we hadn�t yet balanced this content, so those of you who played might have visited islands at lower Sailing levels than intended. Be assured that on launch, all islands will have a proper balance pass to ensure their content is level-appropriate.
+
+Here are a few of the small islands we�ve worked on so far!
+
+Click on each image below to enlarge them.
+
+The islands above are just the appetizer. In our next poll blog, we�ll share more information on the skilling activities and new resources you can find on these small islands � including new ores, trees, materials, and creatures!
+
+Each island will have its own unique feel, from the climate and terrain right up to the creatures that live there and the stories you can find. You�ll meet new people and find interesting mysteries � and of course, you�ll visit some small islands during quests.
+
+Small islands will also give us a place to add future content � things like PvM challenges, skilling opportunities, and more.
+
+That�s why we�re only polling the activities and rewards available, not the islands themselves. They�re a core part of Sailing, and a critical part of bringing the ocean to life and opening up the Sailing reward space. We didn�t poll Lumbridge, did we?
+
+We�re also aware of community interest in procedurally generated islands created by an algorithm � much like the rooms of the Gauntlet. We did do some initial investigation into this process during a game jam, but there�s still a lot we�d need to do to make sure that procedurally generated islands meet our high standards for the game. This isn�t something we�re planning to include in Sailing�s launch, but we�ll keep your interest in mind for other content.
+
+Another thing that�s come up in discussion is whether you�ll need to set sail every time you want to get to a specific island. As exciting as Sailing is, travelling back and forth from A to B constantly could get tedious after a while. We want to clarify that islands with docks will always have an alternative access method, provided you�ve sailed there by yourself at least once. Sailing isn�t just about traversing the seas, so we want to make it convenient to get where you want to go. Rest assured that alternative methods will be on-theme!
+
+Some islands will have mooring points rather than docks. When it makes sense, some of these islands will have teleports. There�ll also be a �Teleport to Boat� spell, which will give you a great deal of flexibility when it comes to travel.
+
+If you want a higher resolution look at the image above, click here!
+
+To go with the small islands, we�d like to add smaller, less impactful quests, much like the ones we recently introduced in Varlamore.
+
+Many of you experienced 'Pandemonium!' in the Sailing Alpha. Its story plays a key role in the first-time user experience of Sailing but doesn�t impact the greater story of the game. Consequently, that one won�t be polled.
+
+We are however making changes based on your feedback from the Sailing Alpha. For example, some of you didn�t like receiving XP for completing the quest, which essentially locks you out of Sailing altogether. To address this feedback we�re making the XP rewards into Lamps, in line with other quest rewards. You can expect to see more small tweaks as we look over the feedback and iterate on the first-time user experience for Sailing.
+
+As for our other smaller quests, you can expect them to be similar to Sheep Shearer or the Twisted Tales in difficulty. They�ll help integrate Sailing with the rest of the game and will serve as a way to introduce players to tools like the Current Duck or the Spyglass, rather than just buying them from an NPC.
+
+We'd prefer to keep the exact details secret for now, so that these small but mighty quests will still have some surprises for you!
+
+Should we add a series of small-scale quests to add additional world-building, life and character to Sailing?
+
+You may have noticed that we've mentioned oceans a couple of times now. Well, take a look at this!
+
+If you want a higher resolution look at the image above, click here!
+
+We�ve transformed the previously monotonous blue tiles into various different oceans. These large areas are the seaborne equivalent of the regions on the mainland, like Asgarnia, and will mostly exist for similar thematic reasons. Most of them will be available on launch, but some will be added afterwards.
+
+At launch we aim to have the Ardent, Unquiet, Shrouded, Western and Northern Oceans available, as well as parts of the Sunset Ocean. To put this into perspective, the Sailing Alpha only included the Ardent and Unquiet oceans, with playable content capped at Level 30. We�ll do the maths for you � the playable area that launches with Sailing will be massive, with plenty of room for future expansion.
+
+On that note, the Forgotten, Untamed, and Eastern Oceans will likely appear as post-launch Sailing updates. We�re approaching this rollout thoughtfully, ensuring we learn from previous experiences and avoiding the introduction of large areas with sparse content.
+
+Oceans are further subdivided into seas, the equivalent of settlements and landmarks, like Canifis or the Karamjan Volcano. Each ocean will contain multiple seas, and unlike oceans, seas are closely tied to gameplay with different level bands for the content there. You may have experienced this already if you tried Sea Charting in the Alpha, where you needed certain level requirements to chart certain things at sea.
+
+These level bands are not rigid, so your boat won�t grind to a halt once you reach a higher-levelled ocean. You�ll be able to access these seas, but there are various hazards which make your journey more difficult � or even impossible.
+
+The map below shows hazardous waters in more detail:
+
+If you want a higher resolution look at the image above, click here!
+
+If you played the Sailing Alpha, you�ll have seen one hazard already. Near Storm Tempor, your boat experiences periodical damage unless it�s been suitably upgraded.
+
+As funny as it would be to poll seas and oceans, we won�t be doing this, as without them you�d have nothing to sail on.
+
+If you want a higher resolution look at the image above, click here!
+
+During refinement, we explored several hybrid training methods, including Deep Sea Trawling (Fishing/Sailing), Mineral Dredging (Mining/Sailing), Coral Farming (Farming/Sailing) and Sea Monster Hunting (Slayer/Sailing).
+
+These were all received positively, so we�ve picked one to flesh out properly before launch. You can expect to see more hybrid training methods in future, but for now, please welcome Deep Sea Trawling!
+
+This method combines Sailing and Fishing, allowing you to turn your boat into a useful tool to catch rare, new species of fish that don't exist on the coastline. The activity is group-friendly, so you can bring your friends along, too!
+
+You�ll earn both Sailing and Fishing XP while collecting unique fish that can have powerful effects. They might be cooked into powerful foods or used in Herblore to craft new potions. As this blog exists as more of a 'greenlight' stage, the effects of any new fish will be polled in our next Sailing poll blog, which covers skilling content and resources.
+
+Deep Sea Trawling isn't intended to replace traditional Fishing. Instead, it offers a meaningful alternative. By going deeper into the sea, you can get more interesting fish, and it should be a reasonable money maker, too.
+
+To get started with Deep Sea Trawling, players will equip their ship with a specialized trawling net facility. At least one player, either you or a crewmate, must operate the trawling equipment to catch fish while the boat follows a moving shoal across the ocean.
+
+Staying on top of the shoal and working as a team is key to gathering large hauls of fish. As you level up your Sailing and Fishing, you�ll be able to upgrade your trawling gear and take on more challenging and rewarding shoals.
+
+The Trawling Net is the core facility that unlocks access to Deep Sea Trawling. Without it, you won�t be able to gather fish at sea. As you progress, higher-tier nets will become available. These advanced nets allow boats to reach deeper sea levels, where rarer and more rewarding shoals can be found. In addition to accessing deeper waters, upgraded nets will also increase the minimum quantity of fish obtained per successful catch, making investing in better facilities feel like a worthwhile use of your time.
+
+The image above shows that Trawling Nets are made out of Rope, Linen, Hemp and Cotton � the latter three are new materials we'd like to introduce with Sailing. Say it with us - more information about skilling content and resources will be discussed in our next Sailing poll blog.
+
+The Chum Bucket is an additional facility that can help sustain shoals of fish for longer periods. It holds and spreads bait into the water, which can reduce the rate at which a shoal disperses. In addition to extending shoal lifespan, spreading bait also increases the numbers of fish caught.
+
+You must be locked-in to the Chum Bucket facility in order to use it, which is when you'll see the option to "spread bait" on the Sailing side panel. If an NPC crewmate is assigned to the Chum Bucket, the Captain will gain the capability to issue a command to spread bait from anywhere on the boat. Each Chum Bucket will allow you to store up to 1,000 of each bait type. When 10 pieces of bait (y�arr!) have been successfully fed to a shoal, there is a % chance that the shoal will not deplete, allowing players to catch fish from it for a longer time. All players participating in catching from the shoal can contribute bait towards this total, but once bait has been offered, the effect doesn't stack.
+
+The "spread bait" feature will intelligently choose the best available bait for the current shoal, prioritizing the highest-level bait that meets the shoal�s needs.
+
+Basic Chum Buckets can only store simple fish offcuts, while higher-tier versions will be able to store a wider range of bait types.
+
+The Sonar Orb is another additional facility for your boat which can help you detect where shoals of fish are using sonar. This facility doesn't require locking-in to use, you simply need to click on it.
+
+There are currently two tiers of Sonar Orb. The first gives a general direction, whereas the second gives you a hint arrow directly over the shoal. If you�re too far away from your nearest shoal, neither orb will do anything.
+
+Please note that whilst three facilities are explained here, only one of these (Trawling Net) is required to try Deep Sea Trawling.
+
+There are also currently three sizes of boat: the raft, small boat and large boat. Each of these boats have one, four and eight facility slots, respectively. You will be able to own and customise up to five boats, so you can build a dedicated deep-sea trawler if you like!
+
+Here's how the core activity plays out:
+
+Special Rules for Iron Players
+
+We�ve often seen the sentiment that low-level skilling supplies have little use once you�ve levelled past them. It�s especially true for fish � there�s only so many sardines a person can stomach!
+
+Some fish can be cut into offcuts as a replacement for bait, but bait is so cheap that there�s no reason to do so. Aerial Fishing implemented a similar system, but it�s contained to that one activity.
+
+Deep Sea Trawling will let you use all types of fish as bait, creating progression where you use low-level fish to catch higher-level ones.
+
+To accomplish this and streamline the system, we�re removing fish chunks and rolling out three types of fish offcuts: regular, fine, and premium. If you already have chunks in your Bank, firstly, apologise to your Banker. Then, don�t worry � they�ll be converted to the appropriate type when Sailing launches.
+
+Anywhere you currently use fish chunks or offcuts you'll be able to use regular fish offcuts instead.
+
+Any fish can be cut into offcuts based on the tiers below, but premium offcuts are limited to the new fish introduced with Sailing.
+
+Standard Fishing Offcut Tiers
+
+Deep Sea Trawling Fish Offcut Tiers
+
+As you progress into deeper parts of the sea, you'll encounter higher tiers of shoals that introduce more complex and rewarding gameplay. But beware � the deeper out at sea you are, the more potential danger to your boat and crew. Team coordination will become super important at these higher levels to successfully catch fish while defending your boat.
+
+Your ability to catch fish from shoals scales with your Fishing level, so a higher Fishing level will allow you to catch them more reliably. The quantity of fish caught improves by upgrading your Trawling Net facility.
+
+To make things more challenging, higher tiers of shoals are able to change their depth. That means that you'll benefit further from having a higher-level trawling net so you can reach further down into the depths of the sea. Occasionally, instead of a standard single-fish shoal, players might encounter rare mixed shoals when a shoal respawns. These shoals allow players to catch a variety of fish, some of which they might not normally have the level for�but at reduced catch rates. These rare fish will be tracked on the Collection Log. Estimated rates are still being finalized, but the goal is roughly 10 hours of dedicated trawling to catch a rare variant of a specific fish.
+
+So, what do you think � savvy?
+
+Do you want us to add Deep Sea Trawling, a training method that combines Fishing and Sailing together, as described in the blog? This includes streamlining fish chunks into fish offcuts and introducing new fish resources, which can be cooked. Healing amounts, potential special effects and herblore uses are open to community feedback, and will be polled later.
+
+That�s a wrap! Remember that you can look forward to more Sailing polls very soon, but for now, please cast your vote and leave your feedback in the survey below!
+
+We also want to say thank you for your patience over the last few months. In the time between locking-in Sailing and the Sailing Alpha we�ve been pretty quiet about what we�ve been working on, but we hope that getting hands-on with our first new skill will help you understand what you want from it.
+
+As always, all your thoughts and opinions � yes, even that one � are welcome, so leave your feedback via the survey linked below.
+
+We�ll look over the results and provide any clarifications or changes before the poll opens. Remember, this is a greenlight blog � so you�ll see the nitty gritty details once we move further into production.
+
+On Monday, June 2nd, we'll be live on Twitch at 16:00 GMT to answer your questions. The following day, Tuesday June 3rd, we will also run a longer Discord Stages Q&A where you can ask us questions directly. Please note, the date of these may move forward depending on availability and feedback we receive.
+
+Thanks for reading and please let us know what you think, or what needs changing! We�ll see you soon for our next Sailing poll, where we�ll discuss skilling and resources.
+
+You can also discuss this update on the 2007Scape subreddit, the Steam forums, or the community-led OSRS Sailing Discord in the relevant forum section. For more info on the above content, check out the official Old School Wiki.
+
+Mods Abe, Abyss, Arcane, Archie, Argo, Ash, Ayiza, BigRig, Blossom, Boko, Bruno, Chilly, Criminal, Crystal, Curse, Daizong, Donkey, Dylan, Ed, Elena, Enigma, Entropi, Errol, Freddie, Fuzz, Gecko, Gengis, Gizmo, Goblin, Grub, Halo, Harold, Hend, Hornet, Husky, Ivory, Jalo, Jamesy, Jerv, Keyser, Kieren, Kirby, Kurotou, Leebleh, Lenny, Light, Liron, Lykos, Ludo, Mack, Manked, Markos, Maylea, Mobius, Moogle, Morty, Moz, Necro, Nin, Nox, Nylu, Ori, Other, Philomel, Pork, Pumpkin, Puppi, Rach, Redfield, Rice, Roq, Roy, Ry, Saiyan, Sarnie, Schmidt, Shogun, Shroom, Sigma, Skylark, Smithy, Sova, Squid, Starry, Suharun, Surma, Sween, Tide, Titania, Titus, TJ, Tomb, Tsourorf, Tyran, Veda, Vegard, West, Wolfy & Yume
+
+The Old School Team.

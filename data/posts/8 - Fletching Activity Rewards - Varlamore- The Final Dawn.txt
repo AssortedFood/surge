@@ -1,0 +1,131 @@
+We're back with a few tweaks and some clarifications ahead of polling next week! Thanks to the Fletching aficionados who flocked to the survey and filled us in on their reward thoughts.
+
+Atlatl Dart Crafting level requirement feels too high.
+
+We're trimming the level requirement down to 74 Fletching, meaning you can whip up your own much sooner in your journey.
+
+Having the automatic left-click option on the Fletching Knife set to equip will make fletching from your inventory frustrating.
+
+No one wants to keep equipping the knife when you're just trying to make your goods. So, we'll set the primary option for the Fletching Knife to "use", and you'll be able to interchange whether you select the log or the knife first to start Fletching. When you want to equip it, you'll need to use the right-click minimenu option.
+
+Why can't we have a right-click Fletch option on all logs?
+
+We feel that using one item on another, like using a knife on a log, feels very Old School, and we don't want to lose that iconic interaction. To consider making a change that would potentially affect such a core Old School feel, we'd need a more thorough discussion on skilling interactions across the game as a whole. Unfortunately we just don't have the scope to include that level of work in this project.
+
+Can the Bow String Spool storage be lost on death?
+
+No, that storage is tied to your account. You'll need to venture back to the Activity to re-acquire a Spool, but once you get your hands on one, you'll immediately have the level of storage unlock you had before death. When lost in PvP, the Spool empties and is lost, with the PKer receiving all stored Strings in noted form.
+
+With that, we feel ready to head to poll, so keep an eye out for it opening up at a poll booth near you next week!
+
+It's time to traverse into the Auburn Valley and turn our binoculars back to the upcoming Fletching Activity.
+
+Until now, Fletching has felt like a forever bank-stand, frankly the amount of wood shavings littering the Grand Exchange is getting out of hand! So, if you're looking for a break from the bank and a good stretch of the old legs, this new activity is for you!
+
+We fully broke down the gameplay loop in a previous blog, along with a huge range of rewards we had been considering. With your help, we've whittled down the list and we're ready to share what we'd like to go ahead with. We've also rounded up some of your most asked questions to shed a little more light on what's in store.
+
+Much like the Ents leaving gifts to nature, we have our own offerings that we'd like you to get your hands on, if your RNG luck is strong enough.
+
+(Untradeable)
+
+If you can�t see the image above, click here!
+
+A step up from the standard knife was a popular pitch when we shared our thoughts before, and so we're cutting right to the chase and highlighting it first. Here's what we have in mind:
+
+Our aim is that this faster Fletching action time doesn't interact with skilling timers and won't impact tick manipulation methods or metas. So while on initial reading, those alarm bells might start ringing, we wanted to assure you that it's something we're aware of and will put the work in to make sure it's the case.
+
+We know some of you are reaching for calculators right now, so to help you work out what a difference this new knife will make, we've popped some XP comparisons in a handy table for you.
+
+Poll Question #1:
+
+Should we add the Fletching Knife to the Fletching Activity rewards table as part of Varlamore: The Final Dawn, as described in the blog? The Fletching Knife will reduce some crafts by 1-tick, plus you can equip it in your off-hand and it'll work for any action that requires a knife check. The Fletching Knife is untradeable.
+
+(Untradeable)
+
+The Bow String Spool pitch was a firm favourite amongst Fletching aficionados, and with the help of your feedback, we've refined our design.
+
+Our plan is for the Spool to be upgradeable, giving you the chance to combine a total of 6 Spools to reach a maximum String storage of 100,000. We liked the idea of an upgradeable piece of kit that gave uses for some of your duplicates - we don't intend for this item to be particularly rare, but any spare duplicates after your sixth can be traded in for Ent Branches, which we'll get into later in the blog.
+
+By getting your hands on each new Spool, you'll see your storage grow:
+
+We're looking at also giving the Spool the following features:
+
+Poll Question #2:
+
+Should we add the Bow String Spool to the Fletching Activity rewards table as part of Varlamore: The Final Dawn, as described in the blog? The Bow String Spool is untradeable and can store up to 250 Bow Strings. You'll be able to combine up to six Spools, for a final storage limit of 100,000.
+
+(Tradeable)
+
+We shared a lot of different ideas for what you could craft using Ent Branches in our previous blog, and with the help of your feedback, we've chopped them down to the three we feel are the strongest: Atlatl Darts, a cosmetic Greenman Mask, and two types of POH carvings. Keep reading for more on these.
+
+If you have some spare Fletching Activity uniques on your hands, you will be able to trade them in for extra Ent Branches. You can then use them for creating more Darts, crafting the cosmetics, or to sell.
+
+First up, we're giving you the ability to craft Atlatl Darts using Ent Branches, but you will need to get your hands on a few other components to complete the dart.
+
+To craft them you'll need:
+
+Even better, all of these components are tradeable!
+
+Poll Question #3:
+
+Should we add Atlatl Dart Crafting, made using a combination of an Ent Branch, Broken Antler and feathers, with the  release of Varlamore: The Final Dawn?
+
+(Tradeable)
+
+If you can�t see the image above, click here!
+
+This would be a cosmetic head item with a set base style when first crafted, that you can then spruce up by attaching different Forestry Leaves, like Maple or Magic, to best suit your style. The base Mask will be tradeable but you'll need to peel off your own decor and revert any embellished Mask to the base state if you are looking to trade it in.
+
+You'll also be able to use the Greenman Mask to craft the next cosmetic on the table...
+
+Poll Question #4:
+
+Should we add the Greenman Mask to the rewards available from the Fletching Activity as part of Varlamore: The Final Dawn, as described in the blog? The Greenman mask is a new cosmetic, made from an Ent Branch, with the ability to decorate with leaves. The Greenman Mask is tradeable.
+
+(Tradeable)
+
+If you can�t see the image above, click here!
+
+Bring your love of nature home with a brand new carving, whittled with your own two hands!
+
+You'll be able to Fletch two different versions, both using a combination of Ent Branches, a number of Gold Bars, and a Greenman Mask:
+
+When removing it from your space, it'll pop back into your inventory for you to replace it when you like.
+
+Poll Question #5:
+
+Should we add new POH Carvings to the Fletching Activity rewards table as part of Varlamore: The Final Dawn, as described in the blog? You'll be able to craft two different versions - Wall Carvings and a Garden Statue. Both versions will be tradeable.
+
+So, that's all the rewards we're pitching for the upcoming Fletching activity. We want to hear your thoughts ahead of polling, so we've put together a quick survey that you can fill in via the button below. We'll also be keeping a keen eye on conversation on Reddit and the official Discord server, so make sure to have your say!
+
+Following our previous blog, we saw plenty of questions around the activity itself, and we wanted to take a moment to expand on some of those.
+
+Will this be another DailyScape?
+
+No, our intention is for this to be a very active activity, we're thinking something akin to Herbiboar, rather than having birdhouse vibes. The maximum time a totem will stay standing is 4.5 minutes, and this time will depend on the level of wood you're using. You'll be hard-pressed to find downtime here, as you'll want to keep moving between your totems, checking them, rebuilding and collecting your rewards. While the rewards will stick around if you leave and come back later, they won't continue to accumulate once the totem has collapsed.
+
+Can we have higher-level tree options for adventurers later in their Fletching journey?
+
+Yes! You'll be able to use Oak, Willow, Maple, Yew, Magic and Redwood logs as building materials for your totems and their decorations. You'll find each of these wood types along the route, helping you stock up on your chosen supplies.
+
+Can I use strung bows to decorate my totems?
+
+This is another happy yes! You'll be able to use the following items to decorate your totems:
+
+How will the Ents look?
+
+If you can�t see the image above, click here!
+
+If you've ever ventured beneath the Woodcutting Guild and traversed the dungeons, or headed out to the forests north and east of the Chaos Temple, likely you'll have crossed paths with the mysterious beings. While these particular Ents have been praising the lands of Varlamore all this time, away from the lands of Gielinor you're more familiar with, you will find that they bear a striking resemblance with their brethren.
+
+Are the Ents really OK with us chopping down trees and taking their offerings?
+
+The wants and inclinations of these ancient beings is a mystery to us humans, but research suggests that, after living so long and being at one with nature, the Ents truly understand that it's just the circle of life. As a thanks for showing your own praise of nature through your totems, the Ents leave you gifts, but you'll also spot their spiritual offerings to nature that aren't up for the taking!
+
+We'll leaf... it at that. We're excited to hear your thoughts on the rewards on offer, so much so we'll drop you another handy link to the survey, here.
+
+You can also discuss this update on the 2007Scape subreddit, the Steam forums, or the community-led OSRS Discord in the #gameupdate channel. For more info on the above content, check out the official Old School Wiki.
+
+Mods Abe, Abyss, Arcane, Archie, Argo, Ash, Ayiza, BigRig, Blossom, Boko, Bruno, Chilly, Criminal, Crystal, Curse, Daizong, Donkey, Dylan, Ed, Elena, Enigma, Entropi, Errol, Freddie, Fuzz, Gecko, Gengis, Gizmo, Goblin, Grub, Halo, Harold, Hend, Hornet, Husky, Ivory, Jalo, Jamesy, Jerv, Keyser, Kieren, Kirby, Kurotou, Leebleh, Lenny, Light, Liron, Lykos, Ludo, Mack, Manked, Markos, Maylea, Mobius, Moogle, Morty, Moz, Necro, Nin, Nox, Nylu, Ori, Other, Philomel, Pork, Pumpkin, Puppi, Rach, Redfield, Rice, Roq, Roy, Ry, Saiyan, Sarnie, Schmidt, Shogun, Shroom, Sigma, Skylark, Smithy, Sova, Squid, Starry, Suharun, Surma, Sween, Tide, Titania, Titus, TJ, Tomb, Tsourorf, Tyran, Veda, Vegard, West, Wolfy & Yume
+
+The Old School Team.

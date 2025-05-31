@@ -1,0 +1,100 @@
+Update 02/05: Following your feedback, and to keep things true to how Old School works, we�ve also decided to poll whether to revert the 1-hour Clue Scroll despawn timer alongside the introduction of Scroll Boxes. We originally said this timer would stay, but it was never polled - and that didn�t sit quite right with many of you. We�re happy with the system, but ultimately want to make sure you are too.
+
+Clue Scrolls are a beloved part of Old School, and we knew going into Poll 84 that any changes to how they work would spark strong opinions - and a lot of discussion. You�ve more than delivered on that front.
+
+Since the blog went live, we�ve seen a huge wave of thoughtful feedback, debate, and concerns about Stackable Clues - especially around elements like Skip Tokens, the five-scroll cap, and the 1-hour despawn timer. These conversations have been invaluable in helping us understand what you want (and don�t want) from this kind of update.
+
+We�ve taken all that feedback on board, spent time re-evaluating the proposal, and made meaningful changes we think strike a better balance between old-school charm and quality of life. Below, we�ll walk you through how each part of the Stackable Clues system is evolving - and why we�re now confident enough to poll this separately from the rest of Poll 84.
+
+Let�s start with the Elephant in the room. Skip Tokens? Yep, they're gone.
+
+We included them in the proposal with good intentions - the idea was to bypass the sorts of steps that make you want to juggle clues in the first place, while also adding an additional reward layer for more consistent profitability on your treasure trails. However, you let us know, loud and clear: this one didn�t hit the mark.
+
+A lot of you felt Skip Tokens just didn�t belong. They took away from the sense of challenge, progression, and satisfaction that comes from working through clues the old-fashioned way. For many, it felt like too much of a shortcut - a bit too modern for something so classically Old School.
+
+So, we�re cutting them. We�ll happily hold our hands up and say we got this one wrong. Skip Tokens won�t be included in this poll, and we�ve no plans to bring them back in future proposals either.
+
+Thanks for keeping us honest - and for helping clue content stay true to its Old School roots.
+
+Next up: the 1-hour clue despawn timer. Originally, we were planning to revert this to 3 minutes. The idea was to fix an unintended side effect of a previous update - specifically, that the 1-hour timer encouraged clue juggling in a way that could feel fiddly, awkward, and inaccessible for a lot of players. With Scroll Boxes on the way, we figured juggling wouldn�t be necessary anymore - so why keep the timer?
+
+Well, your feedback challenged that! Many of you argued that the 1-hour timer enables a creative, community-driven form of clue gameplay. Sure, it�s fiddly - but it's your fiddly, and it fits that spirit of emergent gameplay we�ve always loved in Old School.
+
+When players come up with new ways to interact with content, even if those approaches weren�t part of the original design, we�re usually happy to support them, so long as they don�t negatively impact the wider game.
+
+After digging deeper into the data, we�re reassured: yes, players are doing more clues on average since the 1-hour timer was added, but not to a degree that�s disruptive or damaging. Additionally the number of people who are actually juggling more clues than they'd be able to stack with these changes is very small - so it's not a hill that we're willing to die on.
+
+In short: the benefits of keeping this unique, high-effort playstyle far outweigh the concerns we had around balance or clue volume - though if that ever changes in a big way, it�s something we�d be open to revisiting in the future.
+
+That said, while we�re happy with the 1-hour timer remaining in place, we also want to acknowledge that its introduction wasn�t originally polled - and it did have a considerable impact on Treasure Trails for many players.
+
+So, to make sure we�re aligned with what you want, we�re putting the decision in your hands.
+Whether you�re a clue juggler or a casual scroller, we want to ensure the system works for everyone.
+
+Question #1: Should we revert the despawn timer for dropped Clue Scrolls from 1 hour back to 3 minutes?
+
+If this question passes, Clue Scrolls will once again despawn after 3 minutes when dropped. If it does not pass, the 1-hour timer will remain.
+
+Which brings us to...
+
+Alright, here it is - the 5-clue cap. Yes, we�re keeping it, but before you grab your pitchforks, hear us out.
+
+The goal here is to keep clues as a fun, occasional interruption to your gameplay, and not something you hoard and grind all day. The five-clue cap lets you bank up to five clues at a time, giving you the freedom to take on a solid clue session without interrupting your main activities. It�s a convenience feature, yes, but it�s designed to keep clues a fun, short-term activity rather than something you spend your entire day grinding.
+
+Now, we get that there�s a balancing act here. On one hand, we want to make sure that casual players can still enjoy the system without having to ditch their raid team every time they get an Elite clue. On the other, we don�t want to turn clues into a giant grind-fest where everyone�s stockpiling scrolls for an all-day clue binge because it's so far-removed from what Treasure Trails are supposed to be.
+
+Here�s where the 1-hour timer comes in. For those of you who enjoy juggling clues, it�s still possible but it�s going to remain awkward, manual, and a tad unwieldy - just the way you like it. Our data shows that most players don�t bother with this because it�s such a hassle. However, for those who really want to go full-blown clue-hoarder mode, it�s there as a workaround.
+
+In short, we hope the five-clue cap strikes a balance: it gives casual players a convenient and accessible way to enjoy clues, without undermining the core idea that clues should remain a fun, random diversion. For the hardcore clue collectors, the 1-hour timer gives them the ability to still hoard clues - it�s just going to take a bit more effort, and that�s exactly what we want to see.
+
+We saw a fair bit of feedback around the clue slot unlocks feeling a little overcomplicated - and we totally get where that�s coming from. However, we also want to share why we still believe in the system, and why we'd like it to stay in the proposal.
+
+For those who missed the original explanation, here�s a quick refresher on how the unlock system works:
+
+When the update launches, you'll start with a base capacity of two clues per tier - for example, one active Clue Scroll and one Scroll Box. From there, you can unlock additional storage slots by completing clue-related achievements:
+
+Each unlock bumps your capacity by 1, allowing you to stack more clues and dive into longer clue sessions. Defeating The Mimic works a little differently - it grants you an extra slot for every clue tier at once, no matter your clue completion count.
+
+On a related note, while we�re talking about clue rewards: we�ve heard feedback about unlocking The Mimic encounter itself. Although this blog doesn't include changes to that system, we are currently working on adding a dry protection mechanic - meaning you�ll eventually encounter The Mimic after completing a specific number of Elite or Master clues, even if luck hasn�t been on your side so far.
+
+We still believe this unlock system respects your time, celebrates your progress, and gives clue content a real sense of growth - without making it feel gated or exhausting.
+
+At its heart, this approach is designed to make clue progression feel rewarding. There's a real sense of journey and discovery in clue hunting, and we think gradually unlocking additional storage slots through your own clue activity leans into that in a meaningful way. It reflects the way a lot of you already engage with clues - building knowledge, gaining efficiency, and growing mastery over time.
+
+That said, we don�t want anyone to feel punished for only just hearing about this now. That�s why the system is fully retroactive - meaning if you�ve already put in the work, you�ll log in with clue slots ready and waiting. No surprises. No lost progress. Just a nice little nod to the effort you�ve already put in.
+
+In short: we still believe this system respects your time, celebrates your progress, and gives clue content a real sense of growth, without making it feel grindy or gated.
+
+Question #2: Should Stackable Clues (via Scroll Boxes) be added to the game, as described in the blog?
+
+One new addition we�re sliding in based on your feedback: a friendly little heads-up to help prevent a painful moment many clue chasers have faced.
+
+If you�re at your five-Master clue limit and try to open a Casket that could give you a Master Clue Box, the game will display a warning message:
+
+"You already have 5 Master Clues. You will not receive a Master Clue Box if one would have been awarded. Are you sure you want to open this?"
+
+It�s a small change, but one we hope could save you a major headache. Hopefully, it spares you from missing out on a Master Clue just because your clicks got a little too keen. This option will also be toggleable, so if you're not a fan, you can turn it off!
+
+We�ve seen a bunch of questions asking: �Will the Rogue�s outfit double clue scrolls from pickpocketing?� - and it�s a totally fair question! To answer it directly: no, the Rogue�s outfit won�t double clue scrolls.
+
+We get that might be a bit disappointing to hear, so we want to explain why. Clues are already in a pretty good spot across the game, with different methods and areas offering their own strengths. If the Rogue�s outfit doubled clue drops, it would push pickpocketing to become the clear best-in-slot method for certain clue tiers - and that�s not something we want to do with this update.
+
+The goal of stackable clues is to reduce context-switching, letting you collect and complete clues in bursts. It�s not meant to make clue scrolls significantly more common overall - just nicer to engage with. Doubling clue drops through the Rogue�s outfit would go against that philosophy and throw off the balance we�ve already got in place for clue scroll acquisition.
+
+So... what�s Next?
+
+With the rest of Poll 84 now wrapped up, it�s time for Stackable Clues to take center stage.
+
+We�ll be polling the updated Stackable Clues proposal separately, giving it the spotlight it deserves and ensuring you�ve got a clear voice on this refined version. Keep an eye out - the poll will go live very soon!
+
+Thank you again for sticking with us through all the tweaks, turns, and clue-related chaos. Whether you�re cracking open your very first Easy, or sweating through your tenth Master, we hope these changes make the clue experience smoother, more exciting, and still unmistakably Old School.
+
+See you in the poll - and may your next casket finally drop that elusive 3rd age piece.
+
+You can also discuss this update on the 2007Scape subreddit, the Steam forums, or the community-led OSRS Discord in the #gameupdate channel. For more info on the above content, check out the official Old School Wiki.
+
+Mods Abe, Abyss, Arcane, Archie, Argo, Ash, Ayiza, BigRig, Blossom, Boko, Bruno, Chilly, Criminal, Crystal, Curse, Daizong, Donkey, Dylan, Ed, Elena, Enigma, Entropi, Errol, Gecko, Gengis, Gizmo, Goblin, Grub, Halo, Harold, Hend, Hornet, Husky, Jalo, Jerv, Keyser, Kieren, Kirby, Kurotou, Leebleh, Lenny, Light, Liron, Lykos, Mack, Manked, Markos, Maylea, Mobius, Moogle, Morty, Moz, Necro, Nin, Nox, Nylu, Ori, Other, Philomel, Pumpkin, Rach, Redfield, Rice, Roq, Ry, Saiyan, Sarnie, Shogun, Shroom, Sigma, Skylark, Smithy, Sova, Squid, Starry, Suharun, Surma, Sween, Tide, Titus, Tsourorf, Tyran, Veda, Vegard, West, Wolfy & Yume
+
+The Old School Team.
+
+The Old School Team.
