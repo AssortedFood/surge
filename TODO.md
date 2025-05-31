@@ -1,17 +1,17 @@
 # TODO
 
-### 3. something that downloads the new rss page content
+### 4. something that flags matches in the new rss page content against the items list
 
-- takes an id, checks the seenPosts.json, and fetches the matching URL
-- downloads the url html
-- filters it for content
-- saves that to some file in data/posts/$id - $post_title.md
+- new module that takes two args (post.txt, item_list.json) and does an efficient O of n look up of all the words in post.txt against all the names in item_list.json (e.g. "name": "3rd age amulet")
+- it .lower() all the words in the post.txt as well as the names from the item_list
+- it returns a list of the matches, if any
+- it can be called with node to print this list to the console
 
 ### Flow
 
 1. ~~something to check the rss page~~
 2. something that flags a change
-3. something that downloads the new rss page content
+3. ~~something that downloads the new rss page content~~
 4. something that flags matches in the new rss page content against the items list
 5. ~~presumably something that fetches the items list (keeping it up to date)~~
 6. some module that calls openai api
