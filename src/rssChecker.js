@@ -1,22 +1,22 @@
 // src/rssChecker.js
+import 'dotenv/config'; // Load environment variables from .env
 import fetch from "node-fetch";
 import { load } from "cheerio";
 import fs from "fs/promises";
-import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
 
-// Determine __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
 
-// Load config.json
-const rawConfig = readFileSync(resolve(__dirname, "../config.json"), "utf-8");
-const config    = JSON.parse(rawConfig);
+// Use environment variable for the RSS feed URL
+const rssPageUrl = process.env.RSS_PAGE_URL;
 
-const { rssPageUrl } = config;
+if (!rssPageUrl) {
+  console.error("[rssChecker] Error: RSS_PAGE_URL is not defined in the .env file.");
+  process.exit(1);
+}
 
-// Path to the JSON file storing seen posts (with IDs)
 const dataDir       = resolve(__dirname, "../data");
 const seenPostsFile = resolve(dataDir, "seenPosts.json");
 
@@ -84,27 +84,17 @@ async function saveSeenPosts(allPosts) {
  * @returns {Promise<{ id: number, title: string, link: string }[]>}
  */
 export async function getNewRssPosts() {
-  // 1. Load previously seen posts
   const seenPosts = await loadSeenPosts();
-  // Build a quick lookup: title -> id
   const seenMap = new Map(seenPosts.map(post => [post.title, post.id]));
-  // Determine next ID (max existing ID + 1), or 1 if none
   let nextId = seenPosts.length > 0
     ? Math.max(...seenPosts.map(p => p.id)) + 1
     : 1;
 
-  // 2. Fetch and scrape current RSS
   const xml     = await fetchRssXml();
   const scraped = scrapeTitlesAndUrls(xml);
-
-  // 3. Identify raw new posts (in scraped order: newest first)
   const rawNewPosts = scraped.filter(post => !seenMap.has(post.title));
-
-  // 4. Reverse rawNewPosts so that the oldest among them (bottom-most) is first
   rawNewPosts.reverse();
 
-  // 5. Assign IDs to each new post in that reversed order,
-  //    then append to seenPosts and collect in newPostsList
   const newPostsList = [];
   for (const { title, link } of rawNewPosts) {
     const newPost = { id: nextId++, title, link };
@@ -113,23 +103,20 @@ export async function getNewRssPosts() {
     newPostsList.push(newPost);
   }
 
-  // 6. If any new posts were found, save updated seenPosts
   if (newPostsList.length > 0) {
     await saveSeenPosts(seenPosts);
   }
 
-  return newPostsList; // may be []
+  return newPostsList;
 }
 
 /**
- * If this file is run directly with Node (e.g. `node src/rssChecker.js`),
- * call getNewRssPosts once and exit (no polling).
+ * If this file is run directly with Node, call getNewRssPosts once and exit.
  */
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   (async () => {
     try {
       const newPosts = await getNewRssPosts();
-      // Optionally log or process newPosts here
       console.log(newPosts);
     } catch (err) {
       console.error("[rssChecker] Error:", err);

@@ -1,7 +1,7 @@
 // src/rssPostFetcher.js
+import 'dotenv/config'; // Load environment variables from .env
 import fetch from "node-fetch";
 import fs from "fs/promises";
-import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, resolve, join } from "path";
 import { load } from "cheerio";
@@ -9,10 +9,6 @@ import { load } from "cheerio";
 // Determine __dirname in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
-
-// Load config.json
-const rawConfig = readFileSync(resolve(__dirname, "../config.json"), "utf-8");
-const config    = JSON.parse(rawConfig);
 
 // Paths
 const dataDir       = resolve(__dirname, "../data");
@@ -43,7 +39,6 @@ function sanitizeFilename(name) {
  * @returns {Promise<string>}
  */
 export async function fetchAndSavePost(postId) {
-  // 1. Load seenPosts.json
   let seenPosts;
   try {
     const raw = await fs.readFile(seenPostsFile, "utf-8");
@@ -55,14 +50,12 @@ export async function fetchAndSavePost(postId) {
     throw err;
   }
 
-  // 2. Find the post entry by ID
   const post = seenPosts.find((p) => p.id === postId);
   if (!post) {
     throw new Error(`No post with id ${postId} found in seenPosts.json`);
   }
   const { title, link } = post;
 
-  // 3. Fetch the HTML content of the link
   let res;
   try {
     res = await fetch(link);
@@ -72,10 +65,9 @@ export async function fetchAndSavePost(postId) {
   if (!res.ok) {
     throw new Error(`Failed to fetch URL ${link}: HTTP ${res.status}`);
   }
+
   const html = await res.text();
 
-  // 4. Parse HTML and extract the article content
-  //    We assume the main article content is inside a <div class="news-article-content">
   const $ = load(html);
   const container = $(".news-article-content");
   if (!container.length) {
@@ -97,7 +89,6 @@ export async function fetchAndSavePost(postId) {
   const safeTitle = sanitizeFilename(title);
   const filename  = `${postId} - ${safeTitle}.txt`;
 
-  // 7. Ensure postsDir exists
   await fs.mkdir(postsDir, { recursive: true });
 
   // 8. Write markdown to data/posts/{filename}
@@ -107,13 +98,14 @@ export async function fetchAndSavePost(postId) {
   return outPath;
 }
 
-// If run directly via `node src/rssPostFetcher.js <id>`, fetch that post once
+// If run directly via CLI
 if (process.argv.length >= 3 && process.argv[1].endsWith("rssPostFetcher.js")) {
   const idArg = parseInt(process.argv[2], 10);
   if (isNaN(idArg)) {
-    console.error("Usage: node rssPostFetcher.js <postId>");
+    console.error("Usage: node src/rssPostFetcher.js <postId>");
     process.exit(1);
   }
+
   fetchAndSavePost(idArg)
     .then((filepath) => {
       console.log(`Saved post ${idArg} to ${filepath}`);

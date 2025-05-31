@@ -1,24 +1,20 @@
 // src/allItemsFetcher.js
+import 'dotenv/config'; // Load environment variables from .env
 import fetch from "node-fetch";
 import fs from "fs/promises";
-import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
 
-// Load config.json by reading it from disk and JSON‐parsing it
-const rawConfig = readFileSync(resolve(__dirname, "../config.json"), "utf-8");
-const config    = JSON.parse(rawConfig);
-
 const dataDir    = resolve(__dirname, "../data");
 const outputFile = resolve(dataDir, "all_items.json");
 
-// Use the mapping URL and userAgent from config.json
-const mappingUrl = config.itemListUrl;
+// Get URL and user-agent from environment variables
+const mappingUrl = process.env.ITEM_LIST_URL;
 const apiHeaders = {
-  "User-Agent": config.userAgent
+  "User-Agent": process.env.USER_AGENT || "default-agent"
 };
 
 export async function fetchAndSaveAllItems() {
