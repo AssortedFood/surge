@@ -1,39 +1,80 @@
 // tests/allItemsFetcher.test.js
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 // Mock node-fetch
 import fetch from 'node-fetch';
-vi.mock('node-fetch', () => ({
-  default: vi.fn()
-}));
+vi.mock('node-fetch', () => ({ default: vi.fn() }));
 
-// Import the function under test and config
-import { fetchAndSaveAllItems } from '../src/allItemsFetcher.js';
-import config from '../config.json' assert { type: 'json' };
-
-const dataDir = path.resolve(__dirname, '../data');
+// Determine file paths
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
+const projectDir = path.resolve(__dirname, '..');
+const dataDir    = path.join(projectDir, 'data');
 const outputFile = path.join(dataDir, 'all_items.json');
 
-describe('allItemsFetcher', () => {
-  beforeEach(async () => {
-    // Ensure no leftover file before each test
+let fetchAndSaveAllItems;
+let userAgent;
+
+beforeAll(async () => {
+  // Read userAgent from config.json
+  const config = JSON.parse(await fs.readFile(path.join(projectDir, 'config.json'), 'utf-8'));
+  userAgent = config.userAgent;
+
+  // Backup existing data/all_items.json if it exists
+  try {
+    await fs.readFile(outputFile, 'utf-8');
+    hadOriginalAllItems = true;
+  } catch {
+    hadOriginalAllItems = false;
+  }
+
+  // Import the function under test
+  fetchAndSaveAllItems = (await import('../src/allItemsFetcher.js')).fetchAndSaveAllItems;
+});
+
+let hadOriginalAllItems = false;
+let originalAllItemsContent = null;
+
+beforeAll(async () => {
+  if (hadOriginalAllItems) {
+    originalAllItemsContent = await fs.readFile(outputFile, 'utf-8');
+  }
+});
+
+afterAll(async () => {
+  // Restore original data/all_items.json
+  if (hadOriginalAllItems) {
+    await fs.writeFile(outputFile, originalAllItemsContent, 'utf-8');
+  } else {
     try {
       await fs.unlink(outputFile);
     } catch {}
+  }
+});
+
+describe('allItemsFetcher', () => {
+  beforeEach(() => {
     vi.clearAllMocks();
   });
 
   afterEach(async () => {
-    // Clean up file after each test
-    try {
-      await fs.unlink(outputFile);
-    } catch {}
+    // After each test, ensure no stray file remains except the backed-up content
+    if (hadOriginalAllItems) {
+      const current = await fs.readFile(outputFile, 'utf-8');
+      if (current !== originalAllItemsContent) {
+        await fs.writeFile(outputFile, originalAllItemsContent, 'utf-8');
+      }
+    } else {
+      try {
+        await fs.unlink(outputFile);
+      } catch {}
+    }
   });
 
   it('writes JSON file when fetch returns ok', async () => {
-    // Arrange: mock fetch to return ok response with JSON array
     const fakeData = [{ id: 1, name: 'TestItem' }];
     fetch.mockResolvedValue({
       ok: true,
@@ -42,17 +83,16 @@ describe('allItemsFetcher', () => {
       json: async () => fakeData
     });
 
-    // Act
     await fetchAndSaveAllItems();
 
-    // Assert: file exists and contains the expected JSON
     const contents = await fs.readFile(outputFile, 'utf-8');
-    const parsed = JSON.parse(contents);
-    expect(parsed).toEqual(fakeData);
+    expect(JSON.parse(contents)).toEqual(fakeData);
   });
 
-  it('throws error and does not write file when HTTP response is not ok', async () => {
-    // Arrange: mock fetch to return non-ok response
+  it('throws error and does not overwrite existing file when HTTP response is not ok', async () => {
+    if (!hadOriginalAllItems) {
+      await fs.writeFile(outputFile, JSON.stringify([{ id: 99, name: 'KeepMe' }]), 'utf-8');
+    }
     fetch.mockResolvedValue({
       ok: false,
       status: 500,
@@ -60,32 +100,32 @@ describe('allItemsFetcher', () => {
       json: async () => ({})
     });
 
-    // Act & Assert
     await expect(fetchAndSaveAllItems()).rejects.toThrow('HTTP 500: Internal Server Error');
 
-    // Ensure file does not exist
-    await expect(fs.access(outputFile)).rejects.toThrow();
+    const contents = await fs.readFile(outputFile, 'utf-8');
+    if (hadOriginalAllItems) {
+      expect(contents).toBe(originalAllItemsContent);
+    } else {
+      expect(JSON.parse(contents)).toEqual([{ id: 99, name: 'KeepMe' }]);
+    }
   });
 
   it('calls fetch with correct URL and User-Agent header', async () => {
-    // Arrange: mock fetch to return ok response
-    const fakeData = [];
     fetch.mockResolvedValue({
       ok: true,
       status: 200,
       statusText: 'OK',
-      json: async () => fakeData
+      json: async () => []
     });
 
-    // Act
     await fetchAndSaveAllItems();
 
-    // Assert: fetch called once with correct arguments
     expect(fetch).toHaveBeenCalledTimes(1);
     const [calledUrl, calledOptions] = fetch.mock.calls[0];
+    const config = JSON.parse(await fs.readFile(path.join(projectDir, 'config.json'), 'utf-8'));
     expect(calledUrl).toBe(config.itemListUrl);
     expect(calledOptions.headers).toMatchObject({
-      'User-Agent': 'surge: item-price-analysis-bot - @oxidising on Discord'
+      'User-Agent': userAgent
     });
   });
 });

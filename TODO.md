@@ -15,7 +15,7 @@
 2. something that flags a change
 3. something that downloads the new rss page content
 4. something that flags matches in the new rss page content against the items list
-5. presumably something that fetches the items list (keeping it up to date)
+5. ~~presumably something that fetches the items list (keeping it up to date)~~
 6. some module that calls openai api
 7. some higher level module that uses the openai api module, the new rss page content, and the matched items list and makes a series of calls (one per item) to get semantic analysis of the expected price changes, along with the text snippet that supports this (structured output)
 8. some module that is capable of sending telegram messages through a bot

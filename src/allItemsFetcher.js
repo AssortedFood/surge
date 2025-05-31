@@ -15,12 +15,10 @@ const config    = JSON.parse(rawConfig);
 const dataDir    = resolve(__dirname, "../data");
 const outputFile = resolve(dataDir, "all_items.json");
 
-// Use the mapping URL from config.json
+// Use the mapping URL and userAgent from config.json
 const mappingUrl = config.itemListUrl;
-
-// Hardcoded User-Agent header as required by the OSRS prices API
 const apiHeaders = {
-  "User-Agent": "surge: item-price-analysis-bot - @oxidising on Discord"
+  "User-Agent": config.userAgent
 };
 
 export async function fetchAndSaveAllItems() {
