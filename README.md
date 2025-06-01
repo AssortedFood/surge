@@ -19,6 +19,18 @@ cd surge
 npm install
 ```
 
+Alternatively, you can use Docker Compose instead of installing locally:
+
+1. Ensure Docker and Docker Compose are installed.
+2. Copy or create the `docker-compose.yml` and corresponding `.env` file as shown below.
+3. From the project root, run:
+
+   ```bash
+   docker compose up -d
+   ```
+
+   This will pull `0xidising/surge:latest` and start Surge in a container.
+
 ## Configuration
 
 Create a `.env` file in the project root with:
@@ -28,10 +40,10 @@ USER_AGENT="surge: item-price-analysis-bot - @your_username_here on Discord"
 RSS_PAGE_URL="https://secure.runescape.com/m=news/a=13/latest_news.rss?oldschool=true"
 ITEM_LIST_URL="https://prices.runescape.wiki/api/v1/osrs/mapping"
 RSS_CHECK_INTERVAL="60"
-OPENAI_API_KEY="YOUR_OPENAI_API_KEY"
+OPENAI_API_KEY="sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 OPENAI_MODEL="gpt-4.1-mini"
-TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN"
-TELEGRAM_CHAT_ID="YOUR_TELEGRAM_CHAT_ID"
+TELEGRAM_BOT_TOKEN="123456789:ABCDEFGHIJKLMNOPQRSTUVWX"
+TELEGRAM_CHAT_ID="1234567890"
 INCLUDED_CHANGE_TYPES=["Price increase","Price decrease"]
 ```
 
@@ -52,19 +64,71 @@ Start the service:
 npm start
 ```
 
+If you started Surge via Docker Compose, logs can be viewed with:
+
+```bash
+docker compose logs -f surge
+```
+
+To stop the container:
+
+```bash
+docker compose down
+```
+
+Make sure you have a `.env` file next to `docker-compose.yml` with all `SURGE_…` variables defined (see the Docker Compose example).
+
 Surge will:
 
 1. Create `data/posts/` and `data/analysis/` if missing.
 2. Poll the RSS feed immediately and then every `RSS_CHECK_INTERVAL` seconds.
-3. For each new post, fetch its content, match items, analyze via AI, and send Telegram alerts as configured.
+3. For each new post, fetch its content, match items, analyse via AI, and send Telegram alerts as configured.
 
 ## Docker Compose
 
-*(Template section; Dockerfile and compose configs to be added later)*
+Below is a template for running Surge via Docker Compose. Adjust the environment variables as needed in your host environment or in an `.env` file:
 
 ```yaml
 # docker-compose.yml
+services:
+  surge:
+    image: 0xidising/surge:latest
+    container_name: surge
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      USER_AGENT: ${SURGE_USER_AGENT}
+      RSS_PAGE_URL: ${SURGE_RSS_PAGE_URL}
+      ITEM_LIST_URL: ${SURGE_ITEM_LIST_URL}
+      RSS_CHECK_INTERVAL: ${SURGE_RSS_CHECK_INTERVAL}
+      OPENAI_API_KEY: ${SURGE_OPENAI_API_KEY}
+      OPENAI_MODEL: ${SURGE_OPENAI_MODEL}
+      TELEGRAM_BOT_TOKEN: ${SURGE_TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${SURGE_TELEGRAM_CHAT_ID}
+      INCLUDED_CHANGE_TYPES: ${SURGE_INCLUDED_CHANGE_TYPES}
 ```
+
+To start Surge with Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+Ensure you have set the corresponding `SURGE_…` variables in your environment or in a `.env` file next to `docker-compose.yml`.
+
+```env
+# surge
+SURGE_USER_AGENT="surge: item-price-analysis-bot - @your_username_here on Discord"
+SURGE_RSS_PAGE_URL="https://secure.runescape.com/m=news/a=13/latest_news.rss?oldschool=true"
+SURGE_ITEM_LIST_URL="https://prices.runescape.wiki/api/v1/osrs/mapping"
+SURGE_RSS_CHECK_INTERVAL="60"
+SURGE_OPENAI_API_KEY="sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+SURGE_OPENAI_MODEL="gpt-4.1-mini"
+SURGE_TELEGRAM_BOT_TOKEN="123456789:ABCDEFGHIJKLMNOPQRSTUVWX"
+SURGE_TELEGRAM_CHAT_ID="1234567890"
+SURGE_INCLUDED_CHANGE_TYPES=["Price increase","Price decrease"]
+```
+
 
 ## Module Descriptions
 
@@ -102,7 +166,7 @@ Below are the modules that can be invoked directly with Node:
 
   Scans the plaintext post for mentions of items (case-insensitive, whole words) and prints matching `id: name` pairs.
 
-* **Analyze one item via AI**
+* **Analyse one item via AI**
 
   ```bash
   node src/semanticItemAnalysis.js <path/to/post.txt> "<Item Name>"
