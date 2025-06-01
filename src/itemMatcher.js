@@ -17,17 +17,19 @@ function escapeRegex(str) {
 
 /**
  * Reads a plaintext post file and an item list JSON file, then returns
- * an array of item names that appear (case‐insensitive) within the post text,
- * matching whole words and allowing an optional trailing "s" or "'s".
+ * an array of objects ({ id, name }) for each item that appears (case‐insensitive)
+ * within the post text, matching whole words and allowing an optional trailing "s" or "'s".
  *
  * @param {string} postFilePath    Path to the plaintext file
- * @param {string} itemListPath    Path to the JSON file with "name" fields
- * @returns {Promise<string[]>}    Array of matched item names
+ * @param {string} itemListPath    Path to the JSON file with "id" and "name" fields
+ * @returns {Promise<Array<{ id: any, name: string }>>}    Array of matched item objects
  */
 export async function findMatches(postFilePath, itemListPath) {
+  // Read the post, convert to lowercase
   const rawPost = await fs.readFile(postFilePath, "utf-8");
   const postText = rawPost.toLowerCase();
 
+  // Read + parse the JSON array of items
   const rawItems = await fs.readFile(itemListPath, "utf-8");
   let items;
   try {
@@ -38,13 +40,14 @@ export async function findMatches(postFilePath, itemListPath) {
 
   const matches = [];
   for (const item of items) {
-    if (!item.name) continue;
+    // Skip any entry missing a name or an id
+    if (!item.name || item.id == null) continue;
 
-    // 1) Lowercase and escape any special regex chars in the item name.
+    // 1) Lowercase and escape special regex chars in the item name
     const lowerName = item.name.toLowerCase();
     const escapedName = escapeRegex(lowerName);
 
-    // 2) Build a RegExp that matches the item name as a whole word, with an optional "s" or "'s" at the end.
+    // 2) Build a RegExp that matches the item name as a whole word, with an optional "s" or "'s" suffix.
     //
     //    \b           ← word boundary
     //    escapedName  ← the literal item name (escaped)
@@ -63,7 +66,7 @@ export async function findMatches(postFilePath, itemListPath) {
     const pattern = new RegExp(`\\b${escapedName}(?:s|'s)?\\b`, "i");
 
     if (pattern.test(postText)) {
-      matches.push(item.name);
+      matches.push({ id: item.id, name: item.name });
     }
   }
 
@@ -71,7 +74,8 @@ export async function findMatches(postFilePath, itemListPath) {
 }
 
 /**
- * If this script is run directly, attempt to load args or use defaults from .env
+ * If this script is run directly, attempt to load args or use defaults from .env.
+ * Prints each match as "<id>: <name>" or "No matches found."
  */
 if (import.meta.url === `file://${process.argv[1]}`) {
   const postArg     = process.argv[2];
@@ -90,7 +94,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       if (matches.length === 0) {
         console.log("No matches found.");
       } else {
-        matches.forEach((name) => console.log(name));
+        matches.forEach(({ id, name }) => {
+          console.log(`${id}: ${name}`);
+        });
       }
     })
     .catch((err) => {
