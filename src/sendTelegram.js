@@ -16,22 +16,30 @@ if (!BOT_TOKEN || !CHAT_ID) {
 // Instantiate the bot (no polling needed for sendMessage)
 const bot = new TelegramBot(BOT_TOKEN, { polling: false });
 
-// Grab the message text from command-line args:
-const args = process.argv.slice(2);
-if (args.length === 0) {
-  console.error('Usage: node sendTelegram.js "<your message here>"');
-  process.exit(1);
+/**
+ * Sends a message to the configured Telegram chat.
+ * @param {string} text
+ * @returns {Promise<import('node-telegram-bot-api').Message>}
+ */
+export async function sendTelegramMessage(text) {
+  return bot.sendMessage(CHAT_ID, text, { parse_mode: 'HTML' });
 }
-const text = args.join(' ');
 
-// Send as HTML so hyphens and most punctuation don’t need escaping:
-bot
-  .sendMessage(CHAT_ID, text, { parse_mode: 'HTML' })
-  .then((result) => {
-    console.log('✅ Message sent, message_id:', result.message_id);
-    process.exit(0);
-  })
-  .catch((err) => {
-    console.error('❌ Error sending message:', err);
+// If this file is run directly via `node src/sendTelegram.js "some text"`, use the CLI entrypoint below:
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const args = process.argv.slice(2);
+  if (args.length === 0) {
+    console.error('Usage: node src/sendTelegram.js "<your message here>"');
     process.exit(1);
-  });
+  }
+  const text = args.join(' ');
+  sendTelegramMessage(text)
+    .then((result) => {
+      console.log('✅ Message sent, message_id:', result.message_id);
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('❌ Error sending message:', err);
+      process.exit(1);
+    });
+}
