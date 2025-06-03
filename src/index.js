@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 // src/index.js
 import 'dotenv/config';
 import { fileURLToPath } from 'url';
@@ -211,8 +209,9 @@ async function pollRss() {
       `⚠️ RSS polling error:`,
       `${err.message}`,
     ].join('\n');
-    await sendTelegramMessage(errMsg);
-    console.log(`⚠️ Sent RSS polling error notification.`);
+    console.log(errMsg)
+    // await sendTelegramMessage(errMsg);
+    // console.log(`⚠️ Sent RSS polling error notification.`);
   }
 }
 
@@ -236,4 +235,3 @@ async function ensureDirectories() {
   setInterval(pollRss, RSS_CHECK_INTERVAL * 1000);
   console.log(`⏰ Scheduled RSS polling every ${RSS_CHECK_INTERVAL} seconds.`);
 })();
->>>>>>> 0ccc1f9 (refactor: INCLUDED_CHANGE_TYPES from index.js to .env)
