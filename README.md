@@ -4,6 +4,9 @@
 
 Surge monitors Old School RuneScape update posts, identifies mentioned items, analyses their likely price impact using an AI model, and sends alerts via Telegram.
 
+> [!CAUTION]
+> The “expected_price_change” prediction is based on AI analysis and might not reflect market conditions accurately. Always double-check alerts before trading.
+
 ## Prerequisites
 
 * Node.js (v16 or later)
@@ -31,6 +34,9 @@ Alternatively, you can use Docker Compose instead of installing locally:
 
    This will pull `0xidising/surge:latest` and start Surge in a container.
 
+> [!TIP]
+> If you’re only testing installing locally with `npm install` is usually faster. Use Docker Compose for a more consistent, isolated environment (e.g. on a server).
+
 ## Configuration
 
 Create a `.env` file in the project root with:
@@ -55,6 +61,9 @@ INCLUDED_CHANGE_TYPES=["Price increase","Price decrease"]
 * `OPENAI_MODEL`: Model name (e.g., `gpt-4.1-mini`).
 * `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`: For sending alerts.
 * `INCLUDED_CHANGE_TYPES`: ["Price increase","Price decrease", "No change"] are the set of valid options.
+
+> [!WARNING]
+> Setting `RSS_CHECK_INTERVAL` too low (e.g. under 60 seconds) could lead to throttling by the RSS server.
 
 ## Usage
 
