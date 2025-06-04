@@ -35,7 +35,7 @@ Alternatively, you can use Docker Compose instead of installing locally:
    This will pull `0xidising/surge:latest` and start Surge in a container.
 
 > [!TIP]
-> If you’re only testing installing locally with `npm install` is usually faster. Use Docker Compose for a more consistent, isolated environment (e.g. on a server).
+> If you’re only testing, installing locally with `npm install` is usually faster. Use Docker Compose for a more consistent, isolated environment (e.g. on a server).
 
 ## Configuration
 
