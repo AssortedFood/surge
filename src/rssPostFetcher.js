@@ -15,29 +15,6 @@ const dataDir       = resolve(__dirname, "../data");
 const seenPostsFile = join(dataDir, "seenPosts.json");
 const postsDir      = join(dataDir, "posts");
 
-/**
- * Sanitize a string for use as a filesystem name:
- * - Replace slashes, colons, and other problematic chars with dashes
- * - Trim whitespace
- */
-function sanitizeFilename(name) {
-  return name
-    .replace(/[/\\?%*:|"<>]/g, "-")
-    .trim();
-}
-
-/**
- * Given a post ID, load seenPosts.json, find the matching entry
- * (with fields { id, title, link }), fetch the HTML at `link`,
- * extract the article content, and save it as Markdown under:
- *   data/posts/{id} - {sanitized_title}.txt
- *
- * If the ID is not found in seenPosts.json, throws an Error.
- * Returns the filepath of the written Markdown on success.
- *
- * @param {number} postId
- * @returns {Promise<string>}
- */
 export async function fetchAndSavePost(postId) {
   let seenPosts;
   try {
@@ -85,9 +62,8 @@ export async function fetchAndSavePost(postId) {
   });
   const markdownContent = paragraphs.join("\n\n");
 
-  // 6. Build the output filename: "{id} - {sanitized_title}.txt"
-  const safeTitle = sanitizeFilename(title);
-  const filename  = `${postId} - ${safeTitle}.txt`;
+  // 6. Build the output filename: "{id}.txt"
+  const filename  = `${postId}.txt`;
 
   await fs.mkdir(postsDir, { recursive: true });
 
