@@ -135,7 +135,7 @@ async function analyzeOneItem(postId, itemId, itemName) {
 
 /**
  * Process one RSS post: fetch its text (with retries), find matching items,
- * send a “new post” Telegram notification, and spawn per-item analyses.
+ * and spawn per-item analyses.
  */
 async function processOnePost(postId, title, link) {
   try {
@@ -155,19 +155,11 @@ async function processOnePost(postId, title, link) {
       return;
     }
 
-    // 3. Send “new post” Telegram message immediately
-    const headerMsg = [
-      `📰 New post: “${title}”`,
-      `🔗 ${link}`,
-    ].join('\n');
-    await sendTelegramMessage(headerMsg);
-    console.log(`✉️ Sent “new post” notification for post ${postId}.`);
-
-    // 4. Create analysis folder: data/analysis/{postId}/
+    // 3. Create analysis folder: data/analysis/{postId}/
     const analysisPath = join(ANALYSIS_DIR, String(postId));
     await fs.mkdir(analysisPath, { recursive: true });
 
-    // 5. For each matched item, spawn analyzeOneItem in parallel
+    // 4. For each matched item, spawn analyzeOneItem in parallel
     for (const { id: itemId, name: itemName } of matchedItems) {
       analyzeOneItem(postId, itemId, itemName);
     }
@@ -183,8 +175,8 @@ async function processOnePost(postId, title, link) {
 }
 
 /**
- * Poll the RSS feed; for any new posts, refresh the item list once,
- * then dispatch processing for each post in parallel.
+ * Poll the RSS feed; for any new posts, immediately send header messages,
+ * refresh the item list once, then dispatch processing for each post in parallel.
  */
 async function pollRss() {
   try {
@@ -194,6 +186,15 @@ async function pollRss() {
     }
 
     console.log(`🔔 Found ${newPosts.length} new post(s): ${newPosts.map(p => p.id).join(', ')}.`);
+
+    // 🔔 NEW: Immediately send “new post” Telegram messages (fire-and-forget)
+    for (const { id, title, link } of newPosts) {
+      sendTelegramMessage(
+        [`📰 New post: “${title}”`, `🔗 ${link}`].join('\n')
+      )
+        .then(() => console.log(`✉️ Sent immediate “new post” notification for post ${id}.`))
+        .catch((err) => console.error(`❌ Failed to send header for post ${id}:`, err));
+    }
 
     // Refresh master item list once per batch
     await fetchAndSaveAllItems();
@@ -209,7 +210,7 @@ async function pollRss() {
       `⚠️ RSS polling error:`,
       `${err.message}`,
     ].join('\n');
-    console.log(errMsg)
+    console.log(errMsg);
     // await sendTelegramMessage(errMsg);
     // console.log(`⚠️ Sent RSS polling error notification.`);
   }
