@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// NEW: Enum for strict type safety on analysis results
+enum PriceChange {
+  PriceIncrease
+  PriceDecrease
+  NoChange
+}
+
+model Item {
+  id        Int      @id @unique
+  name      String
+  examine   String?
+  members   Boolean
+  limit     Int?
+  value     Int
+  icon      String?
+  highalch  Int?
+  lowalch   Int?
+  prices    PriceSnapshot[] // MODIFIED: Changed to PriceSnapshot
+  analyses  ItemAnalysis[]
+}
+
+// MODIFIED: This model is now purpose-built for periodic snapshots
+model PriceSnapshot {
+  id           Int      @id @default(autoincrement())
+  itemId       Int
+  item         Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  highPrice    Int
+  lowPrice     Int
+  snapshotTime DateTime
+
+  @@unique([itemId, snapshotTime])
+  @@index([snapshotTime])
+}
+
+model Post {
+  id        Int      @id
+  title     String
+  link      String   @unique
+  content   String
+  createdAt DateTime @default(now())
+  analyses  ItemAnalysis[]
+}
+
+model ItemAnalysis {
+  id                  Int         @id @default(autoincrement())
+  postId              Int
+  post                Post        @relation(fields: [postId], references: [id], onDelete: Cascade)
+  itemId              Int
+  item                Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  relevantTextSnippet String
+  expectedPriceChange PriceChange // MODIFIED: Using the enum for data integrity
+  createdAt           DateTime    @default(now())
+
+  @@unique([postId, itemId])
+}
