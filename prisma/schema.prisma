@@ -17,6 +17,11 @@ enum PriceChange {
   NoChange
 }
 
+model AppState {
+  key   String @id @unique
+  value String
+}
+
 model Item {
   id        Int      @id @unique
   name      String
@@ -45,12 +50,13 @@ model PriceSnapshot {
 }
 
 model Post {
-  id        Int      @id
-  title     String
-  link      String   @unique
-  content   String
-  createdAt DateTime @default(now())
-  analyses  ItemAnalysis[]
+  id         Int      @id
+  title      String
+  link       String   @unique
+  content    String
+  createdAt  DateTime @default(now())
+  isAnalyzed Boolean  @default(false)
+  analyses ItemAnalysis[]
 }
 
 model ItemAnalysis {

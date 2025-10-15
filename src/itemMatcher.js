@@ -1,12 +1,11 @@
 // src/itemMatcher.js
-import fs from 'fs/promises';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
 import { GENERIC_WORDS } from './genericWords.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
+/**
+ * Cleans a name by removing suffixes, parentheses, and non-alphanumeric characters.
+ * @param {string | null | undefined} name The string to normalize.
+ * @returns {string} The cleaned, lowercased string.
+ */
 function normalizeName(name) {
   if (!name) return '';
   return name
@@ -17,23 +16,22 @@ function normalizeName(name) {
     .trim();
 }
 
+/**
+ * Extracts the significant, non-generic words from a cleaned name.
+ * @param {string} cleanedName The name after normalization.
+ * @returns {Set<string>} A set of significant words.
+ */
 function getSignificantWords(cleanedName) {
   return new Set(cleanedName.split(/\s+/).filter(word => word && !GENERIC_WORDS.has(word)));
 }
 
-function escapeRegex(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-export async function findMatches(postFilePath, itemListPath) {
-  let rawText;
-  try {
-    rawText = await fs.readFile(postFilePath, 'utf-8');
-  } catch (err) {
-    if (err.code === 'ENOENT') return [];
-    throw err;
-  }
-  const allItems = JSON.parse(await fs.readFile(itemListPath, 'utf-8'));
+/**
+ * Finds matching items within a given text content.
+ * @param {string} rawText The raw text content of a news post.
+ * @param {Array<object>} allItems An array of item objects to search for (from the database).
+ * @returns {Array<{id: number, name: string}>} An array of matched items.
+ */
+export function findMatches(rawText, allItems) {
   const lowerCaseText = rawText.toLowerCase();
 
   // 1. Analyze the post text to get a set of all its significant words.
@@ -52,9 +50,11 @@ export async function findMatches(postFilePath, itemListPath) {
 
     let isMatch = false;
     if (wordCount >= 2) {
+      // Rule for Multi-Word Items: Flexible subset match.
       isMatch = [...itemWords].every(word => postWords.has(word));
     } else { // wordCount === 1
-      const pattern = new RegExp(`\\b${escapeRegex(cleanedItemName)}\\b`, 'i');
+      // Rule for Single-Word Items: Strict phrase match.
+      const pattern = new RegExp(`\\b${cleanedItemName}\\b`, 'i');
       isMatch = pattern.test(rawText);
     }
 
@@ -62,7 +62,7 @@ export async function findMatches(postFilePath, itemListPath) {
       potentialMatches.push({
         id: item.id,
         name: item.name,
-        cleanedName: cleanedItemName, // Pass this through for the sort
+        cleanedName: cleanedItemName,
         wordCount: wordCount,
         significantWords: itemWords,
       });
@@ -74,67 +74,28 @@ export async function findMatches(postFilePath, itemListPath) {
   const seenIds = new Set();
   const matchedWords = new Set();
 
-  // Sort by word count (most specific) first, then by our new tie-breaker.
+  // Sort by word count, then by phrase presence, then by name length.
   potentialMatches.sort((a, b) => {
-    // Primary sort: more significant words is always better.
     if (b.wordCount !== a.wordCount) {
       return b.wordCount - a.wordCount;
     }
-
-    // --- NEW TIE-BREAKER LOGIC ---
-    // If word counts are equal, check if one appears as a literal phrase and the other doesn't.
     const aIsPhrase = lowerCaseText.includes(a.cleanedName);
     const bIsPhrase = lowerCaseText.includes(b.cleanedName);
-
-    if (aIsPhrase && !bIsPhrase) {
-      return -1; // a is better, sort it first.
-    }
-    if (!aIsPhrase && bIsPhrase) {
-      return 1; // b is better, sort it first.
-    }
-    // --- END NEW TIE-BREAKER ---
-
-    // Final fallback tie-breaker: longer original name.
+    if (aIsPhrase && !bIsPhrase) return -1;
+    if (!aIsPhrase && bIsPhrase) return 1;
     return b.name.length - a.name.length;
   });
 
   for (const match of potentialMatches) {
-    // Check if a more specific item has already "claimed" the words in this item.
     const alreadyClaimed = [...match.significantWords].some(word => matchedWords.has(word));
     if (alreadyClaimed) continue;
 
     if (!seenIds.has(match.id)) {
-      finalMatches.push({ id: match.id, name: match.name });
+      finalMatches.push(match);
       seenIds.add(match.id);
-      // "Claim" the words from this match so less specific items are ignored.
       match.significantWords.forEach(word => matchedWords.add(word));
     }
   }
 
   return finalMatches;
-}
-
-
-// CLI entrypoint
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const postArg = process.argv[2];
-  const itemListArg = process.argv[3] || process.env.ITEM_LIST_PATH;
-  if (!postArg || !itemListArg) {
-    console.error('Usage: node src/itemMatcher.js <postFile> <itemListJson>');
-    process.exit(1);
-  }
-  const postPath = resolve(process.cwd(), postArg);
-  const itemPath = resolve(process.cwd(), itemListArg);
-  findMatches(postPath, itemPath)
-    .then((arr) => {
-      if (arr.length === 0) console.log('No matches found.');
-      else {
-        arr.sort((a, b) => a.name.localeCompare(b.name));
-        arr.forEach(({ id, name }) => console.log(`${id}: ${name}`));
-      }
-    })
-    .catch((err) => {
-      console.error('Error:', err.message);
-      process.exit(1);
-    });
 }

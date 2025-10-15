@@ -1,238 +1,169 @@
 // src/index.js
 import 'dotenv/config';
-import { fileURLToPath } from 'url';
-import { dirname, resolve, join } from 'path';
-import fs from 'fs/promises';
+import { PrismaClient, PriceChange } from '@prisma/client';
 
-import { getNewRssPosts } from './rssChecker.js';
-import { fetchAndSaveAllItems } from './allItemsFetcher.js';
-import { fetchAndSavePost as originalFetchAndSavePost } from './rssPostFetcher.js';
+// Import all necessary functions from other modules
 import { findMatches } from './itemMatcher.js';
 import { analyzeItemImpact } from './semanticItemAnalysis.js';
 import { sendTelegramMessage } from './sendTelegram.js';
+import { getEconomicallySignificantItems } from './itemFilter.js';
+import { syncItemsAndPrices } from './syncData.js';
+import { syncNewPosts } from './syncPosts.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const prisma = new PrismaClient();
 
-// Read a JSON array from .env (or fall back to a default)
-let INCLUDED_CHANGE_TYPES = ['Price increase', 'Price decrease', 'No change'];
-if (process.env.INCLUDED_CHANGE_TYPES) {
-  try {
-    INCLUDED_CHANGE_TYPES = JSON.parse(process.env.INCLUDED_CHANGE_TYPES);
-  } catch (e) {
-    console.warn(
-      'Warning: INCLUDED_CHANGE_TYPES in .env is not valid JSON. ' +
-      'Falling back to default.'
-    );
-  }
+// --- Configuration from .env ---
+const DATA_SYNC_INTERVAL_MINUTES = parseInt(process.env.DATA_SYNC_INTERVAL_MINUTES, 10) || 360;
+const RSS_CHECK_INTERVAL_SECONDS = parseInt(process.env.RSS_CHECK_INTERVAL_SECONDS, 10) || 60;
+const INCLUDED_CHANGE_TYPES = process.env.INCLUDED_CHANGE_TYPES
+  ? JSON.parse(process.env.INCLUDED_CHANGE_TYPES)
+  : ['Price increase', 'Price decrease', 'No change'];
+
+// --- Keys for storing last-run timestamps ---
+const LAST_DATA_SYNC_KEY = 'lastDataSyncTimestamp';
+
+// --- Scheduler for Infrequent Data Sync ---
+async function shouldRunDataSync() {
+  const lastRunState = await prisma.appState.findUnique({ where: { key: LAST_DATA_SYNC_KEY } });
+  if (!lastRunState) return true;
+
+  const lastRunTime = new Date(lastRunState.value);
+  const now = new Date();
+  const minutesSinceLastRun = (now.getTime() - lastRunTime.getTime()) / 60000;
+  return minutesSinceLastRun > DATA_SYNC_INTERVAL_MINUTES;
 }
 
-// How often to check RSS (in seconds)
-const RSS_CHECK_INTERVAL = parseInt(process.env.RSS_CHECK_INTERVAL, 10) || 60;
-
-const DATA_DIR = resolve(__dirname, '../data');
-const POSTS_DIR = join(DATA_DIR, 'posts');
-const ANALYSIS_DIR = join(DATA_DIR, 'analysis');
-const ALL_ITEMS_PATH = join(DATA_DIR, 'all_items.json');
-
-/**
- * Simple sleep helper for retry delays.
- */
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+async function updateLastDataSync() {
+  const now = new Date().toISOString();
+  await prisma.appState.upsert({
+    where: { key: LAST_DATA_SYNC_KEY },
+    update: { value: now },
+    create: { key: LAST_DATA_SYNC_KEY, value: now },
+  });
 }
 
-/**
- * Wrap fetchAndSavePost with a retry loop for HTTP 502s.
- * Tries up to maxAttempts times, waiting 2 seconds between attempts.
- */
-async function fetchAndSavePost(postId, maxAttempts = 3) {
-  let lastErr = null;
-
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+async function runDataSyncScheduler() {
+  console.log('--- Scheduler checking for due data sync ---');
+  if (await shouldRunDataSync()) {
+    console.log(`[SCHEDULER] Triggering item & price data sync (interval: ${DATA_SYNC_INTERVAL_MINUTES} mins)...`);
     try {
-      await originalFetchAndSavePost(postId);
-      return; // success
+      await syncItemsAndPrices();
+      await updateLastDataSync();
+      console.log(`[SCHEDULER] Item & price data sync finished.`);
     } catch (err) {
-      lastErr = err;
-      if (err.message.includes('HTTP 502') && attempt < maxAttempts) {
-        console.log(`🔄 502 on post ${postId}, retrying attempt ${attempt + 1}/${maxAttempts} in 3s…`);
-        await sleep(3000);
-        continue;
-      }
-      throw err;
+      console.error('[SCHEDULER] Error during item & price data sync:', err);
     }
   }
-
-  throw lastErr;
 }
 
-/**
- * Analyze one item for a given post.
- * Writes the result (or error) to disk and conditionally sends a Telegram message.
- */
-async function analyzeOneItem(postId, itemId, itemName) {
-  const analysisPath = join(ANALYSIS_DIR, String(postId));
-  console.log(`⚙️ Starting analysis for item “${itemName}” (ID: ${itemId}) in post ${postId}.`);
-  
+// --- Analysis Logic ---
+function toPriceChangeEnum(changeString) {
+  switch (changeString) {
+    case 'Price increase': return PriceChange.PriceIncrease;
+    case 'Price decrease': return PriceChange.PriceDecrease;
+    default: return PriceChange.NoChange;
+  }
+}
+
+async function analyzeOneItem(post, item) {
+  console.log(`⚙️ Starting analysis for item “${item.name}” (ID: ${item.id}) in post ${post.id}.`);
   try {
-    const result = await analyzeItemImpact(
-      join(POSTS_DIR, `${postId}.txt`),
-      itemName
-    );
-    const output = {
-      relevant_text_snippet: result.relevant_text_snippet,
-      expected_price_change: result.expected_price_change,
-    };
+    const result = await analyzeItemImpact(post.content, item.name);
+    
+    await prisma.itemAnalysis.create({
+      data: {
+        postId: post.id,
+        itemId: item.id,
+        relevantTextSnippet: result.relevant_text_snippet,
+        expectedPriceChange: toPriceChangeEnum(result.expected_price_change),
+      },
+    });
 
-    // 1. Write the raw JSON to disk
-    const filePath = join(analysisPath, `${itemId}.json`);
-    await fs.writeFile(filePath, JSON.stringify(output, null, 2), 'utf-8');
-
-    // 2. Only send Telegram if this change type is included
-    if (INCLUDED_CHANGE_TYPES.includes(output.expected_price_change)) {
-      // Pick a “circle + arrow” emoji:
-      let emoji;
-      if (output.expected_price_change === 'Price increase') {
-        emoji = '🟢';
-      } else if (output.expected_price_change === 'Price decrease') {
-        emoji = '🔴';
-      } else {
-        emoji = '🟡'; // “No change”
-      }
-
-      // Build an HTML‐bold message (since we use parse_mode='HTML'):
+    if (INCLUDED_CHANGE_TYPES.includes(result.expected_price_change)) {
+      const emoji = { 'Price increase': '🟢', 'Price decrease': '🔴', 'No change': '🟡' }[result.expected_price_change];
       const msg = [
-        `<b>${itemName}</b>`,
-        ``,
-        `“${output.relevant_text_snippet}”`,
-        ``,
-        `${emoji} ${output.expected_price_change}`
+        `<b>${item.name}</b>`, ``, `“${result.relevant_text_snippet}”`, ``,
+        `${emoji} ${result.expected_price_change}`
       ].join('\n');
-
+      
       await sendTelegramMessage(msg);
-      console.log(`✉️ Sent analysis result for item “${itemName}” (ID: ${itemId}) in post ${postId}.`);
+      console.log(`✉️ Sent analysis for “${item.name}” in post ${post.id}.`);
     } else {
-      console.log(
-        `ℹ️ Skipped Telegram for item “${itemName}” (ID: ${itemId}) – ` +
-        `change type “${output.expected_price_change}” not included.`
-      );
+      console.log(`ℹ️ Skipped Telegram for “${item.name}” – change type not included.`);
     }
   } catch (err) {
-    const errorObj = { error: err.message };
-    const errPath = join(analysisPath, `${itemId}.error.json`);
-    await fs.writeFile(errPath, JSON.stringify(errorObj, null, 2), 'utf-8');
-
-    const errMsg = [
-      `⚠️ Analysis failed for item “${itemName}” (ID: ${itemId}):`,
-      `${err.message}`,
-    ].join('\n');
+    const errMsg = `⚠️ Analysis failed for item “${item.name}” (ID: ${item.id}):\n${err.message}`;
+    console.error(errMsg);
     await sendTelegramMessage(errMsg);
-
-    console.log(`⚠️ Sent analysis error for item “${itemName}” (ID: ${itemId}) in post ${postId}.`);
   }
 }
 
-/**
- * Process one RSS post: fetch its text (with retries), find matching items,
- * and spawn per-item analyses.
- */
-async function processOnePost(postId, title, link) {
+async function processOnePost(post) {
   try {
-    // 1. Fetch and save post text with retry → data/posts/{postId}.txt
-    await fetchAndSavePost(postId);
-    console.log(`📥 Post ${postId} fetched and saved.`);
+    console.log(`🔍 Processing post ${post.id}: "${post.title}"`);
+    
+    const significantItems = await getEconomicallySignificantItems(prisma);
+    const matchedItems = findMatches(post.content, significantItems);
+    console.log(`➡️ Found ${matchedItems.length} matched item(s) in post ${post.id}.`);
 
-    // 2. Find matching items by ID & name
-    const matchedItems = await findMatches(
-      join(POSTS_DIR, `${postId}.txt`),
-      ALL_ITEMS_PATH
-    );
-    console.log(`🔍 Post ${postId} matched ${matchedItems.length} item(s).`);
+    if (matchedItems.length === 0) return;
 
-    if (!matchedItems || matchedItems.length === 0) {
-      console.log(`ℹ️ No tracked items found in post ${postId}.`);
+    // 'item' is now the full object from the matcher, so we use it directly.
+    const analysisPromises = matchedItems.map(item => analyzeOneItem(post, item));
+    await Promise.all(analysisPromises);
+
+  } catch (err) {
+    console.error(`❌ Error processing post ${post.id}:`, err);
+    await sendTelegramMessage(`⚠️ Failed to process post ID ${post.id}:\n${err.message}`);
+  }
+}
+
+async function pollAndProcess() {
+  console.log('--- Polling for unprocessed posts ---');
+  try {
+    const postsToProcess = await prisma.post.findMany({ where: { isAnalyzed: false } });
+
+    if (postsToProcess.length === 0) {
+      console.log('No new posts to process.');
       return;
     }
 
-    // 3. Create analysis folder: data/analysis/{postId}/
-    const analysisPath = join(ANALYSIS_DIR, String(postId));
-    await fs.mkdir(analysisPath, { recursive: true });
-
-    // 4. For each matched item, spawn analyzeOneItem in parallel
-    for (const { id: itemId, name: itemName } of matchedItems) {
-      analyzeOneItem(postId, itemId, itemName);
+    console.log(`🔔 Found ${postsToProcess.length} new post(s) to analyze.`);
+    for (const post of postsToProcess) {
+      await processOnePost(post);
+      await prisma.post.update({
+        where: { id: post.id },
+        data: { isAnalyzed: true },
+      });
+      console.log(`✅ Finished processing post ${post.id}.`);
     }
   } catch (err) {
-    console.error(`❌ Error processing post ${postId}:`, err);
-    const errMsg = [
-      `⚠️ Failed to process post ID ${postId}:`,
-      `${err.message}`,
-    ].join('\n');
-    await sendTelegramMessage(errMsg);
-    console.log(`⚠️ Sent post-processing error notification for post ${postId}.`);
+    console.error('❌ Error in pollAndProcess loop:', err);
   }
 }
 
-/**
- * Poll the RSS feed; for any new posts, immediately send header messages,
- * refresh the item list once, then dispatch processing for each post in parallel.
- */
-async function pollRss() {
+// --- Main Post Pipeline ---
+async function runPostPipeline() {
+  console.log('--- Running Post Pipeline ---');
   try {
-    const newPosts = await getNewRssPosts();
-    if (!newPosts || newPosts.length === 0) {
-      return;
-    }
-
-    console.log(`🔔 Found ${newPosts.length} new post(s): ${newPosts.map(p => p.id).join(', ')}.`);
-
-    // 🔔 NEW: Immediately send “new post” Telegram messages (fire-and-forget)
-    for (const { id, title, link } of newPosts) {
-      sendTelegramMessage(
-        [`📰 New post: “${title}”`, `🔗 ${link}`].join('\n')
-      )
-        .then(() => console.log(`✉️ Sent immediate “new post” notification for post ${id}.`))
-        .catch((err) => console.error(`❌ Failed to send header for post ${id}:`, err));
-    }
-
-    // Refresh master item list once per batch
-    await fetchAndSaveAllItems();
-    console.log(`🔄 Master item list refreshed.`);
-
-    // For each new post, process it without awaiting
-    for (const { id: postId, title, link } of newPosts) {
-      processOnePost(postId, title, link);
-    }
+    await syncNewPosts();
+    await pollAndProcess();
   } catch (err) {
-    console.error('❌ Error in pollRss:', err);
-    const errMsg = [
-      `⚠️ RSS polling error:`,
-      `${err.message}`,
-    ].join('\n');
-    console.log(errMsg);
-    // await sendTelegramMessage(errMsg);
-    // console.log(`⚠️ Sent RSS polling error notification.`);
+    console.error('❌ Error in Post Pipeline:', err);
   }
 }
 
-/**
- * Ensure top-level data directories exist before starting.
- */
-async function ensureDirectories() {
-  await fs.mkdir(POSTS_DIR, { recursive: true });
-  await fs.mkdir(ANALYSIS_DIR, { recursive: true });
-  console.log('📂 Ensured data directories exist.');
-}
-
+// --- Main Application Entrypoint ---
 (async () => {
-  // 1. Create necessary directories
-  await ensureDirectories();
+  console.log('Application starting...');
+  
+  // 1. Set up the infrequent data sync scheduler (checks every minute)
+  await runDataSyncScheduler();
+  setInterval(runDataSyncScheduler, 60 * 1000); 
+  console.log(`⏰ Data sync scheduler running, will check every minute.`);
 
-  // 2. Initial poll immediately
-  await pollRss();
-
-  // 3. Schedule recurring polls
-  setInterval(pollRss, RSS_CHECK_INTERVAL * 1000);
-  console.log(`⏰ Scheduled RSS polling every ${RSS_CHECK_INTERVAL} seconds.`);
+  // 2. Set up the frequent post pipeline (checks for new posts and analyzes)
+  await runPostPipeline();
+  setInterval(runPostPipeline, RSS_CHECK_INTERVAL_SECONDS * 1000);
+  console.log(`⏰ Post pipeline running every ${RSS_CHECK_INTERVAL_SECONDS} seconds.`);
 })();
