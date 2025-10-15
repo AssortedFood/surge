@@ -1,106 +1,140 @@
 // src/itemMatcher.js
-import 'dotenv/config'; // Load environment variables
-import fs from "fs/promises";
-import { fileURLToPath } from "url";
-import { dirname, resolve } from "path";
+import fs from 'fs/promises';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+import { GENERIC_WORDS } from './genericWords.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname  = dirname(__filename);
+const __dirname = dirname(__filename);
 
-/**
- * Escape any regex‐special characters in a string so we can interpolate it literally.
- */
+function normalizeName(name) {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    .replace(/\s*\([^)]+\)/g, '') // Remove text in parentheses, e.g. (4)
+    .replace(/- broken$/, '')      // Remove suffix '- broken'
+    .replace(/[^a-z0-9\s]/g, '')    // Remove remaining non-alphanumeric characters
+    .trim();
+}
+
+function getSignificantWords(cleanedName) {
+  return new Set(cleanedName.split(/\s+/).filter(word => word && !GENERIC_WORDS.has(word)));
+}
+
 function escapeRegex(str) {
-  // from MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/**
- * Reads a plaintext post file and an item list JSON file, then returns
- * an array of objects ({ id, name }) for each item that appears (case‐insensitive)
- * within the post text, matching whole words and allowing an optional trailing "s" or "'s".
- *
- * @param {string} postFilePath    Path to the plaintext file
- * @param {string} itemListPath    Path to the JSON file with "id" and "name" fields
- * @returns {Promise<Array<{ id: any, name: string }>>}    Array of matched item objects
- */
 export async function findMatches(postFilePath, itemListPath) {
-  // Read the post, convert to lowercase
-  const rawPost = await fs.readFile(postFilePath, "utf-8");
-  const postText = rawPost.toLowerCase();
-
-  // Read + parse the JSON array of items
-  const rawItems = await fs.readFile(itemListPath, "utf-8");
-  let items;
+  let rawText;
   try {
-    items = JSON.parse(rawItems);
+    rawText = await fs.readFile(postFilePath, 'utf-8');
   } catch (err) {
-    throw new Error(`Failed to parse JSON from ${itemListPath}: ${err.message}`);
+    if (err.code === 'ENOENT') return [];
+    throw err;
   }
+  const allItems = JSON.parse(await fs.readFile(itemListPath, 'utf-8'));
+  const lowerCaseText = rawText.toLowerCase();
 
-  const matches = [];
-  for (const item of items) {
-    // Skip any entry missing a name or an id
-    if (!item.name || item.id == null) continue;
+  // 1. Analyze the post text to get a set of all its significant words.
+  const postWords = getSignificantWords(normalizeName(rawText));
 
-    // 1) Lowercase and escape special regex chars in the item name
-    const lowerName = item.name.toLowerCase();
-    const escapedName = escapeRegex(lowerName);
+  // 2. Identify all potential matches based on our hybrid rules.
+  const potentialMatches = [];
+  for (const item of allItems) {
+    if (!item.name) continue;
 
-    // 2) Build a RegExp that matches the item name as a whole word, with an optional "s" or "'s" suffix.
-    //
-    //    \b           ← word boundary
-    //    escapedName  ← the literal item name (escaped)
-    //    (?:s|'s)?    ← optional plural/possessive suffix:
-    //                     - an "s"  (for plurals),
-    //                     - or "'s" (for possessive),
-    //                     - or nothing
-    //    \b           ← word boundary again
-    //
-    // Example if item.name = "Dragon scale":
-    //    pattern = /\bdragon scale(?:s|'s)?\b/i
-    //
-    // That will match:
-    //    "dragon scale", "Dragon Scales", "dragon scale's", etc.,
-    // but not "redragon scales" or "dragonscale".
-    const pattern = new RegExp(`\\b${escapedName}(?:s|'s)?\\b`, "i");
+    const cleanedItemName = normalizeName(item.name);
+    const itemWords = getSignificantWords(cleanedItemName);
+    const wordCount = itemWords.size;
 
-    if (pattern.test(postText)) {
-      matches.push({ id: item.id, name: item.name });
+    if (wordCount === 0) continue;
+
+    let isMatch = false;
+    if (wordCount >= 2) {
+      isMatch = [...itemWords].every(word => postWords.has(word));
+    } else { // wordCount === 1
+      const pattern = new RegExp(`\\b${escapeRegex(cleanedItemName)}\\b`, 'i');
+      isMatch = pattern.test(rawText);
+    }
+
+    if (isMatch) {
+      potentialMatches.push({
+        id: item.id,
+        name: item.name,
+        cleanedName: cleanedItemName, // Pass this through for the sort
+        wordCount: wordCount,
+        significantWords: itemWords,
+      });
     }
   }
 
-  return matches;
-}
+  // 3. Select the best match from the candidates to resolve ambiguity.
+  const finalMatches = [];
+  const seenIds = new Set();
+  const matchedWords = new Set();
 
-/**
- * If this script is run directly, attempt to load args or use defaults from .env.
- * Prints each match as "<id>: <name>" or "No matches found."
- */
-if (import.meta.url === `file://${process.argv[1]}`) {
-  const postArg     = process.argv[2];
-  const itemListArg = process.argv[3] || process.env.ITEM_LIST_PATH;
+  // Sort by word count (most specific) first, then by our new tie-breaker.
+  potentialMatches.sort((a, b) => {
+    // Primary sort: more significant words is always better.
+    if (b.wordCount !== a.wordCount) {
+      return b.wordCount - a.wordCount;
+    }
 
-  if (!postArg || !itemListArg) {
-    console.error("Usage: node src/itemMatcher.js <postFile> <itemListJson> OR define ITEM_LIST_PATH in .env");
-    process.exit(1);
+    // --- NEW TIE-BREAKER LOGIC ---
+    // If word counts are equal, check if one appears as a literal phrase and the other doesn't.
+    const aIsPhrase = lowerCaseText.includes(a.cleanedName);
+    const bIsPhrase = lowerCaseText.includes(b.cleanedName);
+
+    if (aIsPhrase && !bIsPhrase) {
+      return -1; // a is better, sort it first.
+    }
+    if (!aIsPhrase && bIsPhrase) {
+      return 1; // b is better, sort it first.
+    }
+    // --- END NEW TIE-BREAKER ---
+
+    // Final fallback tie-breaker: longer original name.
+    return b.name.length - a.name.length;
+  });
+
+  for (const match of potentialMatches) {
+    // Check if a more specific item has already "claimed" the words in this item.
+    const alreadyClaimed = [...match.significantWords].some(word => matchedWords.has(word));
+    if (alreadyClaimed) continue;
+
+    if (!seenIds.has(match.id)) {
+      finalMatches.push({ id: match.id, name: match.name });
+      seenIds.add(match.id);
+      // "Claim" the words from this match so less specific items are ignored.
+      match.significantWords.forEach(word => matchedWords.add(word));
+    }
   }
 
-  const postFilePath = resolve(process.cwd(), postArg);
-  const itemListPath = resolve(process.cwd(), itemListArg);
+  return finalMatches;
+}
 
-  findMatches(postFilePath, itemListPath)
-    .then((matches) => {
-      if (matches.length === 0) {
-        console.log("No matches found.");
-      } else {
-        matches.forEach(({ id, name }) => {
-          console.log(`${id}: ${name}`);
-        });
+
+// CLI entrypoint
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const postArg = process.argv[2];
+  const itemListArg = process.argv[3] || process.env.ITEM_LIST_PATH;
+  if (!postArg || !itemListArg) {
+    console.error('Usage: node src/itemMatcher.js <postFile> <itemListJson>');
+    process.exit(1);
+  }
+  const postPath = resolve(process.cwd(), postArg);
+  const itemPath = resolve(process.cwd(), itemListArg);
+  findMatches(postPath, itemPath)
+    .then((arr) => {
+      if (arr.length === 0) console.log('No matches found.');
+      else {
+        arr.sort((a, b) => a.name.localeCompare(b.name));
+        arr.forEach(({ id, name }) => console.log(`${id}: ${name}`));
       }
     })
     .catch((err) => {
-      console.error("Error:", err.message);
+      console.error('Error:', err.message);
       process.exit(1);
     });
 }
