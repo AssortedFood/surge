@@ -2,15 +2,40 @@
 // Hybrid item extraction: combines LLM extraction with algorithmic search
 // for improved precision (catch hallucinations) and recall (catch misses)
 
+import 'dotenv/config';
 import { extractItemCandidates } from './itemExtractor.js';
 import { validateItemCandidates } from './itemValidator.js';
+import { fetchStructuredResponse } from './fetchStructuredResponse.js';
 import logger from './utils/logger.js';
+import { z } from 'zod';
+
+// Default model config from env vars (used when no config passed)
+const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'o4-mini';
+const DEFAULT_REASONING_EFFORT = process.env.OPENAI_REASONING_EFFORT || 'low';
+
+// Schema for validating algo-found candidates
+const AlgoValidationSchema = z.object({
+  validItems: z
+    .array(
+      z.object({
+        name: z.string().describe('The item name exactly as provided'),
+        isRelevant: z
+          .boolean()
+          .describe(
+            'Whether this item is actually mentioned as a tradeable item in context'
+          ),
+        snippet: z
+          .string()
+          .describe(
+            'The text snippet where this item appears, or empty if not relevant'
+          ),
+      })
+    )
+    .describe('Validation results for each candidate item'),
+});
 
 // Minimum character length for algorithmic search (avoid short false positives)
 const MIN_ALGO_SEARCH_LENGTH = 4;
-
-// Stricter threshold for adding algo-only items (must be very confident)
-const MIN_ALGO_ONLY_LENGTH = 6;
 
 // Ambiguous item names to skip in algorithmic search
 // These are common words or JMod names that would cause false positives
@@ -119,24 +144,145 @@ function algorithmicSearch(content, allItems) {
 }
 
 /**
+ * Validates algo-only candidates with a single LLM call
+ * Asks the LLM to confirm which candidates are actually relevant items
+ *
+ * @param {string} postTitle - The post title
+ * @param {string} content - The post content
+ * @param {Array<{id: number, name: string}>} candidates - Algo-found items to validate
+ * @param {object} modelConfig - Model configuration {model, reasoning}
+ * @returns {Promise<{items: Array, usage: object}>}
+ */
+async function validateAlgoCandidates(
+  postTitle,
+  content,
+  candidates,
+  modelConfig = {}
+) {
+  const emptyResult = {
+    items: [],
+    usage: { promptTokens: 0, completionTokens: 0, reasoningTokens: 0 },
+  };
+
+  if (candidates.length === 0) return emptyResult;
+
+  const model = modelConfig.model || DEFAULT_MODEL;
+  const reasoning = modelConfig.reasoning || DEFAULT_REASONING_EFFORT;
+
+  const candidateNames = candidates.map((c) => c.name);
+
+  const systemPrompt = `You are an Old School RuneScape expert. You will be given a list of potential item names found in a news post. Your job is to determine which ones are ACTUALLY being mentioned as tradeable items in the context of the post.
+
+Rules:
+- Only mark items as relevant if they are genuinely being discussed as tradeable OSRS items
+- "Bones" appearing in "bare bones" or "backbone" is NOT relevant
+- Item names that are JMod names (Ash, Acorn, etc.) are NOT relevant
+- Items mentioned only as untradeable quest/skill rewards are NOT relevant
+- Items that are part of the actual game content discussion ARE relevant`;
+
+  const userMessage = `Post Title: "${postTitle}"
+
+Content:
+"""
+${content}
+"""
+
+Candidate items to validate:
+${candidateNames.map((n, i) => `${i + 1}. ${n}`).join('\n')}
+
+For each candidate, determine if it's actually mentioned as a tradeable item in this post.`;
+
+  try {
+    const response = await fetchStructuredResponse(
+      model,
+      systemPrompt,
+      userMessage,
+      AlgoValidationSchema,
+      { reasoningEffort: reasoning }
+    );
+
+    const usage = {
+      promptTokens: response.usage?.prompt_tokens || 0,
+      completionTokens: response.usage?.completion_tokens || 0,
+      reasoningTokens:
+        response.usage?.completion_tokens_details?.reasoning_tokens || 0,
+    };
+
+    const message = response.choices?.[0]?.message;
+    let result;
+
+    if (message?.parsed) {
+      result = message.parsed;
+    } else if (message?.content) {
+      result = JSON.parse(message.content);
+    } else {
+      return { items: [], usage };
+    }
+
+    // Filter to only relevant items and map back to full item info
+    const validatedItems = [];
+    const candidateMap = new Map(
+      candidates.map((c) => [c.name.toLowerCase(), c])
+    );
+
+    for (const item of result.validItems || []) {
+      if (item.isRelevant) {
+        const original = candidateMap.get(item.name.toLowerCase());
+        if (original) {
+          validatedItems.push({
+            name: original.name,
+            snippet: item.snippet || '[Validated by LLM]',
+            context: 'mention_only',
+            itemId: original.id,
+            itemName: original.name,
+          });
+        }
+      }
+    }
+
+    logger.debug('Validated algo candidates', {
+      postTitle,
+      candidates: candidates.length,
+      validated: validatedItems.length,
+    });
+
+    return { items: validatedItems, usage };
+  } catch (err) {
+    logger.error('Algo candidate validation failed', {
+      error: err.message,
+      postTitle,
+    });
+    return emptyResult;
+  }
+}
+
+/**
  * Hybrid extraction: runs LLM and algorithmic search in parallel,
- * then combines results with confidence scoring
+ * then validates algo-only candidates with a second LLM call
  *
  * @param {string} postTitle - The post title
  * @param {string} cleanedContent - The cleaned post content
  * @param {Array<{id: number, name: string}>} allItems - All items from database
- * @returns {Promise<{items: Array, stats: object}>}
+ * @param {object} modelConfig - Optional model configuration {model, reasoning}
+ * @returns {Promise<{items: Array, stats: object, usage: object, latencyMs: number}>}
  */
-async function hybridExtract(postTitle, cleanedContent, allItems) {
+async function hybridExtract(
+  postTitle,
+  cleanedContent,
+  allItems,
+  modelConfig = {}
+) {
   const startTime = Date.now();
 
   // Run LLM extraction and algorithmic search in parallel
-  const [llmCandidates, algoMatches] = await Promise.all([
-    extractItemCandidates(postTitle, cleanedContent),
+  const [llmResult, algoMatches] = await Promise.all([
+    extractItemCandidates(postTitle, cleanedContent, modelConfig),
     Promise.resolve(algorithmicSearch(cleanedContent, allItems)),
   ]);
 
-  const algoTime = Date.now() - startTime;
+  // Extract items and usage from LLM result
+  const llmCandidates = llmResult.items;
+  let totalUsage = { ...llmResult.usage };
 
   // Validate LLM candidates against database
   const llmValidated = validateItemCandidates(llmCandidates, allItems);
@@ -158,26 +304,38 @@ async function hybridExtract(postTitle, cleanedContent, allItems) {
     }
   }
 
-  // Process algo-only results (items LLM missed)
+  // Collect algo-only candidates for LLM validation
+  const algoOnlyCandidates = [];
   for (const [itemId, matchInfo] of algoMatches) {
     if (!llmItemIds.has(itemId)) {
-      const { item } = matchInfo;
-
-      // Only add algo-only items if they meet strict criteria
-      // Must be longer name (6+ chars) to reduce false positives
-      if (item.name.length >= MIN_ALGO_ONLY_LENGTH) {
-        algoOnly.push({
-          name: item.name,
-          snippet: '[Algorithmically detected - not found by LLM]',
-          context: 'mention_only',
-          itemId: item.id,
-          itemName: item.name,
-          confidence: 0.3,
-          source: 'algo',
-        });
-      }
+      algoOnlyCandidates.push(matchInfo.item);
     }
   }
+
+  // Validate algo-only candidates with a second LLM call
+  if (algoOnlyCandidates.length > 0) {
+    const validationResult = await validateAlgoCandidates(
+      postTitle,
+      cleanedContent,
+      algoOnlyCandidates,
+      modelConfig
+    );
+
+    // Aggregate token usage from second LLM call
+    totalUsage.promptTokens += validationResult.usage.promptTokens;
+    totalUsage.completionTokens += validationResult.usage.completionTokens;
+    totalUsage.reasoningTokens += validationResult.usage.reasoningTokens;
+
+    for (const item of validationResult.items) {
+      algoOnly.push({
+        ...item,
+        confidence: 0.7, // Higher confidence since LLM validated
+        source: 'algo_validated',
+      });
+    }
+  }
+
+  const latencyMs = Date.now() - startTime;
 
   // Combine all results, sorted by confidence
   const allResults = [...confirmed, ...llmOnly, ...algoOnly].sort(
@@ -192,7 +350,6 @@ async function hybridExtract(postTitle, cleanedContent, allItems) {
     llmOnly: llmOnly.length,
     algoOnly: algoOnly.length,
     total: allResults.length,
-    algoTimeMs: algoTime,
   };
 
   logger.debug('Hybrid extraction complete', {
@@ -200,7 +357,7 @@ async function hybridExtract(postTitle, cleanedContent, allItems) {
     ...stats,
   });
 
-  return { items: allResults, stats };
+  return { items: allResults, stats, usage: totalUsage, latencyMs };
 }
 
 /**
@@ -219,6 +376,6 @@ export {
   hybridExtract,
   algorithmicSearch,
   filterByConfidence,
+  validateAlgoCandidates,
   MIN_ALGO_SEARCH_LENGTH,
-  MIN_ALGO_ONLY_LENGTH,
 };

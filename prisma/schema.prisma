@@ -134,6 +134,7 @@ model BenchmarkPostResult {
 
   postId      Int           // References the test post ID
   postTitle   String
+  postHash    String        // SHA-256 hash of post content (first 16 chars)
 
   // Metrics for this post
   tp          Int

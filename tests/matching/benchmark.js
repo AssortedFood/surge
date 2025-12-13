@@ -8,35 +8,47 @@
 //   node tests/matching/benchmark.js                    # Run all configs, 10 runs each
 //   node tests/matching/benchmark.js --runs 5           # 5 runs per config
 //   node tests/matching/benchmark.js --config o4-mini:low --runs 3
-//   node tests/matching/benchmark.js --hybrid           # Use hybrid extraction (LLM + algorithmic)
 //   node tests/matching/benchmark.js --stats            # Show statistics from DB
 //   node tests/matching/benchmark.js --stats --config o4-mini:low
+//
+// Uses hybrid extraction (LLM + algorithmic with LLM validation) by default.
 
 import 'dotenv/config';
 import { createHash } from 'crypto';
 import { readFileSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
-import OpenAI from 'openai';
-import { zodResponseFormat } from 'openai/helpers/zod';
 import { PrismaClient } from '@prisma/client';
-import { ItemExtractionSchema } from '../../schemas/ItemExtractionSchema.js';
 import { cleanPostContent } from '../../src/contentCleaner.js';
-import { validateItemCandidates } from '../../src/itemValidator.js';
 import { hybridExtract } from '../../src/hybridExtractor.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = join(__dirname, 'fixtures');
 
-const prisma = new PrismaClient();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Use separate database for benchmarks
+const BENCHMARK_DB_PATH = join(__dirname, '../../prisma/benchmark.db');
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: `file:${BENCHMARK_DB_PATH}`,
+    },
+  },
+});
+
+/**
+ * Computes SHA-256 hash of content (first 16 chars)
+ */
+function hashContent(content) {
+  return createHash('sha256').update(content).digest('hex').substring(0, 16);
+}
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
-// 8 diverse posts selected for comprehensive testing
-const BENCHMARK_POST_IDS = [2, 3, 5, 6, 7, 8, 12, 15];
+// 7 diverse posts selected for comprehensive testing
+// Excludes posts with 0 items (Post 2) - can't measure F1 with no ground truth
+const BENCHMARK_POST_IDS = [3, 5, 6, 7, 8, 12, 15];
 
 // Model configurations to benchmark
 const MODEL_CONFIGS = {
@@ -124,10 +136,12 @@ async function loadFixtures() {
 
     if (matchingFile) {
       const actualPath = join(postsDir, matchingFile);
+      const content = readFileSync(actualPath, 'utf-8');
       posts.push({
         id: postData.postId,
         title: postData.postTitle,
-        content: readFileSync(actualPath, 'utf-8'),
+        content,
+        hash: hashContent(content),
       });
     }
 
@@ -135,87 +149,6 @@ async function loadFixtures() {
   }
 
   return { posts, items, labelsByPostId };
-}
-
-// ============================================================================
-// EXTRACTION
-// ============================================================================
-
-const systemPrompt = `You are an Old School RuneScape expert. Extract ALL tradeable items mentioned or implied in this news post. Be thorough and comprehensive.
-
-Rules:
-- Only include items that can be traded on the Grand Exchange
-- Do NOT include: quest items, untradeable rewards, currencies (coins/gp), NPCs, locations, skills
-- IMPORTANT: When an item category is mentioned, include ALL tradeable variants:
-  - "nails" → Bronze nails, Iron nails, Steel nails, Black nails, Mithril nails, Adamantite nails, Rune nails
-  - "pickaxe" → Bronze pickaxe, Iron pickaxe, Steel pickaxe, Black pickaxe, Mithril pickaxe, Adamant pickaxe, Rune pickaxe, Dragon pickaxe, Infernal pickaxe, Crystal pickaxe
-  - "impling jar" → Baby impling jar, Young impling jar, Gourmet impling jar, Earth impling jar, Essence impling jar, Eclectic impling jar, Nature impling jar, Magpie impling jar, Ninja impling jar, Crystal impling jar, Dragon impling jar, Lucky impling jar
-  - Armour sets → Include each piece AND the set box
-  - Potions → Include all dose variants
-- Include the exact snippet where the item is mentioned (max 200 chars)
-- Classify WHY the item is mentioned
-
-Common false positives to AVOID:
-- "staff" when referring to Jagex employees
-- JMod names that match items
-- Generic words in non-item context
-- Untradeable items: quest capes, skill capes, void equipment
-
-Context classifications:
-- buff: Item is being made stronger
-- nerf: Item is being made weaker
-- supply_change: Drop rate or availability changing
-- new_content: Part of new content
-- bug_fix: Bug related to item being fixed
-- mention_only: Item mentioned but no gameplay change`;
-
-async function extractWithModel(config, postTitle, cleanedContent) {
-  const userMessage = `Post Title: "${postTitle}"
-
-Content:
-"""
-${cleanedContent}
-"""
-
-Extract all tradeable OSRS items mentioned in this post.`;
-
-  const requestParams = {
-    model: config.model,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMessage },
-    ],
-    response_format: zodResponseFormat(ItemExtractionSchema, 'response'),
-  };
-
-  if (config.reasoning) {
-    requestParams.reasoning_effort = config.reasoning;
-  }
-
-  const startTime = Date.now();
-  const response = await openai.chat.completions.create(requestParams);
-  const latency = Date.now() - startTime;
-
-  const message = response.choices?.[0]?.message;
-  let items = [];
-
-  if (message?.parsed) {
-    items = message.parsed.items || [];
-  } else if (message?.content) {
-    try {
-      items = JSON.parse(message.content).items || [];
-    } catch {
-      items = [];
-    }
-  }
-
-  return {
-    items,
-    latency,
-    promptTokens: response.usage?.prompt_tokens || 0,
-    completionTokens: response.usage?.completion_tokens || 0,
-    reasoningTokens: response.usage?.completion_tokens_details?.reasoning_tokens || 0,
-  };
 }
 
 // ============================================================================
@@ -255,7 +188,7 @@ function evaluateExtraction(extracted, expected) {
 // BENCHMARK EXECUTION
 // ============================================================================
 
-async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, labelsByPostId, useHybrid = false) {
+async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, labelsByPostId) {
   const run = await prisma.benchmarkRun.create({
     data: {
       algorithmId: algorithm.id,
@@ -280,30 +213,11 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
 
     let result;
     try {
-      let validatedNames;
-      let extraction;
+      // Hybrid extraction: LLM + algorithmic search with LLM validation
+      const modelConfig = { model: config.model, reasoning: config.reasoning };
+      const hybridResult = await hybridExtract(post.title, cleanedContent, items, modelConfig);
 
-      if (useHybrid) {
-        // Hybrid extraction: LLM + algorithmic search combined
-        const startTime = Date.now();
-        const hybridResult = await hybridExtract(post.title, cleanedContent, items);
-        const latency = Date.now() - startTime;
-
-        // Use all items with confidence >= 0.3 (includes algo-only)
-        validatedNames = hybridResult.items.map((v) => v.itemName || v.name);
-        extraction = {
-          items: hybridResult.items,
-          latency,
-          promptTokens: 0, // TODO: track from inner LLM call
-          completionTokens: 0,
-          reasoningTokens: 0,
-        };
-      } else {
-        // Standard extraction: LLM only
-        extraction = await extractWithModel(config, post.title, cleanedContent);
-        const validated = validateItemCandidates(extraction.items, items);
-        validatedNames = validated.map((v) => v.name);
-      }
+      const validatedNames = hybridResult.items.map((v) => v.itemName || v.name);
 
       const metrics = evaluateExtraction(validatedNames, expected);
 
@@ -311,30 +225,32 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
         runId: run.id,
         postId: post.id,
         postTitle: post.title,
+        postHash: post.hash,
         tp: metrics.tp,
         fp: metrics.fp,
         fn: metrics.fn,
         precision: metrics.precision,
         recall: metrics.recall,
         f1: metrics.f1,
-        promptTokens: extraction.promptTokens,
-        completionTokens: extraction.completionTokens,
-        reasoningTokens: extraction.reasoningTokens,
-        latencyMs: extraction.latency,
+        promptTokens: hybridResult.usage.promptTokens,
+        completionTokens: hybridResult.usage.completionTokens,
+        reasoningTokens: hybridResult.usage.reasoningTokens,
+        latencyMs: hybridResult.latencyMs,
       };
 
       totalTp += metrics.tp;
       totalFp += metrics.fp;
       totalFn += metrics.fn;
-      totalPromptTokens += extraction.promptTokens;
-      totalCompletionTokens += extraction.completionTokens;
-      totalReasoningTokens += extraction.reasoningTokens;
-      totalLatencyMs += extraction.latency;
+      totalPromptTokens += hybridResult.usage.promptTokens;
+      totalCompletionTokens += hybridResult.usage.completionTokens;
+      totalReasoningTokens += hybridResult.usage.reasoningTokens;
+      totalLatencyMs += hybridResult.latencyMs;
     } catch (err) {
       result = {
         runId: run.id,
         postId: post.id,
         postTitle: post.title,
+        postHash: post.hash,
         tp: 0,
         fp: 0,
         fn: expected.length,
@@ -468,6 +384,58 @@ async function showStatistics(configFilter = null) {
   }
 
   console.log('\n' + '='.repeat(100));
+
+  // Show per-post statistics
+  console.log('\nPER-POST PERFORMANCE (averaged across all runs)');
+  console.log('='.repeat(100));
+
+  const postResults = await prisma.benchmarkPostResult.findMany({
+    where: configFilter ? { run: { configKey: configFilter } } : {},
+    include: { run: { include: { algorithm: true } } },
+  });
+
+  // Group by postHash
+  const postGroups = {};
+  for (const result of postResults) {
+    const key = result.postHash;
+    if (!postGroups[key]) {
+      postGroups[key] = {
+        postId: result.postId,
+        postTitle: result.postTitle,
+        postHash: result.postHash,
+        results: [],
+      };
+    }
+    postGroups[key].results.push(result);
+  }
+
+  // Calculate and display per-post stats
+  const postStats = Object.values(postGroups).map((group) => {
+    const f1Values = group.results.filter((r) => r.f1 !== null).map((r) => r.f1);
+    const f1Stats = computeStats(f1Values);
+    return {
+      postId: group.postId,
+      postTitle: group.postTitle.substring(0, 40),
+      postHash: group.postHash,
+      runs: group.results.length,
+      meanF1: f1Stats?.mean || 0,
+      stdDev: f1Stats?.stdDev || 0,
+    };
+  });
+
+  // Sort by mean F1 (worst first)
+  postStats.sort((a, b) => a.meanF1 - b.meanF1);
+
+  console.log('\nPost ID | Hash             | Runs | Mean F1 | StdDev | Title');
+  console.log('-'.repeat(100));
+  for (const stat of postStats) {
+    const pct = (v) => (v * 100).toFixed(1).padStart(5) + '%';
+    console.log(
+      `${String(stat.postId).padStart(7)} | ${stat.postHash} | ${String(stat.runs).padStart(4)} | ${pct(stat.meanF1)} | ${pct(stat.stdDev)} | ${stat.postTitle}`
+    );
+  }
+
+  console.log('\n' + '='.repeat(100));
 }
 
 // ============================================================================
@@ -481,7 +449,6 @@ async function main() {
   let numRuns = 10;
   let configFilter = null;
   let showStatsMode = false;
-  let useHybrid = false;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--runs' && args[i + 1]) {
@@ -492,8 +459,6 @@ async function main() {
       i++;
     } else if (args[i] === '--stats') {
       showStatsMode = true;
-    } else if (args[i] === '--hybrid') {
-      useHybrid = true;
     }
   }
 
@@ -521,7 +486,7 @@ async function main() {
 
   console.log(`\nRunning ${numRuns} runs for each config: ${Object.keys(configsToRun).join(', ')}`);
   console.log(`Posts: ${BENCHMARK_POST_IDS.join(', ')}`);
-  console.log(`Mode: ${useHybrid ? 'HYBRID (LLM + Algorithmic)' : 'Standard (LLM only)'}`);
+  console.log(`Mode: Hybrid (LLM + Algorithmic with LLM validation)`);
   console.log('');
 
   for (const [configKey, config] of Object.entries(configsToRun)) {
@@ -534,7 +499,7 @@ async function main() {
     for (let run = 1; run <= numRuns; run++) {
       process.stdout.write(`  Run ${run}/${numRuns}... `);
       try {
-        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, labelsByPostId, useHybrid);
+        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, labelsByPostId);
         runResults.push(result);
         console.log(`F1: ${(result.f1 * 100).toFixed(1)}%, Latency: ${(result.totalLatencyMs / 1000).toFixed(1)}s`);
       } catch (err) {

@@ -4,15 +4,9 @@ import { fetchStructuredResponse } from './fetchStructuredResponse.js';
 import { ItemExtractionSchema } from '../schemas/ItemExtractionSchema.js';
 import logger from './utils/logger.js';
 
-const MODEL = process.env.OPENAI_MODEL;
-if (!MODEL) {
-  logger.error('OPENAI_MODEL is not defined in the .env file');
-  process.exit(1);
-}
-
-// Optional reasoning effort for reasoning models (o4-mini, gpt-5-mini)
-// Valid values: low, medium, high
-const REASONING_EFFORT = process.env.OPENAI_REASONING_EFFORT || null;
+// Default model config from env vars
+const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'o4-mini';
+const DEFAULT_REASONING_EFFORT = process.env.OPENAI_REASONING_EFFORT || null;
 
 const systemPrompt = `You are an Old School RuneScape expert. Extract ALL tradeable items mentioned or implied in this news post. Be thorough and comprehensive.
 
@@ -49,9 +43,17 @@ Context classifications:
  * Extracts item candidates from cleaned post content using LLM.
  * @param {string} postTitle - The title of the post
  * @param {string} cleanedContent - The cleaned post content (noise removed)
- * @returns {Promise<Array<{name: string, snippet: string, context: string}>>}
+ * @param {object} modelConfig - Optional model configuration {model, reasoning}
+ * @returns {Promise<{items: Array<{name: string, snippet: string, context: string}>, usage: object}>}
  */
-async function extractItemCandidates(postTitle, cleanedContent) {
+async function extractItemCandidates(
+  postTitle,
+  cleanedContent,
+  modelConfig = {}
+) {
+  const model = modelConfig.model || DEFAULT_MODEL;
+  const reasoning = modelConfig.reasoning || DEFAULT_REASONING_EFFORT;
+
   const userMessage = `Post Title: "${postTitle}"
 
 Content:
@@ -63,12 +65,19 @@ Extract all tradeable OSRS items mentioned in this post.`;
 
   try {
     const rawResponse = await fetchStructuredResponse(
-      MODEL,
+      model,
       systemPrompt,
       userMessage,
       ItemExtractionSchema,
-      { reasoningEffort: REASONING_EFFORT }
+      { reasoningEffort: reasoning }
     );
+
+    const usage = {
+      promptTokens: rawResponse.usage?.prompt_tokens || 0,
+      completionTokens: rawResponse.usage?.completion_tokens || 0,
+      reasoningTokens:
+        rawResponse.usage?.completion_tokens_details?.reasoning_tokens || 0,
+    };
 
     const message = rawResponse.choices?.[0]?.message;
     if (!message) {
@@ -91,7 +100,7 @@ Extract all tradeable OSRS items mentioned in this post.`;
       itemCount: result.items?.length || 0,
     });
 
-    return result.items || [];
+    return { items: result.items || [], usage };
   } catch (err) {
     logger.error('Item extraction failed', {
       error: err.message,
