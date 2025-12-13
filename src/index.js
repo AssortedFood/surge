@@ -136,7 +136,7 @@ async function analyzeOneItem(post, item) {
   }
 }
 
-async function processOnePost(post) {
+export async function processOnePost(post) {
   try {
     logger.info('Processing post', { postId: post.id, title: post.title });
 
@@ -233,7 +233,9 @@ async function runPostPipeline() {
   pipelineRunning = true;
   logger.debug('Running post pipeline');
   try {
-    await syncNewPosts();
+    // Sync new posts and process each one immediately after scraping
+    await syncNewPosts(processOnePost);
+    // Retry any posts that failed processing on previous runs
     await pollAndProcess();
   } catch (err) {
     logger.error('Error in post pipeline', { error: err.message });

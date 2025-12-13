@@ -107,7 +107,7 @@ async function fetchPostContent(link) {
   }
 }
 
-export async function syncNewPosts() {
+export async function syncNewPosts(onPostSaved = null) {
   if (!RSS_PAGE_URL) {
     logger.error('RSS_PAGE_URL is not defined in the .env file');
     return;
@@ -151,7 +151,7 @@ export async function syncNewPosts() {
 
         const content = await fetchPostContent(link);
 
-        await prisma.post.create({
+        const savedPost = await prisma.post.create({
           data: {
             id: nextId,
             title,
@@ -161,8 +161,21 @@ export async function syncNewPosts() {
         });
         logger.info('Saved post', { postId: nextId, title });
 
+        // Process post immediately after saving
+        if (onPostSaved) {
+          const result = await onPostSaved(savedPost);
+          if (result?.success) {
+            await prisma.post.update({
+              where: { id: savedPost.id },
+              data: { isAnalyzed: true },
+            });
+            logger.info('Post marked as analyzed', { postId: savedPost.id });
+          }
+        }
+
         nextId++;
 
+        // Wait before fetching next article (rate limit)
         if (i < newPosts.length - 1) {
           logger.debug('Waiting before fetching next article', {
             waitSeconds: RATE_LIMIT_SECONDS,
