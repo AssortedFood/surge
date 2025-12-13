@@ -9,8 +9,8 @@ Surge monitors Old School RuneScape update posts, identifies mentioned items, an
 
 ## Prerequisites
 
-* Node.js (v16 or later)
-* npm
+* Node.js (v22 or later)
+* pnpm
 * OpenAI API key
 * Telegram bot token & chat ID
 
@@ -19,7 +19,7 @@ Surge monitors Old School RuneScape update posts, identifies mentioned items, an
 ```bash
 git clone https://github.com/AssortedFood/surge.git
 cd surge
-npm install
+pnpm install
 ```
 
 Alternatively, you can use Docker Compose instead of installing locally:
@@ -35,42 +35,52 @@ Alternatively, you can use Docker Compose instead of installing locally:
    This will pull `0xidising/surge:latest` and start Surge in a container.
 
 > [!TIP]
-> If you’re only testing, installing locally with `npm install` is usually faster. Use Docker Compose for a more consistent, isolated environment (e.g. on a server).
+> If you're only testing, installing locally with `pnpm install` is usually faster. Use Docker Compose for a more consistent, isolated environment (e.g. on a server).
 
 ## Configuration
 
 Create a `.env` file in the project root with:
 
 ```ini
+DATABASE_URL="file:./database.db"
 USER_AGENT="surge: item-price-analysis-bot - @your_username_here on Discord"
 RSS_PAGE_URL="https://secure.runescape.com/m=news/a=13/latest_news.rss?oldschool=true"
-ITEM_LIST_URL="https://prices.runescape.wiki/api/v1/osrs/mapping"
-RSS_CHECK_INTERVAL="60"
+MAPPING_API_URL="https://prices.runescape.wiki/api/v1/osrs/mapping"
+LATEST_API_URL="https://prices.runescape.wiki/api/v1/osrs/latest"
+RATE_LIMIT_SECONDS="60"
+DATA_SYNC_INTERVAL_MINUTES="360"
 OPENAI_API_KEY="sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 OPENAI_MODEL="gpt-4.1-mini"
 TELEGRAM_BOT_TOKEN="123456789:ABCDEFGHIJKLMNOPQRSTUVWX"
 TELEGRAM_CHAT_ID="1234567890"
 INCLUDED_CHANGE_TYPES=["Price increase","Price decrease"]
+MARGIN_THRESHOLD="1000000"
+PRICE_VARIANCE_PERCENT="0.05"
 ```
 
-* `USER_AGENT`: Custom User-Agent for item-list requests.
+* `DATABASE_URL`: SQLite database path for Prisma.
+* `USER_AGENT`: Custom User-Agent for API requests.
 * `RSS_PAGE_URL`: OSRS updates RSS feed.
-* `ITEM_LIST_URL`: OSRS item-mapping API.
-* `RSS_CHECK_INTERVAL`: Seconds between RSS polls.
+* `MAPPING_API_URL`: OSRS item-mapping API.
+* `LATEST_API_URL`: OSRS latest prices API.
+* `RATE_LIMIT_SECONDS`: Seconds between RSS/article fetches (shared rate limit).
+* `DATA_SYNC_INTERVAL_MINUTES`: Minutes between item & price data syncs.
 * `OPENAI_API_KEY`: Your OpenAI secret key.
 * `OPENAI_MODEL`: Model name (e.g., `gpt-4.1-mini`).
 * `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`: For sending alerts.
-* `INCLUDED_CHANGE_TYPES`: ["Price increase","Price decrease", "No change"] are the set of valid options.
+* `INCLUDED_CHANGE_TYPES`: Valid options are `"Price increase"`, `"Price decrease"`, `"No change"`.
+* `MARGIN_THRESHOLD`: Minimum potential profit for item to be considered significant.
+* `PRICE_VARIANCE_PERCENT`: Minimum price volatility (e.g., `0.05` = 5%).
 
 > [!WARNING]
-> Setting `RSS_CHECK_INTERVAL` too low (e.g. under 60 seconds) could lead to throttling by the RSS server.
+> Setting `RATE_LIMIT_SECONDS` too low (e.g. under 60 seconds) could lead to throttling by the RSS server.
 
 ## Usage
 
 Start the service:
 
 ```bash
-npm start
+pnpm start
 ```
 
 If you started Surge via Docker Compose, logs can be viewed with:
@@ -89,9 +99,9 @@ Make sure you have a `.env` file next to `docker-compose.yml` with all `SURGE_�
 
 Surge will:
 
-1. Create `data/posts/` and `data/analysis/` if missing.
-2. Poll the RSS feed immediately and then every `RSS_CHECK_INTERVAL` seconds.
-3. For each new post, fetch its content, match items, analyse via AI, and send Telegram alerts as configured.
+1. Sync item and price data from the OSRS API on startup and every `DATA_SYNC_INTERVAL_MINUTES`.
+2. Poll the RSS feed every `RATE_LIMIT_SECONDS` seconds.
+3. For each new post, fetch its content, match economically significant items, analyse via AI, and send Telegram alerts as configured.
 
 ## Docker Compose
 
@@ -105,16 +115,26 @@ services:
     container_name: surge
     pull_policy: always
     restart: unless-stopped
+    volumes:
+      - surge-data:/usr/src/app/prisma
     environment:
+      DATABASE_URL: ${SURGE_DATABASE_URL}
       USER_AGENT: ${SURGE_USER_AGENT}
       RSS_PAGE_URL: ${SURGE_RSS_PAGE_URL}
-      ITEM_LIST_URL: ${SURGE_ITEM_LIST_URL}
-      RSS_CHECK_INTERVAL: ${SURGE_RSS_CHECK_INTERVAL}
+      MAPPING_API_URL: ${SURGE_MAPPING_API_URL}
+      LATEST_API_URL: ${SURGE_LATEST_API_URL}
+      RATE_LIMIT_SECONDS: ${SURGE_RATE_LIMIT_SECONDS}
+      DATA_SYNC_INTERVAL_MINUTES: ${SURGE_DATA_SYNC_INTERVAL_MINUTES}
       OPENAI_API_KEY: ${SURGE_OPENAI_API_KEY}
       OPENAI_MODEL: ${SURGE_OPENAI_MODEL}
       TELEGRAM_BOT_TOKEN: ${SURGE_TELEGRAM_BOT_TOKEN}
       TELEGRAM_CHAT_ID: ${SURGE_TELEGRAM_CHAT_ID}
       INCLUDED_CHANGE_TYPES: ${SURGE_INCLUDED_CHANGE_TYPES}
+      MARGIN_THRESHOLD: ${SURGE_MARGIN_THRESHOLD}
+      PRICE_VARIANCE_PERCENT: ${SURGE_PRICE_VARIANCE_PERCENT}
+
+volumes:
+  surge-data:
 ```
 
 To start Surge with Docker Compose:
@@ -127,76 +147,30 @@ Ensure you have set the corresponding `SURGE_…` variables in your environment 
 
 ```env
 # surge
+SURGE_DATABASE_URL="file:./database.db"
 SURGE_USER_AGENT="surge: item-price-analysis-bot - @your_username_here on Discord"
 SURGE_RSS_PAGE_URL="https://secure.runescape.com/m=news/a=13/latest_news.rss?oldschool=true"
-SURGE_ITEM_LIST_URL="https://prices.runescape.wiki/api/v1/osrs/mapping"
-SURGE_RSS_CHECK_INTERVAL="60"
+SURGE_MAPPING_API_URL="https://prices.runescape.wiki/api/v1/osrs/mapping"
+SURGE_LATEST_API_URL="https://prices.runescape.wiki/api/v1/osrs/latest"
+SURGE_RATE_LIMIT_SECONDS="60"
+SURGE_DATA_SYNC_INTERVAL_MINUTES="360"
 SURGE_OPENAI_API_KEY="sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 SURGE_OPENAI_MODEL="gpt-4.1-mini"
 SURGE_TELEGRAM_BOT_TOKEN="123456789:ABCDEFGHIJKLMNOPQRSTUVWX"
 SURGE_TELEGRAM_CHAT_ID="1234567890"
 SURGE_INCLUDED_CHANGE_TYPES=["Price increase","Price decrease"]
+SURGE_MARGIN_THRESHOLD="1000000"
+SURGE_PRICE_VARIANCE_PERCENT="0.05"
 ```
 
 
-## Module Descriptions
+## Development
 
-Below are the modules that can be invoked directly with Node:
-
-* **Fetch all items list**
-
-  ```bash
-  node src/allItemsFetcher.js
-  ```
-
-  Fetches the OSRS item mapping from `ITEM_LIST_URL` and writes `data/all_items.json`.
-
-* **Check RSS for new posts**
-
-  ```bash
-  node src/rssChecker.js
-  ```
-
-  Prints any newly discovered RSS posts (with assigned IDs) and updates `data/seenPosts.json`.
-
-* **Fetch and save a single post**
-
-  ```bash
-  node src/rssPostFetcher.js <postId>
-  ```
-
-  Reads `data/seenPosts.json` to find the post’s URL, fetches the HTML, extracts paragraphs, and writes `data/posts/<postId>.txt`.
-
-* **Match items in a post**
-
-  ```bash
-  node src/itemMatcher.js <path/to/post.txt> <path/to/all_items.json>
-  ```
-
-  Scans the plaintext post for mentions of items (case-insensitive, whole words) and prints matching `id: name` pairs.
-
-* **Analyse one item via AI**
-
-  ```bash
-  node src/semanticItemAnalysis.js <path/to/post.txt> "<Item Name>"
-  ```
-
-  Sends a structured prompt to the AI and prints a JSON object:
-
-  ```json
-  {
-    "relevant_text_snippet": "...",
-    "expected_price_change": "Price increase" | "Price decrease" | "No change"
-  }
-  ```
-
-* **Send a Telegram message**
-
-  ```bash
-  node src/sendTelegram.js "Your message here"
-  ```
-
-  Sends the given text to the configured Telegram chat in HTML format.
+```bash
+pnpm run lint        # Check for linting errors
+pnpm run format      # Format code with Prettier
+pnpm test            # Run tests
+```
 
 ## License
 
