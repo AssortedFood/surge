@@ -2,10 +2,11 @@
 import 'dotenv/config';
 import { fetchStructuredResponse } from './fetchStructuredResponse.js';
 import { ItemAnalysisSchema } from '../schemas/ItemAnalysisSchema.js';
+import logger from './utils/logger.js';
 
-const MODEL = process.env.OPENAI_API_MODEL || process.env.OPENAI_MODEL;
+const MODEL = process.env.OPENAI_MODEL;
 if (!MODEL) {
-  console.error('❌ Error: OPENAI_MODEL is not defined in the .env file.');
+  logger.error('OPENAI_MODEL is not defined in the .env file');
   process.exit(1);
 }
 
@@ -54,7 +55,9 @@ Return:
       'Neither message.parsed nor message.content contained a valid JSON payload.'
     );
   } catch (err) {
-    console.error('❌ fetchStructuredResponse threw an error:', err);
+    logger.error('fetchStructuredResponse threw an error', {
+      error: err.message,
+    });
     throw err;
   }
 }

@@ -2,6 +2,8 @@
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import fetch from 'node-fetch';
+import logger from './utils/logger.js';
+import { withRetry } from './utils/retry.js';
 
 const prisma = new PrismaClient();
 
@@ -28,24 +30,35 @@ function getSnapshotTime(now = new Date()) {
 }
 
 export async function syncItemsAndPrices() {
-  console.log(
-    `[SYNC] Starting ${PRICE_FETCH_INTERVAL} data synchronization...`
-  );
+  logger.info('Starting data synchronization', {
+    interval: PRICE_FETCH_INTERVAL,
+  });
   const snapshotTime = getSnapshotTime();
-  console.log(`[SYNC] Using snapshot time: ${snapshotTime.toISOString()}`);
+  logger.debug('Using snapshot time', {
+    snapshotTime: snapshotTime.toISOString(),
+  });
 
   try {
-    const [mappingRes, pricesRes] = await Promise.all([
-      fetch(MAPPING_API_URL, { headers: apiHeaders }),
-      fetch(LATEST_API_URL, { headers: apiHeaders }),
+    const fetchWithRetry = (url, name) =>
+      withRetry(
+        async () => {
+          const res = await fetch(url, { headers: apiHeaders });
+          if (!res.ok) {
+            const error = new Error(`HTTP ${res.status} from ${name}`);
+            error.status = res.status;
+            throw error;
+          }
+          return res.json();
+        },
+        { maxRetries: 3, operationName: `Fetch ${name}` }
+      );
+
+    const [mappingData, pricesResponse] = await Promise.all([
+      fetchWithRetry(MAPPING_API_URL, 'mapping API'),
+      fetchWithRetry(LATEST_API_URL, 'prices API'),
     ]);
 
-    if (!mappingRes.ok || !pricesRes.ok) {
-      throw new Error('Failed to fetch data from one or more API endpoints.');
-    }
-
-    const mappingData = await mappingRes.json();
-    const pricesData = (await pricesRes.json()).data;
+    const pricesData = pricesResponse.data;
 
     const priceMap = new Map(Object.entries(pricesData));
     const dbOperations = [];
@@ -94,16 +107,16 @@ export async function syncItemsAndPrices() {
     }
 
     const result = await prisma.$transaction(dbOperations);
-    console.log(
-      `[SYNC] Synchronization complete. Processed ${result.length} database operations.`
-    );
+    logger.info('Data synchronization complete', {
+      operationCount: result.length,
+    });
   } catch (err) {
     if (err.code === 'P2002') {
-      console.warn(
-        `[SYNC] Warning: Some price snapshots already existed for this interval. This is normal if the script runs more than once per interval. Run completed.`
+      logger.warn(
+        'Some price snapshots already existed for this interval - this is normal if running multiple times per interval'
       );
     } else {
-      console.error('[SYNC] An error occurred during synchronization:', err);
+      logger.error('Error during data synchronization', { error: err.message });
     }
   } finally {
     await prisma.$disconnect();

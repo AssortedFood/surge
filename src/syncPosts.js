@@ -4,6 +4,8 @@ import { PrismaClient } from '@prisma/client';
 import fetch from 'node-fetch';
 import { load } from 'cheerio';
 import puppeteer from 'puppeteer';
+import logger from './utils/logger.js';
+import { withRetry } from './utils/retry.js';
 
 const prisma = new PrismaClient();
 
@@ -30,7 +32,7 @@ async function canFetch() {
 
   if (!allowed) {
     const remaining = Math.ceil((RATE_LIMIT_SECONDS * 1000 - elapsed) / 1000);
-    console.log(`[POST SYNC] Rate limit: ${remaining}s remaining.`);
+    logger.debug('Rate limit active', { remainingSeconds: remaining });
   }
 
   return allowed;
@@ -46,11 +48,18 @@ async function updateLastFetch() {
 }
 
 async function fetchRssXml() {
-  const res = await fetch(RSS_PAGE_URL);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch RSS page: HTTP ${res.status}`);
-  }
-  return res.text();
+  return withRetry(
+    async () => {
+      const res = await fetch(RSS_PAGE_URL);
+      if (!res.ok) {
+        const error = new Error(`Failed to fetch RSS page: HTTP ${res.status}`);
+        error.status = res.status;
+        throw error;
+      }
+      return res.text();
+    },
+    { maxRetries: 3, operationName: 'Fetch RSS feed' }
+  );
 }
 
 function scrapeTitlesAndUrls(xml) {
@@ -100,9 +109,7 @@ async function fetchPostContent(link) {
 
 export async function syncNewPosts() {
   if (!RSS_PAGE_URL) {
-    console.error(
-      '[POST SYNC] Error: RSS_PAGE_URL is not defined in the .env file.'
-    );
+    logger.error('RSS_PAGE_URL is not defined in the .env file');
     return;
   }
 
@@ -111,7 +118,7 @@ export async function syncNewPosts() {
     return;
   }
 
-  console.log('[POST SYNC] Checking for new posts...');
+  logger.debug('Checking for new posts');
 
   try {
     const seenPosts = await prisma.post.findMany({ select: { link: true } });
@@ -123,14 +130,12 @@ export async function syncNewPosts() {
     const newPosts = allPostsFromFeed.filter((p) => !seenLinks.has(p.link));
 
     if (newPosts.length === 0) {
-      console.log('[POST SYNC] No new posts found.');
+      logger.debug('No new posts found');
       return;
     }
 
     newPosts.reverse();
-    console.log(
-      `[POST SYNC] Found ${newPosts.length} new post(s). Fetching content in chronological order...`
-    );
+    logger.info('Found new posts', { count: newPosts.length });
 
     const lastPost = await prisma.post.findFirst({
       orderBy: { id: 'desc' },
@@ -154,30 +159,28 @@ export async function syncNewPosts() {
             content,
           },
         });
-        console.log(
-          `[POST SYNC] Successfully saved post ID ${nextId}: "${title}"`
-        );
+        logger.info('Saved post', { postId: nextId, title });
 
         nextId++;
 
         if (i < newPosts.length - 1) {
-          console.log(
-            `[POST SYNC] Waiting ${RATE_LIMIT_SECONDS}s before fetching next article...`
-          );
+          logger.debug('Waiting before fetching next article', {
+            waitSeconds: RATE_LIMIT_SECONDS,
+          });
           await sleep(RATE_LIMIT_SECONDS * 1000);
           await updateLastFetch();
         }
       } catch (err) {
-        console.error(
-          `[POST SYNC] Failed to process post "${post.title}". Error:`,
-          err
-        );
+        logger.error('Failed to process post', {
+          title: post.title,
+          error: err.message,
+        });
       }
     }
 
-    console.log('[POST SYNC] Synchronization complete.');
+    logger.info('Post synchronization complete');
   } catch (err) {
-    console.error('[POST SYNC] A critical error occurred:', err);
+    logger.error('Critical error during post sync', { error: err.message });
   } finally {
     await prisma.$disconnect();
   }

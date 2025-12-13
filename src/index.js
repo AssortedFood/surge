@@ -9,16 +9,18 @@ import { sendTelegramMessage } from './sendTelegram.js';
 import { getEconomicallySignificantItems } from './itemFilter.js';
 import { syncItemsAndPrices } from './syncData.js';
 import { syncNewPosts } from './syncPosts.js';
+import logger from './utils/logger.js';
+import loadConfig from './utils/config.js';
+
+// Validate and load configuration at startup
+const config = loadConfig();
 
 const prisma = new PrismaClient();
 
-// --- Configuration from .env ---
-const DATA_SYNC_INTERVAL_MINUTES =
-  parseInt(process.env.DATA_SYNC_INTERVAL_MINUTES, 10) || 360;
-const RATE_LIMIT_SECONDS = parseInt(process.env.RATE_LIMIT_SECONDS, 10) || 60;
-const INCLUDED_CHANGE_TYPES = process.env.INCLUDED_CHANGE_TYPES
-  ? JSON.parse(process.env.INCLUDED_CHANGE_TYPES)
-  : ['Price increase', 'Price decrease', 'No change'];
+// --- Configuration from validated config ---
+const DATA_SYNC_INTERVAL_MINUTES = config.dataSyncIntervalMinutes;
+const RATE_LIMIT_SECONDS = config.rateLimitSeconds;
+const INCLUDED_CHANGE_TYPES = config.includedChangeTypes;
 
 // --- Keys for storing last-run timestamps ---
 const LAST_DATA_SYNC_KEY = 'lastDataSyncTimestamp';
@@ -46,17 +48,19 @@ async function updateLastDataSync() {
 }
 
 async function runDataSyncScheduler() {
-  console.log('--- Scheduler checking for due data sync ---');
+  logger.debug('Scheduler checking for due data sync');
   if (await shouldRunDataSync()) {
-    console.log(
-      `[SCHEDULER] Triggering item & price data sync (interval: ${DATA_SYNC_INTERVAL_MINUTES} mins)...`
-    );
+    logger.info('Triggering item & price data sync', {
+      intervalMinutes: DATA_SYNC_INTERVAL_MINUTES,
+    });
     try {
       await syncItemsAndPrices();
       await updateLastDataSync();
-      console.log(`[SCHEDULER] Item & price data sync finished.`);
+      logger.info('Item & price data sync finished');
     } catch (err) {
-      console.error('[SCHEDULER] Error during item & price data sync:', err);
+      logger.error('Error during item & price data sync', {
+        error: err.message,
+      });
     }
   }
 }
@@ -74,9 +78,11 @@ function toPriceChangeEnum(changeString) {
 }
 
 async function analyzeOneItem(post, item) {
-  console.log(
-    `⚙️ Starting analysis for item “${item.name}” (ID: ${item.id}) in post ${post.id}.`
-  );
+  logger.info('Starting item analysis', {
+    itemName: item.name,
+    itemId: item.id,
+    postId: post.id,
+  });
   try {
     const result = await analyzeItemImpact(post.content, item.name);
 
@@ -98,73 +104,121 @@ async function analyzeOneItem(post, item) {
       const msg = [
         `<b>${item.name}</b>`,
         ``,
-        `“${result.relevant_text_snippet}”`,
+        `"${result.relevant_text_snippet}"`,
         ``,
         `${emoji} ${result.expected_price_change}`,
       ].join('\n');
 
       await sendTelegramMessage(msg);
-      console.log(`✉️ Sent analysis for “${item.name}” in post ${post.id}.`);
+      logger.info('Sent Telegram alert', {
+        itemName: item.name,
+        postId: post.id,
+        change: result.expected_price_change,
+      });
     } else {
-      console.log(
-        `ℹ️ Skipped Telegram for “${item.name}” – change type not included.`
-      );
+      logger.debug('Skipped Telegram alert - change type not included', {
+        itemName: item.name,
+        change: result.expected_price_change,
+      });
     }
+
+    return { success: true, itemName: item.name };
   } catch (err) {
-    const errMsg = `⚠️ Analysis failed for item “${item.name}” (ID: ${item.id}):\n${err.message}`;
-    console.error(errMsg);
+    const errMsg = `Analysis failed for item "${item.name}" (ID: ${item.id}):\n${err.message}`;
+    logger.error('Item analysis failed', {
+      itemName: item.name,
+      itemId: item.id,
+      error: err.message,
+    });
     await sendTelegramMessage(errMsg);
+
+    return { success: false, itemName: item.name, error: err.message };
   }
 }
 
 async function processOnePost(post) {
   try {
-    console.log(`🔍 Processing post ${post.id}: "${post.title}"`);
+    logger.info('Processing post', { postId: post.id, title: post.title });
 
     const significantItems = await getEconomicallySignificantItems(prisma);
     const matchedItems = findMatches(post.content, significantItems);
-    console.log(
-      `➡️ Found ${matchedItems.length} matched item(s) in post ${post.id}.`
-    );
+    logger.info('Found matched items', {
+      postId: post.id,
+      matchCount: matchedItems.length,
+    });
 
-    if (matchedItems.length === 0) return;
+    if (matchedItems.length === 0) {
+      return { success: true, itemsProcessed: 0, itemsFailed: 0 };
+    }
 
     // 'item' is now the full object from the matcher, so we use it directly.
     const analysisPromises = matchedItems.map((item) =>
       analyzeOneItem(post, item)
     );
-    await Promise.all(analysisPromises);
+    const results = await Promise.all(analysisPromises);
+
+    const successes = results.filter((r) => r.success).length;
+    const failures = results.filter((r) => !r.success).length;
+
+    logger.info('Post analysis complete', {
+      postId: post.id,
+      itemsProcessed: successes,
+      itemsFailed: failures,
+    });
+
+    return {
+      success: failures === 0,
+      itemsProcessed: successes,
+      itemsFailed: failures,
+    };
   } catch (err) {
-    console.error(`❌ Error processing post ${post.id}:`, err);
+    logger.error('Error processing post', {
+      postId: post.id,
+      error: err.message,
+    });
     await sendTelegramMessage(
-      `⚠️ Failed to process post ID ${post.id}:\n${err.message}`
+      `Failed to process post ID ${post.id}:\n${err.message}`
     );
+    return {
+      success: false,
+      itemsProcessed: 0,
+      itemsFailed: 0,
+      error: err.message,
+    };
   }
 }
 
 async function pollAndProcess() {
-  console.log('--- Polling for unprocessed posts ---');
+  logger.debug('Polling for unprocessed posts');
   try {
     const postsToProcess = await prisma.post.findMany({
       where: { isAnalyzed: false },
     });
 
     if (postsToProcess.length === 0) {
-      console.log('No new posts to process.');
+      logger.debug('No new posts to process');
       return;
     }
 
-    console.log(`🔔 Found ${postsToProcess.length} new post(s) to analyze.`);
+    logger.info('Found posts to analyze', { count: postsToProcess.length });
     for (const post of postsToProcess) {
-      await processOnePost(post);
-      await prisma.post.update({
-        where: { id: post.id },
-        data: { isAnalyzed: true },
-      });
-      console.log(`✅ Finished processing post ${post.id}.`);
+      const result = await processOnePost(post);
+
+      if (result.success) {
+        await prisma.post.update({
+          where: { id: post.id },
+          data: { isAnalyzed: true },
+        });
+        logger.info('Finished processing post', { postId: post.id });
+      } else {
+        logger.warn('Post processing had failures - will retry on next run', {
+          postId: post.id,
+          itemsFailed: result.itemsFailed,
+        });
+      }
     }
   } catch (err) {
-    console.error('❌ Error in pollAndProcess loop:', err);
+    logger.error('Error in pollAndProcess loop', { error: err.message });
   }
 }
 
@@ -173,16 +227,16 @@ let pipelineRunning = false;
 
 async function runPostPipeline() {
   if (pipelineRunning) {
-    console.log('--- Pipeline already running, skipping ---');
+    logger.debug('Pipeline already running, skipping');
     return;
   }
   pipelineRunning = true;
-  console.log('--- Running Post Pipeline ---');
+  logger.debug('Running post pipeline');
   try {
     await syncNewPosts();
     await pollAndProcess();
   } catch (err) {
-    console.error('❌ Error in Post Pipeline:', err);
+    logger.error('Error in post pipeline', { error: err.message });
   } finally {
     pipelineRunning = false;
   }
@@ -190,15 +244,15 @@ async function runPostPipeline() {
 
 // --- Main Application Entrypoint ---
 (async () => {
-  console.log('Application starting...');
+  logger.info('Application starting');
 
   // 1. Set up the infrequent data sync scheduler (checks every minute)
   await runDataSyncScheduler();
   setInterval(runDataSyncScheduler, 60 * 1000);
-  console.log(`⏰ Data sync scheduler running, will check every minute.`);
+  logger.info('Data sync scheduler started', { checkIntervalSeconds: 60 });
 
   // 2. Set up the frequent post pipeline (checks for new posts and analyzes)
   await runPostPipeline();
   setInterval(runPostPipeline, RATE_LIMIT_SECONDS * 1000);
-  console.log(`⏰ Post pipeline running every ${RATE_LIMIT_SECONDS} seconds.`);
+  logger.info('Post pipeline started', { intervalSeconds: RATE_LIMIT_SECONDS });
 })();

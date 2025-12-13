@@ -1,5 +1,6 @@
 // src/itemFilter.js
 import 'dotenv/config';
+import logger from './utils/logger.js';
 
 // Read configuration from .env with sensible defaults
 const MARGIN_THRESHOLD = parseInt(process.env.MARGIN_THRESHOLD, 10) || 1000000;
@@ -13,7 +14,7 @@ const PRICE_VARIANCE_PERCENT =
  * @returns {Promise<Array<Item>>} A filtered array of economically significant items.
  */
 export async function getEconomicallySignificantItems(prisma) {
-  console.log('[FILTER] Fetching items and latest prices from database...');
+  logger.debug('Fetching items and latest prices from database');
 
   // 1. Fetch all items and include their MOST RECENT price snapshot
   const itemsWithPrices = await prisma.item.findMany({
@@ -25,9 +26,7 @@ export async function getEconomicallySignificantItems(prisma) {
     },
   });
 
-  console.log(
-    `[FILTER] Found ${itemsWithPrices.length} total items. Applying filters...`
-  );
+  logger.debug('Applying filters', { totalItems: itemsWithPrices.length });
 
   const significantItems = [];
   for (const item of itemsWithPrices) {
@@ -64,8 +63,8 @@ export async function getEconomicallySignificantItems(prisma) {
     significantItems.push(item);
   }
 
-  console.log(
-    `[FILTER] Found ${significantItems.length} economically significant items.`
-  );
+  logger.debug('Found economically significant items', {
+    count: significantItems.length,
+  });
   return significantItems;
 }
