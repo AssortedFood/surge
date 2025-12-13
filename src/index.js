@@ -3,8 +3,10 @@ import 'dotenv/config';
 import { PrismaClient, PriceChange } from '@prisma/client';
 
 // Import all necessary functions from other modules
-import { findMatches } from './itemMatcher.js';
-import { analyzeItemImpact } from './semanticItemAnalysis.js';
+import { cleanPostContent } from './contentCleaner.js';
+import { extractItemCandidates } from './itemExtractor.js';
+import { validateItemCandidates } from './itemValidator.js';
+import { predictPriceChange } from './pricePredictor.js';
 import { sendTelegramMessage } from './sendTelegram.js';
 import { getEconomicallySignificantItems } from './itemFilter.js';
 import { syncItemsAndPrices } from './syncData.js';
@@ -77,62 +79,60 @@ function toPriceChangeEnum(changeString) {
   }
 }
 
-async function analyzeOneItem(post, item) {
-  logger.info('Starting item analysis', {
-    itemName: item.name,
-    itemId: item.id,
-    postId: post.id,
-  });
+async function analyzeAndSaveItem(post, validatedItem, prediction) {
   try {
-    const result = await analyzeItemImpact(post.content, item.name);
-
     await prisma.itemAnalysis.create({
       data: {
         postId: post.id,
-        itemId: item.id,
-        relevantTextSnippet: result.relevant_text_snippet,
-        expectedPriceChange: toPriceChangeEnum(result.expected_price_change),
+        itemId: validatedItem.itemId,
+        relevantTextSnippet: validatedItem.snippet,
+        expectedPriceChange: toPriceChangeEnum(prediction.direction),
       },
     });
 
-    if (INCLUDED_CHANGE_TYPES.includes(result.expected_price_change)) {
+    if (INCLUDED_CHANGE_TYPES.includes(prediction.direction)) {
       const emoji = {
         'Price increase': '🟢',
         'Price decrease': '🔴',
         'No change': '🟡',
-      }[result.expected_price_change];
+      }[prediction.direction];
       const msg = [
-        `<b>${item.name}</b>`,
+        `<b>${validatedItem.itemName}</b>`,
         ``,
-        `"${result.relevant_text_snippet}"`,
+        `"${validatedItem.snippet}"`,
         ``,
-        `${emoji} ${result.expected_price_change}`,
+        `${emoji} ${prediction.direction}`,
+        `<i>${prediction.reasoning}</i>`,
       ].join('\n');
 
       await sendTelegramMessage(msg);
       logger.info('Sent Telegram alert', {
-        itemName: item.name,
+        itemName: validatedItem.itemName,
         postId: post.id,
-        change: result.expected_price_change,
+        change: prediction.direction,
       });
     } else {
       logger.debug('Skipped Telegram alert - change type not included', {
-        itemName: item.name,
-        change: result.expected_price_change,
+        itemName: validatedItem.itemName,
+        change: prediction.direction,
       });
     }
 
-    return { success: true, itemName: item.name };
+    return { success: true, itemName: validatedItem.itemName };
   } catch (err) {
-    const errMsg = `Analysis failed for item "${item.name}" (ID: ${item.id}):\n${err.message}`;
+    const errMsg = `Analysis failed for item "${validatedItem.itemName}" (ID: ${validatedItem.itemId}):\n${err.message}`;
     logger.error('Item analysis failed', {
-      itemName: item.name,
-      itemId: item.id,
+      itemName: validatedItem.itemName,
+      itemId: validatedItem.itemId,
       error: err.message,
     });
     await sendTelegramMessage(errMsg);
 
-    return { success: false, itemName: item.name, error: err.message };
+    return {
+      success: false,
+      itemName: validatedItem.itemName,
+      error: err.message,
+    };
   }
 }
 
@@ -140,22 +140,76 @@ export async function processOnePost(post) {
   try {
     logger.info('Processing post', { postId: post.id, title: post.title });
 
-    const significantItems = await getEconomicallySignificantItems(prisma);
-    const matchedItems = findMatches(post.content, significantItems);
-    logger.info('Found matched items', {
+    // 1. Clean content to reduce noise
+    const cleanedContent = cleanPostContent(post.content);
+    logger.debug('Content cleaned', {
       postId: post.id,
-      matchCount: matchedItems.length,
+      originalLength: post.content.length,
+      cleanedLength: cleanedContent.length,
     });
 
-    if (matchedItems.length === 0) {
+    // 2. Extract item candidates via LLM
+    const candidates = await extractItemCandidates(post.title, cleanedContent);
+    logger.info('Extracted item candidates', {
+      postId: post.id,
+      candidateCount: candidates.length,
+    });
+
+    if (candidates.length === 0) {
       return { success: true, itemsProcessed: 0, itemsFailed: 0 };
     }
 
-    // 'item' is now the full object from the matcher, so we use it directly.
-    const analysisPromises = matchedItems.map((item) =>
-      analyzeOneItem(post, item)
+    // 3. Validate candidates against item database
+    const allItems = await prisma.item.findMany({
+      select: { id: true, name: true },
+    });
+    const validated = validateItemCandidates(candidates, allItems);
+    logger.info('Validated item candidates', {
+      postId: post.id,
+      validatedCount: validated.length,
+    });
+
+    if (validated.length === 0) {
+      return { success: true, itemsProcessed: 0, itemsFailed: 0 };
+    }
+
+    // 4. Filter by economic significance
+    const significantItems = await getEconomicallySignificantItems(prisma);
+    const significantIds = new Set(significantItems.map((i) => i.id));
+    const filtered = validated.filter((item) =>
+      significantIds.has(item.itemId)
     );
-    const results = await Promise.all(analysisPromises);
+    logger.info('Filtered to economically significant items', {
+      postId: post.id,
+      filteredCount: filtered.length,
+    });
+
+    if (filtered.length === 0) {
+      return { success: true, itemsProcessed: 0, itemsFailed: 0 };
+    }
+
+    // 5. Predict price direction for each item (1:1 calls) and save
+    const results = [];
+    for (const item of filtered) {
+      try {
+        const prediction = await predictPriceChange(
+          item.itemName,
+          item.snippet
+        );
+        const result = await analyzeAndSaveItem(post, item, prediction);
+        results.push(result);
+      } catch (err) {
+        logger.error('Price prediction failed for item', {
+          itemName: item.itemName,
+          error: err.message,
+        });
+        results.push({
+          success: false,
+          itemName: item.itemName,
+          error: err.message,
+        });
+      }
+    }
 
     const successes = results.filter((r) => r.success).length;
     const failures = results.filter((r) => !r.success).length;
