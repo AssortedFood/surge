@@ -16,7 +16,7 @@
 
 import 'dotenv/config';
 import { createHash } from 'crypto';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, readdirSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
@@ -26,6 +26,9 @@ import { hybridExtract } from '../../src/hybridExtractor.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = join(__dirname, 'fixtures');
+
+// Hash truncation length for algorithm and content hashes
+const HASH_LENGTH = 16;
 
 // Use separate database for benchmarks
 const BENCHMARK_DB_PATH = join(__dirname, '../../prisma/benchmark.db');
@@ -38,10 +41,10 @@ const prisma = new PrismaClient({
 });
 
 /**
- * Computes SHA-256 hash of content (first 16 chars)
+ * Computes SHA-256 hash of content (truncated to HASH_LENGTH chars)
  */
 function hashContent(content) {
-  return createHash('sha256').update(content).digest('hex').substring(0, 16);
+  return createHash('sha256').update(content).digest('hex').substring(0, HASH_LENGTH);
 }
 
 // ============================================================================
@@ -84,7 +87,7 @@ function computeAlgorithmHash() {
     }
   }
 
-  return hash.digest('hex').substring(0, 16); // First 16 chars
+  return hash.digest('hex').substring(0, HASH_LENGTH);
 }
 
 /**
@@ -143,7 +146,7 @@ async function getOrCreateAlgorithm() {
 // DATA LOADING
 // ============================================================================
 
-async function loadFixtures() {
+function loadFixtures() {
   const postsDir = join(FIXTURES_DIR, 'posts');
   const labelsPath = join(FIXTURES_DIR, 'labels', 'human-approved.json');
   const itemsPath = join(FIXTURES_DIR, 'items.json');
@@ -154,16 +157,20 @@ async function loadFixtures() {
   const posts = [];
   const labelsByPostId = {};
 
-  // Get list of post files
-  const { readdirSync } = await import('fs');
+  // Build a Map of postId -> filename for O(1) lookups
   const postFiles = readdirSync(postsDir);
+  const filesByPostId = new Map();
+  for (const file of postFiles) {
+    const match = file.match(/^(\d+)-/);
+    if (match) {
+      filesByPostId.set(parseInt(match[1], 10), file);
+    }
+  }
 
   for (const postData of labels.posts) {
     if (!BENCHMARK_POST_IDS.includes(postData.postId)) continue;
 
-    // Find actual file matching this post ID
-    const prefix = String(postData.postId).padStart(2, '0') + '-';
-    const matchingFile = postFiles.find((f) => f.startsWith(prefix));
+    const matchingFile = filesByPostId.get(postData.postId);
 
     if (matchingFile) {
       const actualPath = join(postsDir, matchingFile);
@@ -174,9 +181,8 @@ async function loadFixtures() {
         content,
         hash: hashContent(content),
       });
+      labelsByPostId[postData.postId] = (postData.matches || []).map((m) => m.itemName.toLowerCase());
     }
-
-    labelsByPostId[postData.postId] = (postData.matches || []).map((m) => m.itemName.toLowerCase());
   }
 
   return { posts, items, labelsByPostId };
@@ -185,6 +191,16 @@ async function loadFixtures() {
 // ============================================================================
 // EVALUATION
 // ============================================================================
+
+/**
+ * Calculates precision, recall, and F1 from confusion matrix values
+ */
+function calculateMetrics(tp, fp, fn) {
+  const precision = tp + fp > 0 ? tp / (tp + fp) : 0;
+  const recall = tp + fn > 0 ? tp / (tp + fn) : 0;
+  const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+  return { precision, recall, f1 };
+}
 
 function evaluateExtraction(extracted, expected) {
   const extractedSet = new Set(extracted.map((n) => n.toLowerCase()));
@@ -208,11 +224,7 @@ function evaluateExtraction(extracted, expected) {
     }
   }
 
-  const precision = tp + fp > 0 ? tp / (tp + fp) : 0;
-  const recall = tp + fn > 0 ? tp / (tp + fn) : 0;
-  const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
-
-  return { tp, fp, fn, precision, recall, f1 };
+  return { tp, fp, fn, ...calculateMetrics(tp, fp, fn) };
 }
 
 // ============================================================================
@@ -237,6 +249,8 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
     totalCompletionTokens = 0,
     totalReasoningTokens = 0;
   let totalLatencyMs = 0;
+
+  const postResults = [];
 
   for (const post of posts) {
     const cleanedContent = cleanPostContent(post.content);
@@ -291,13 +305,14 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
       totalFn += expected.length;
     }
 
-    await prisma.benchmarkPostResult.create({ data: result });
+    postResults.push(result);
   }
 
+  // Batch insert all post results
+  await prisma.benchmarkPostResult.createMany({ data: postResults });
+
   // Calculate aggregate metrics
-  const precision = totalTp + totalFp > 0 ? totalTp / (totalTp + totalFp) : 0;
-  const recall = totalTp + totalFn > 0 ? totalTp / (totalTp + totalFn) : 0;
-  const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+  const { precision, recall, f1 } = calculateMetrics(totalTp, totalFp, totalFn);
 
   await prisma.benchmarkRun.update({
     where: { id: run.id },
@@ -379,7 +394,7 @@ async function showStatistics(configFilter = null) {
   console.log('BENCHMARK STATISTICS');
   console.log('='.repeat(100));
 
-  for (const [key, group] of Object.entries(groups)) {
+  for (const group of Object.values(groups)) {
     const f1Values = group.runs.filter((r) => r.f1 !== null).map((r) => r.f1);
     const precisionValues = group.runs.filter((r) => r.precision !== null).map((r) => r.precision);
     const recallValues = group.runs.filter((r) => r.recall !== null).map((r) => r.recall);
@@ -495,27 +510,35 @@ async function main() {
     }
   }
 
+  // Validate --runs argument
+  if (isNaN(numRuns) || numRuns < 1) {
+    console.error('Invalid --runs value. Must be a positive integer.');
+    await prisma.$disconnect();
+    process.exit(1);
+  }
+
   if (showStatsMode) {
     await showStatistics(configFilter);
     await prisma.$disconnect();
     return;
   }
 
-  // Run benchmarks
-  console.log('Loading fixtures...');
-  const { posts, items, labelsByPostId } = await loadFixtures();
-  console.log(`Loaded ${posts.length} posts, ${items.length} items`);
-
-  const algorithm = await getOrCreateAlgorithm();
-
-  const configsToRun = configFilter ? { [configFilter]: MODEL_CONFIGS[configFilter] } : MODEL_CONFIGS;
-
+  // Validate config before doing any work
   if (configFilter && !MODEL_CONFIGS[configFilter]) {
     console.error(`Unknown config: ${configFilter}`);
     console.log('Available configs:', Object.keys(MODEL_CONFIGS).join(', '));
     await prisma.$disconnect();
-    return;
+    process.exit(1);
   }
+
+  const configsToRun = configFilter ? { [configFilter]: MODEL_CONFIGS[configFilter] } : MODEL_CONFIGS;
+
+  // Run benchmarks
+  console.log('Loading fixtures...');
+  const { posts, items, labelsByPostId } = loadFixtures();
+  console.log(`Loaded ${posts.length} posts, ${items.length} items`);
+
+  const algorithm = await getOrCreateAlgorithm();
 
   console.log(`\nRunning ${numRuns} runs for each config: ${Object.keys(configsToRun).join(', ')}`);
   console.log(`Posts: ${BENCHMARK_POST_IDS.join(', ')}`);
