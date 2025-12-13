@@ -28,6 +28,8 @@ async function fetchStructuredResponse(
           { role: 'user', content: userMessage },
         ],
         response_format: zodResponseFormat(zodSchemaObject, 'response'),
+        // Use temperature=0 for deterministic, consistent extraction
+        temperature: options.temperature ?? 0,
       };
 
       // Add reasoning_effort for reasoning models (o4-mini, gpt-5-mini)

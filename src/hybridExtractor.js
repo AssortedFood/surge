@@ -13,6 +13,14 @@ import { z } from 'zod';
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'o4-mini';
 const DEFAULT_REASONING_EFFORT = process.env.OPENAI_REASONING_EFFORT || 'low';
 
+// Confidence scores for different extraction sources
+// These can be tuned based on benchmark results
+const CONFIDENCE_SCORES = {
+  confirmed: 1.0, // Both LLM and algo found the item
+  llmOnly: 0.8, // LLM found but algo didn't (context-aware)
+  algoValidated: 0.7, // Algo found and LLM confirmed relevance
+};
+
 // Schema for validating algo-found candidates
 const AlgoValidationSchema = z.object({
   validItems: z
@@ -40,25 +48,55 @@ const MIN_ALGO_SEARCH_LENGTH = 4;
 // Ambiguous item names to skip in algorithmic search
 // These are common words or JMod names that would cause false positives
 const ALGO_BLOCKLIST = new Set([
+  // JMod names that match items
   'ash',
+  'grace',
+  'acorn',
+  'pumpkin',
+  'mod',
+
+  // Generic resource words (too ambiguous without context)
   'logs',
   'log',
   'gold',
   'coal',
   'fish',
-  'cape',
-  'hat',
-  'ring',
-  'staff', // Often refers to Jagex staff
   'seed',
   'seeds',
   'coin',
   'coins',
+  'ore',
+  'bar',
+  'rune',
+  'runes',
+
+  // Equipment words (too generic)
+  'cape',
+  'hat',
+  'ring',
+  'staff',
+  'sword',
+  'shield',
+  'helm',
+  'boots',
+  'gloves',
+  'body',
+  'legs',
+  'plate',
+  'chain',
+
+  // Material/tier names
   'bronze',
   'iron',
   'steel',
   'black',
   'white',
+  'mithril',
+  'adamant',
+  'rune',
+  'dragon',
+
+  // Colors
   'red',
   'blue',
   'green',
@@ -68,17 +106,8 @@ const ALGO_BLOCKLIST = new Set([
   'pink',
   'grey',
   'gray',
-  'grace', // JMod name
-  'acorn', // JMod name
-  'pumpkin', // JMod name
-  'mod',
-  'team',
-  'food',
-  'item',
-  'items',
-  'game',
-  'quest',
-  'skill',
+
+  // Skill names
   'attack',
   'defence',
   'defense',
@@ -87,6 +116,55 @@ const ALGO_BLOCKLIST = new Set([
   'prayer',
   'range',
   'ranged',
+  'hitpoints',
+  'mining',
+  'smithing',
+  'fishing',
+  'cooking',
+  'woodcutting',
+  'firemaking',
+  'crafting',
+  'fletching',
+  'herblore',
+  'agility',
+  'thieving',
+  'slayer',
+  'farming',
+  'runecraft',
+  'hunter',
+  'construction',
+
+  // Common game/post words
+  'team',
+  'food',
+  'item',
+  'items',
+  'game',
+  'quest',
+  'skill',
+  'drop',
+  'rate',
+  'chance',
+  'update',
+  'patch',
+  'fix',
+  'change',
+  'buff',
+  'nerf',
+  'ban',
+  'block',
+  'trade',
+  'split',
+  'map',
+  'light',
+  'rock',
+  'shade',
+  'world',
+  'level',
+  'boss',
+  'monster',
+  'player',
+  'account',
 ]);
 
 /**
@@ -298,9 +376,17 @@ async function hybridExtract(
   // Process LLM results
   for (const item of llmValidated) {
     if (algoMatches.has(item.itemId)) {
-      confirmed.push({ ...item, confidence: 1.0, source: 'both' });
+      confirmed.push({
+        ...item,
+        confidence: CONFIDENCE_SCORES.confirmed,
+        source: 'both',
+      });
     } else {
-      llmOnly.push({ ...item, confidence: 0.8, source: 'llm' });
+      llmOnly.push({
+        ...item,
+        confidence: CONFIDENCE_SCORES.llmOnly,
+        source: 'llm',
+      });
     }
   }
 
@@ -329,7 +415,7 @@ async function hybridExtract(
     for (const item of validationResult.items) {
       algoOnly.push({
         ...item,
-        confidence: 0.7, // Higher confidence since LLM validated
+        confidence: CONFIDENCE_SCORES.algoValidated,
         source: 'algo_validated',
       });
     }

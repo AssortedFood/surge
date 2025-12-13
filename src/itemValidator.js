@@ -41,6 +41,7 @@ function levenshteinDistance(a, b) {
  * Normalizes an item name for matching
  * - Lowercase
  * - Remove parenthetical suffixes like (4), (p++), (or)
+ * - Normalize hyphens/spaces
  * - Trim whitespace
  * @param {string} name
  * @returns {string}
@@ -49,7 +50,43 @@ function normalizeName(name) {
   return name
     .toLowerCase()
     .replace(/\s*\([^)]*\)\s*$/, '') // Remove trailing parentheses
+    .replace(/-/g, ' ') // Convert hyphens to spaces
+    .replace(/\s+/g, ' ') // Normalize multiple spaces to single
     .trim();
+}
+
+/**
+ * Creates additional normalized variants for matching
+ * Handles common spelling/formatting differences
+ * @param {string} name
+ * @returns {string[]}
+ */
+function getNameVariants(name) {
+  const base = name.toLowerCase().trim();
+  const variants = [base];
+
+  // Add hyphenated/non-hyphenated variants
+  if (base.includes('-')) {
+    variants.push(base.replace(/-/g, ' ')); // "anti-venom" -> "anti venom"
+    variants.push(base.replace(/-/g, '')); // "anti-venom" -> "antivenom"
+  }
+  if (base.includes(' ')) {
+    variants.push(base.replace(/ /g, '-')); // "anti venom" -> "anti-venom"
+    variants.push(base.replace(/ /g, '')); // "anti venom" -> "antivenom"
+  }
+
+  // Add variant without apostrophes
+  if (base.includes("'")) {
+    variants.push(base.replace(/'/g, '')); // "inquisitor's" -> "inquisitors"
+  }
+
+  // Without trailing parentheses
+  const noParens = base.replace(/\s*\([^)]*\)\s*$/, '').trim();
+  if (noParens !== base) {
+    variants.push(noParens);
+  }
+
+  return [...new Set(variants)]; // Dedupe
 }
 
 /**
@@ -80,7 +117,7 @@ function findClosestMatch(candidateName, items, { maxDistance = 2 } = {}) {
 
 /**
  * Validates LLM-extracted item candidates against the item database.
- * Uses multiple matching strategies: exact, normalized, fuzzy.
+ * Uses multiple matching strategies: exact, normalized, variants, fuzzy.
  *
  * @param {Array<{name: string, snippet: string, context: string}>} candidates - LLM-extracted items
  * @param {Array<{id: number, name: string}>} allItems - All items from database
@@ -93,6 +130,7 @@ function validateItemCandidates(candidates, allItems) {
   // Build lookup maps for faster matching
   const exactMap = new Map();
   const normalizedMap = new Map();
+  const variantMap = new Map();
 
   for (const item of allItems) {
     const lower = item.name.toLowerCase();
@@ -103,23 +141,39 @@ function validateItemCandidates(candidates, allItems) {
     if (!normalizedMap.has(normalized)) {
       normalizedMap.set(normalized, item);
     }
+
+    // Add all variants of the item name
+    for (const variant of getNameVariants(item.name)) {
+      if (!variantMap.has(variant)) {
+        variantMap.set(variant, item);
+      }
+    }
   }
 
   for (const candidate of candidates) {
     const candidateLower = candidate.name.toLowerCase();
     const candidateNormalized = normalizeName(candidate.name);
+    const candidateVariants = getNameVariants(candidate.name);
 
     let match = null;
 
     // 1. Try exact match (case-insensitive)
     match = exactMap.get(candidateLower);
 
-    // 2. Try normalized match (remove parentheses, suffixes)
+    // 2. Try normalized match (remove parentheses, normalize spaces/hyphens)
     if (!match) {
       match = normalizedMap.get(candidateNormalized);
     }
 
-    // 3. Try fuzzy match (Levenshtein distance <= 2)
+    // 3. Try variant matching (handles "anti venom" vs "anti-venom" etc.)
+    if (!match) {
+      for (const variant of candidateVariants) {
+        match = variantMap.get(variant);
+        if (match) break;
+      }
+    }
+
+    // 4. Try fuzzy match (Levenshtein distance <= 2)
     if (!match) {
       match = findClosestMatch(candidate.name, allItems, { maxDistance: 2 });
     }
@@ -147,4 +201,9 @@ function validateItemCandidates(candidates, allItems) {
   return validated;
 }
 
-export { validateItemCandidates, normalizeName, levenshteinDistance };
+export {
+  validateItemCandidates,
+  normalizeName,
+  getNameVariants,
+  levenshteinDistance,
+};

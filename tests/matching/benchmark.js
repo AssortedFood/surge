@@ -8,6 +8,7 @@
 //   node tests/matching/benchmark.js                    # Run all configs, 10 runs each
 //   node tests/matching/benchmark.js --runs 5           # 5 runs per config
 //   node tests/matching/benchmark.js --config o4-mini:low --runs 3
+//   node tests/matching/benchmark.js --verbose          # Show FP/FN details per post
 //   node tests/matching/benchmark.js --stats            # Show statistics from DB
 //   node tests/matching/benchmark.js --stats --config o4-mini:low
 //
@@ -209,29 +210,35 @@ function evaluateExtraction(extracted, expected) {
   let tp = 0,
     fp = 0,
     fn = 0;
+  const tpItems = [];
+  const fpItems = [];
+  const fnItems = [];
 
   for (const item of extractedSet) {
     if (expectedSet.has(item)) {
       tp++;
+      tpItems.push(item);
     } else {
       fp++;
+      fpItems.push(item);
     }
   }
 
   for (const item of expectedSet) {
     if (!extractedSet.has(item)) {
       fn++;
+      fnItems.push(item);
     }
   }
 
-  return { tp, fp, fn, ...calculateMetrics(tp, fp, fn) };
+  return { tp, fp, fn, tpItems, fpItems, fnItems, ...calculateMetrics(tp, fp, fn) };
 }
 
 // ============================================================================
 // BENCHMARK EXECUTION
 // ============================================================================
 
-async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, labelsByPostId) {
+async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, labelsByPostId, verbose = false) {
   const run = await prisma.benchmarkRun.create({
     data: {
       algorithmId: algorithm.id,
@@ -290,6 +297,18 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
       totalCompletionTokens += hybridResult.usage.completionTokens;
       totalReasoningTokens += hybridResult.usage.reasoningTokens;
       totalLatencyMs += hybridResult.latencyMs;
+
+      // Verbose output for error analysis
+      if (verbose && (metrics.fp > 0 || metrics.fn > 0)) {
+        console.log(`\n    Post ${post.id}: "${post.title.substring(0, 50)}..."`);
+        console.log(`      TP: ${metrics.tp}, FP: ${metrics.fp}, FN: ${metrics.fn}`);
+        if (metrics.fpItems.length > 0) {
+          console.log(`      False Positives: ${metrics.fpItems.slice(0, 10).join(', ')}${metrics.fpItems.length > 10 ? '...' : ''}`);
+        }
+        if (metrics.fnItems.length > 0) {
+          console.log(`      False Negatives: ${metrics.fnItems.slice(0, 10).join(', ')}${metrics.fnItems.length > 10 ? '...' : ''}`);
+        }
+      }
     } catch (err) {
       result = {
         runId: run.id,
@@ -497,6 +516,7 @@ async function main() {
   let numRuns = 10;
   let configFilter = null;
   let showStatsMode = false;
+  let verboseMode = false;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--runs' && args[i + 1]) {
@@ -507,6 +527,8 @@ async function main() {
       i++;
     } else if (args[i] === '--stats') {
       showStatsMode = true;
+    } else if (args[i] === '--verbose' || args[i] === '-v') {
+      verboseMode = true;
     }
   }
 
@@ -554,7 +576,7 @@ async function main() {
     for (let run = 1; run <= numRuns; run++) {
       process.stdout.write(`  Run ${run}/${numRuns}... `);
       try {
-        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, labelsByPostId);
+        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, labelsByPostId, verboseMode);
         runResults.push(result);
         console.log(`F1: ${(result.f1 * 100).toFixed(1)}%, Latency: ${(result.totalLatencyMs / 1000).toFixed(1)}s`);
       } catch (err) {
