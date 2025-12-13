@@ -36,11 +36,11 @@ COPY package.json pnpm-lock.yaml ./
 # Copy prisma schema for generation
 COPY prisma ./prisma
 
-# Install dependencies (production only)
-RUN pnpm install --frozen-lockfile --prod
+# Install dependencies (production only, skip prepare script which runs husky)
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
 
-# Generate Prisma client
-RUN pnpm exec prisma generate
+# Generate Prisma client (pin version to match devDependency)
+RUN npx prisma@6 generate
 
 # Copy application source
 COPY src ./src
