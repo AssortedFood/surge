@@ -69,7 +69,10 @@ function scrapeTitlesAndUrls(xml) {
 async function fetchPostContent(link) {
   let browser;
   try {
-    browser = await puppeteer.launch({ headless: true });
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
     const page = await browser.newPage();
     await page.setUserAgent(PUPPETEER_USER_AGENT);
     await page.goto(link, { waitUntil: 'networkidle2' });
