@@ -17,30 +17,43 @@ Rules:
 - Include newly announced items even if they aren't released yet
 - For each item, provide a confidence score (0.0-1.0) based on how certain you are it's a tradeable item
 
-CATEGORY EXPANSIONS - When a category is mentioned, include ALL tradeable variants:
+CATEGORY EXPANSIONS - CRITICAL: When a category word appears (singular OR plural), you MUST expand it to ALL variants listed below. This is essential for complete extraction:
 
 Tiered items (bronze/iron/steel/black/mithril/adamant/rune/dragon):
-- "nails" → Bronze nails, Iron nails, Steel nails, Black nails, Mithril nails, Adamantite nails, Rune nails
-- "pickaxe" → Bronze pickaxe, Iron pickaxe, Steel pickaxe, Black pickaxe, Mithril pickaxe, Adamant pickaxe, Rune pickaxe, Dragon pickaxe, 3rd age pickaxe, Infernal pickaxe, Crystal pickaxe
-- "axe"/"hatchet" → Bronze axe through Dragon axe, Infernal axe, Crystal axe
-- "bar" → Bronze bar, Iron bar, Steel bar, Gold bar, Mithril bar, Adamantite bar, Runite bar
-- "ore" → Copper ore, Tin ore, Iron ore, Silver ore, Coal, Gold ore, Mithril ore, Adamantite ore, Runite ore
+- "nails"/"nail" → Bronze nails, Iron nails, Steel nails, Black nails, Mithril nails, Adamantite nails, Rune nails
+- "pickaxe"/"pickaxes" → Bronze pickaxe, Iron pickaxe, Steel pickaxe, Black pickaxe, Mithril pickaxe, Adamant pickaxe, Rune pickaxe, Dragon pickaxe, 3rd age pickaxe, Infernal pickaxe, Crystal pickaxe
+- "axe"/"axes"/"hatchet" → Bronze axe, Iron axe, Steel axe, Black axe, Mithril axe, Adamant axe, Rune axe, Dragon axe, Infernal axe, Crystal axe
+- "bar"/"bars" → Bronze bar, Iron bar, Steel bar, Gold bar, Mithril bar, Adamantite bar, Runite bar
+- "ore"/"ores" → Copper ore, Tin ore, Iron ore, Silver ore, Coal, Gold ore, Mithril ore, Adamantite ore, Runite ore
 
 Resources:
-- "logs" → Logs, Oak logs, Willow logs, Maple logs, Yew logs, Magic logs, Redwood logs
-- "plank" → Plank, Oak plank, Teak plank, Mahogany plank
-- "runes" → Air rune, Water rune, Earth rune, Fire rune, Mind rune, Body rune, Cosmic rune, Chaos rune, Nature rune, Law rune, Death rune, Blood rune, Soul rune, Wrath rune
+- "log"/"logs" → Logs, Oak logs, Willow logs, Maple logs, Yew logs, Magic logs, Redwood logs
+- "plank"/"planks" → Plank, Oak plank, Teak plank, Mahogany plank
+- "rune"/"runes" → Air rune, Water rune, Earth rune, Fire rune, Mind rune, Body rune, Cosmic rune, Chaos rune, Nature rune, Law rune, Death rune, Blood rune, Soul rune, Wrath rune, Sunfire rune
 
 Consumables:
-- "impling jar" → Baby impling jar, Young impling jar, Gourmet impling jar, Earth impling jar, Essence impling jar, Eclectic impling jar, Nature impling jar, Magpie impling jar, Ninja impling jar, Crystal impling jar, Dragon impling jar, Lucky impling jar
-- "chinchompa" → Chinchompa, Red chinchompa, Black chinchompa
+- "impling"/"implings"/"impling jar"/"impling jars" → Baby impling jar, Young impling jar, Gourmet impling jar, Earth impling jar, Essence impling jar, Eclectic impling jar, Nature impling jar, Magpie impling jar, Ninja impling jar, Crystal impling jar, Dragon impling jar, Lucky impling jar
+- "chinchompa"/"chinchompas"/"chins" → Chinchompa, Red chinchompa, Black chinchompa
+- "chompy"/"chompies" → Raw chompy, Cooked chompy
 - Potions → Include all dose variants with notation: (4), (3), (2), (1)
-  Example: "anti-venom" → Anti-venom(4), Anti-venom(3), Anti-venom(2), Anti-venom(1)
+  Example: "anti-venom+" → Anti-venom+(4), Anti-venom+(3), Anti-venom+(2), Anti-venom+(1)
+  Example: "super restore" → Super restore(4), Super restore(3), Super restore(2), Super restore(1)
 
-Armor sets:
-- Include each piece separately AND the set box
+Bones:
+- "bone"/"bones" (when discussing multiple bone types) → Bones, Big bones, Babydragon bones, Dragon bones, Lava dragon bones, Superior dragon bones, Wyvern bones, Wyrm bones, Drake bones, Hydra bones, Dagannoth bones, Ourg bones, Fayrg bones, Raurg bones
+
+Armor sets and outfits:
+- Include each piece separately AND the set box if it exists
 - Example: "Virtus" → Virtus mask, Virtus robe top, Virtus robe bottom, Virtus armour set
-- Example: "Inquisitor's" → Inquisitor's great helm, Inquisitor's hauberk, Inquisitor's plateskirt, Inquisitor's mace
+- Example: "Inquisitor's" → Inquisitor's great helm, Inquisitor's hauberk, Inquisitor's plateskirt, Inquisitor's mace, Inquisitor's armour set
+- Example: "HAM" outfit → Ham shirt, Ham robe, Ham hood, Ham cloak, Ham logo, Ham gloves, Ham boots
+- Example: "Sunfire fanatic" → Sunfire fanatic helm, Sunfire fanatic cuirass, Sunfire fanatic chausses, Sunfire fanatic armour set
+
+Color variants:
+- When an item has color variants, include ALL colors
+- Example: "bandana eyepatch" → Red bandana eyepatch, Blue bandana eyepatch, White bandana eyepatch, Purple bandana eyepatch
+- Example: "partyhat" → Red partyhat, Yellow partyhat, Green partyhat, Blue partyhat, Purple partyhat, White partyhat
+- Example: "halloween mask" → Red halloween mask, Green halloween mask, Blue halloween mask
 
 VARIANT NOTATION - Preserve exact notation:
 - Dose variants: (4), (3), (2), (1)
@@ -73,10 +86,19 @@ COMMON ABBREVIATIONS (expand these):
 - Rapier → Ghrazi rapier
 - Fang → Osmumten's fang
 
+Specific tradeable items to look for:
+- Rune pouch note (tradeable version of rune pouch)
+- Sunfire rune (new rune type)
+- Graceful ornament kit (tradeable, unlike graceful outfit itself)
+- Chugging barrel (NOT "chugging barrel (disassembled)")
+- Damaged monkey tail (tradeable drop)
+- Broken zombie axe (tradeable drop)
+
 FALSE POSITIVES TO AVOID:
 - "staff" when referring to Jagex employees (NOT tradeable Staff of X)
 - JMod names: Pumpkin, Acorn, Ash, Grace, Mod X
 - Generic words in non-item context: "shield your account", "gold sellers", "drop rate", "item scammers"
+- Color words when not part of item name: "orange" (the color), "red" (the color), "blue" (the color)
 - Untradeable: quest capes, skill capes (99 capes), void equipment, graceful outfit, Ava's devices
 - RS3-only items (this is OSRS only)
 - Currencies: coins, gp, gold pieces, tokkul, platinum tokens

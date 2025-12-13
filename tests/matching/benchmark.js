@@ -70,8 +70,12 @@ const ALGORITHM_FILES = [
   'src/contentCleaner.js',
   'src/itemValidator.js',
   'src/hybridExtractor.js',
+  'src/itemFilter.js',
   'schemas/ItemExtractionSchema.js',
 ];
+
+// Economic significance threshold from .env (matches production filter)
+const MARGIN_THRESHOLD = parseInt(process.env.MARGIN_THRESHOLD, 10) || 1000000;
 
 // ============================================================================
 // ALGORITHM VERSIONING
@@ -157,6 +161,23 @@ function loadFixtures() {
   const groundTruthHash = hashContent(labelsContent);
   const items = JSON.parse(readFileSync(itemsPath, 'utf-8'));
 
+  // Build item lookup by name (lowercase) for economic filter
+  const itemByName = new Map();
+  for (const item of items) {
+    itemByName.set(item.name.toLowerCase(), item);
+  }
+
+  /**
+   * Checks if an item meets the economic significance threshold
+   * Uses value * limit >= MARGIN_THRESHOLD (matches production filter)
+   */
+  function isEconomicallySignificant(itemName) {
+    const item = itemByName.get(itemName.toLowerCase());
+    if (!item) return false; // Item not in DB = can't trade it
+    const margin = (item.value || 0) * (item.limit || 0);
+    return margin >= MARGIN_THRESHOLD;
+  }
+
   const posts = [];
   const labelsByPostId = {};
 
@@ -169,6 +190,9 @@ function loadFixtures() {
       filesByPostId.set(parseInt(match[1], 10), file);
     }
   }
+
+  let totalLabels = 0;
+  let filteredLabels = 0;
 
   for (const postData of labels.posts) {
     if (!BENCHMARK_POST_IDS.includes(postData.postId)) continue;
@@ -184,11 +208,21 @@ function loadFixtures() {
         content,
         hash: hashContent(content),
       });
-      labelsByPostId[postData.postId] = (postData.matches || []).map((m) => m.itemName.toLowerCase());
+
+      // Apply economic filter to ground truth labels
+      const allLabels = (postData.matches || []).map((m) => m.itemName.toLowerCase());
+      const significantLabels = allLabels.filter(isEconomicallySignificant);
+
+      totalLabels += allLabels.length;
+      filteredLabels += significantLabels.length;
+
+      labelsByPostId[postData.postId] = significantLabels;
     }
   }
 
-  return { posts, items, labelsByPostId, groundTruthHash };
+  console.log(`Economic filter: ${filteredLabels}/${totalLabels} ground truth items meet threshold (${MARGIN_THRESHOLD.toLocaleString()} GP margin)`);
+
+  return { posts, items, itemByName, labelsByPostId, groundTruthHash, isEconomicallySignificant };
 }
 
 // ============================================================================
@@ -240,7 +274,7 @@ function evaluateExtraction(extracted, expected) {
 // BENCHMARK EXECUTION
 // ============================================================================
 
-async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, labelsByPostId, groundTruthHash, verbose = false) {
+async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, labelsByPostId, groundTruthHash, isEconomicallySignificant, verbose = false) {
   const run = await prisma.benchmarkRun.create({
     data: {
       algorithmId: algorithm.id,
@@ -272,7 +306,10 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
       const modelConfig = { model: config.model, reasoning: config.reasoning };
       const hybridResult = await hybridExtract(post.title, cleanedContent, items, modelConfig);
 
-      const validatedNames = hybridResult.items.map((v) => v.itemName || v.name);
+      const allValidatedNames = hybridResult.items.map((v) => v.itemName || v.name);
+
+      // Apply economic filter to extracted items (matches production behavior)
+      const validatedNames = allValidatedNames.filter(isEconomicallySignificant);
 
       const metrics = evaluateExtraction(validatedNames, expected);
 
@@ -564,7 +601,7 @@ async function main() {
 
   // Run benchmarks
   console.log('Loading fixtures...');
-  const { posts, items, labelsByPostId, groundTruthHash } = loadFixtures();
+  const { posts, items, labelsByPostId, groundTruthHash, isEconomicallySignificant } = loadFixtures();
   console.log(`Loaded ${posts.length} posts, ${items.length} items`);
   console.log(`Ground truth hash: ${groundTruthHash}`);
 
@@ -584,7 +621,7 @@ async function main() {
     for (let run = 1; run <= numRuns; run++) {
       process.stdout.write(`  Run ${run}/${numRuns}... `);
       try {
-        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, labelsByPostId, groundTruthHash, verboseMode);
+        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, labelsByPostId, groundTruthHash, isEconomicallySignificant, verboseMode);
         runResults.push(result);
         console.log(`F1: ${(result.f1 * 100).toFixed(1)}%, Latency: ${(result.totalLatencyMs / 1000).toFixed(1)}s`);
       } catch (err) {
