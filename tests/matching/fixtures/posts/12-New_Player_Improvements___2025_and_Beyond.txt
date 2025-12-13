@@ -1,0 +1,164 @@
+Title: New Player Improvements - 2025 and Beyond
+ID: 12
+Link: https://secure.runescape.com/m=news/a=13/new-player-improvements---2025-and-beyond?oldschool=1
+
+---
+
+With recent months seeing player number records broken week-after-week, it should come as no surprise that we're seeing a large cohort of players setting foot in Gielinor who've never played Old School RuneScape before.
+
+Not long ago, we released a handful of new player guides (now accessible from the main website, near the top-left) taking you through your initial setup and client selection, breaking down the Combat system, and helping you learn to set goals and complete them. Loads of you thought these were a great resource and we're excited to find even more ways to make this information more readily-accessible for new starters, but it's important that our commitment to helping more new starters stick around doesn't end there.
+
+This blog is an overview of changes we'd like to make to smooth out the initial sections of gameplay. While it's true that Old School starts to get under your skin before long, it's also true that a significant chunk of prospective players bounce off before finishing Tutorial Island, gaining a level, or finishing a single quest.
+
+The changes we're talking about in this blog aim to maintain the existing spirit of areas like Tutorial Island and Lumbridge, but better inform players and set them up for long-term success in Gielinor. Before the alarm bells start ringing, we're not going to be redesigning the tutorial or terraforming Lumbridge - these areas are iconic and we have no interest in trying to totally reinvent the wheel, we're here to fix a few spokes and improve the tyre pressure a tad.
+
+Before we start listing off changes, we know you love your stats just as much as we do, so we thought we'd share some particularly eye-opening tidbits that we believe help demonstrate why changes to the first-time user experience (FTUE) could be very impactful!
+
+A sizeable chunk of players who start Old School for the first time never make it off of Tutorial Island, or log out for the final time before completing a single quest.
+Players who complete a quest are 1.5x more likely to stick around and become long-term members of the community.
+Players who complete a quest and gain a Combat level are 2x more likely to stick around and become long-term members of the community.
+
+Old School RuneScape relies overwhelmingly on players getting stuck in and continuing to play. Luckily for us, Old School's in a wonderful place right now and offers any prospective player with an unmatched breadth of content, goals to set, and progress to make that's never going to be invalidated, so we're seeing more and more new players trying out the game and getting properly stuck in!
+
+Having said that, we think small changes in the right place could help players understand the tools available to them once they get into Gielinor, find their feet in a massive sandbox MMO, and ultimately stick around long-term once they realise what sets Old School RuneScape apart. New players shouldn't be struggling with using items in their inventory, or not knowing what Prayer is even for, or being able to note items at a bank, and that's what we're looking to improve.
+
+To kick things off, we'll talk about changes that we're looking to make within the next few months. After that, we'll take you through some changes that we'd like to make in 2026 but would love to hear your thoughts on ahead of time.
+
+New Player Improvements - Coming Soon
+Tutorial Island
+
+First things first: don't panic! Tutorial Island isn't going anywhere, we're not reinventing the tutorial or moving it to another location because we know this island is sacrosanct: Vannaka's sass, cooking your first shrimp and having Newbie Melody blast out of your family computer's speakers late at night are just as important to us as they are to all of you.
+
+We've got a lot of data on Tutorial Island, which we've used in conjunction with qualitative feedback from testers to identify the areas we believe could stand to be improved. Here are some highlights:
+
+The most common 'drop-off' points (meaning parts of the tutorial where players get stuck and log out) are the following:
+Any scenario where the player needs to speak to the same NPC again, most often the Gielinor Guide, Quest Guide and Account Guide.
+Any scenario where players need to use items together in their inventory, namely lighting a fire or making bread dough.
+Any scenario that involves specific clicks within part of the UI, the two biggest examples here are equipping a sword and shield via the Equipped Items interface (something that no player is likely to do outside of Tutorial Island), and casting Wind Strike on a chicken.
+Some scenarios where players are expected to walk a longer distance, or use a ladder - the ladder in the Quest Guide's building is a standout here.
+There's a lot of text on the UI, especially with the transparent 'Control Guide' textbox giving some guidance, while the typical message box is more specific. Additionally, the transparent textbox is on a timer and eventually goes away, and isn't consistently applied along the whole island.
+Dialogue boxes combine bits of world-building, NPC dialogue and gameplay instructions in a way that can overload players and make it harder to discern what's expected of players.
+Some key features like right-clicking objects/NPCs are poorly explained or not explained at all.
+Default settings could be tidied up considerably, visible roofs stands out as one that can impede a player's progress early-on.
+
+While it is true that some new starters are still likely to log out regardless of any changes we make here, we still believe there are a number of improvements we could make to better equip people for interacting with the sandbox that is Gielinor and start setting goals for themselves. Old School's 'click to interact with just about anything' approach isn't found in many other games, meaning some people struggle with the lack of transferrable skills from similar games - it's easy to jump from one FPS to another, but jumping from most MMOs to Old School is night and day!
+
+Let's take a look through some of the things we'd like to do and explain our reasoning as we go - it's important to us that we're all on the same page, so we'd welcome your thoughts on these and invite you to give us feedback or challenge us if you think we're missing the mark at all!
+
+Add clearer visual cues to the NPCs you need to interact with, including when you need to interact with the same NPC for a second time. Currently, we're working towards a yellow outline, similar to the blue outlining that you'll see on the Official Client's Clue Scroll Helper.
+In a similar vein, add an outline highlight to the objects that players are expected to interact with. Examples of this include doors, gates, trees to chop, a fire to cook your shrimp, the copper or tin ore for you to prospect - you get the picture!
+Add some form of in-game highlighting system for UI components such as side stone buttons, spells or inventory items. This should make it clearer to players that they're supposed to click on the items in their inventory, a specific tab/side stone, or on the spell icon to finish the tutorial.
+Improve the 'Control Guide' functionality and text. This is the slightly transparent box with orange text that provides some instruction for navigating Tutorial Island.
+Improve clarity of dialogue boxes. Let these focus more on dialogue from NPCs while the Control Guide handles the 'out of world' stuff. Also, minimise these when they're not actively in-use.
+
+This sort of 'outline signposting' functionality is used by countless players for quests, minigames and even clue scrolls, so we don't think it's likely to feel overly handhold-y. It's true that once players get to the mainland, they won't have a bunch of highlights telling them what they should be doing, but the key aim here is to build better patterns so that players understand that items can be used on each other, objects in the world have different interactions when clicked, or even really simple things like chatting to the same NPC again for more information if you're stuck on a quest.
+
+We'd also like to make some changes to the flow of things so that you're focused on learning and interacting with the game rather than reading loads of text or long segments of NPCs talking at you about features that could be better explained elsewhere. Some of the things we're considering are:
+
+Make a dedicated, lightweight UI for the question players are asked about their previous experience, since it's currently housed in a dialogue box that people often just click anything to get rid of. Experienced players may have some different default settings more in-line with what they're already used to.
+Make Tutorial Island a trackable quest/miniquest with its own Quest Journal entry, meaning you'll actually have something to look at when you meet the Quest Guide and something to refer back to if you get stuck or forget what you've already done. Quest Capers do not panic - you'd have this auto-completed, we can't have you going back to Tutorial Island and scaring the new players!
+Slightly speed up the Woodcutting and Fishing action speeds during the tutorial. For players just starting out, waiting 8 ticks to chop a log can lead to them questioning if they're doing something wrong. Once the initial understanding that many actions are 'click and wait' is reached, there's no need for this speed increase, so we're not changing anything on the mainland.
+Replace the Magic Guide's teleport with a Home Teleport step instead. Home Teleport's incredibly useful early-on and is easily missed by new players, plus it feels good to teleport yourself somewhere!
+Remove Brother Brace's introduction to the Friends List. This interrupts the flow of Tutorial Island and stands out since you can't even add friends until you're on the mainland, plus any friends you're likely to add straight away can talk you through it - how social!
+Default Settings Improvements
+
+High up on our list is improving the Default Settings for new players in-line with modern standards. This is the first menu players ever open in the game, despite not knowing what half of it means, and requires a lot of tinkering to find settings that most players will stumble across and wonder why it wasn't always that way. We've got some changes here that impact all new characters, while some will depend on whether players indicate that they're brand new, returning or experienced when prompted at the start of Tutorial Island
+
+Default Settings changes for all players
+AFK Timer set to 25 minutes.
+Ground Items overlay enabled.
+Move follower options lower down: On.
+Auto-equip Worn Items from Gravestone: On.
+Highlight Agility Obstacles: On.
+Highlight Agility Shortcuts: On (based on requirements)
+Max Hitsplat threshold (the minimum max hit you'll need to see that lovely golden outline): 2.
+Loot drop notifications: On. Minimum value: 20,000 GP.
+Untradeable loot notifications: On.
+Player Attack options: Always right-click.
+NPC Attack options: Left-click where available.
+PK Skull prevention: On.
+Enable precise timing: On.
+Split friends private chat: On.
+Rune-picking behaviour: On.
+Ammo-picking behaviour: On.
+Hide roofs: On.
+Enables new-style Skill guide interfaces: On.
+Collection Log - New addition notifications: On.
+Collection Log - New addition popup: On.
+Music Volume: 10%
+Sound Volume: 20%
+Area Sound Volume: 15%
+Default Client mode: Resizable - Modern layout.
+Cannon low and no ammo notifications: On.
+Cannon low notification amount: 10.
+Chatbox Mode - Set Automatically: On.
+Default Settings changes for players who tell us that they're new to the game
+Accept Aid: On
+HiScores Minimenu Lookup: On
+Highlight Quest start points: On.
+Filter Quest start highlights based on requirements: On.
+Quest list sorting: Starter. This is a new sorting category aimed at newer players.
+Show Quests you lack the requirements for: Show as unavailable.
+Show Quests you lack the recommended stats for: Show as unavailable.
+Default Settings changes for players who tell us that they're returning to the game
+Accept Aid: On
+HiScores Minimenu Lookup: On
+
+We'd love to hear what you think about these proposals. Our aim isn't to uproot the classic Tutorial Island, but instead to make it clearer to players exactly how they interact with the game so that they're able to see a little more of what it's got to offer before getting frustrated, logging out, and ultimately missing out on an MMO experience that's unlike anything else.
+
+Naturally, the new player experience doesn't end after Tutorial Island - there's still a massive and overwhelming world waiting to be explored, and we think we could offer brand new players a little more guidance.
+
+Questing & Interface Improvements
+
+Beyond Tutorial Island, we have a handful of other quick wins that we feel we could make to better immerse and inform new players. These ones are likely to land after the changes listed above, so expect to see them in early 2026!
+
+Improve the detail of Quest Journal entries for older/early game quests. While most players opt to use guides to complete these, we feel that the in-game guidance provided could be clearer in a lot of places.
+Similarly, make some of the dialogue more clear about what's expected from players for early-game quests. We'll take great care to ensure that the tone of Old School's dialogue is preserved while improving players' understanding of the core mechanics they're expected to interact with (talking to NPCs, using items from their inventory, solving a puzzle etc.). The kinds of quests we'd be looking at are things like Cook's Assistant, Sheep Shearer, Romeo & Juliet, The Restless Ghost - the kinds of quests that could very well be the first thing a player does upon reaching the mainland.
+Add lightweight, beginner-friendly 'Getting started' sections to the in-game Skill guides, accessed by clicking on any icon in the Skills tab.
+Potential New Player Improvements - 2026 and Beyond
+
+Important Note: This section details changes which we're considering further in the future which we'd like to implement, but want to manage expectations and say that we aren't 100% certain we'll be able to deliver. If something here really stands out that you think would be a great addition for new players, make sure to let us know and help us prioritise!
+
+At risk of repeating ourselves: don't panic! Much like Tutorial Island, we know that Lumbridge is an equally sacred place and we're not looking to terraform it, construct a bunch of new buildings and fill it full of NPCs that you've never seen before. In truth, the game's starting areas are full of NPCs who provide useful information and do give new players a lot of steer/guidance, but tracking them down on your own can be tricky.
+
+We'd like to explore some lightweight changes/additions that leverage the locations, quests and NPCs that we've already got so that players who select the 'I'm a brand new player' option on Tutorial Island receive some kind of direction to get them going. Our aims here are to make changes that aren't invasive for experienced players, that stay true both visually and tonally to the rest of Old School, and that focus on players building up confidence with the game's core progression systems so that they can make their own decisions without feeling overwhelmed or second-guessing themselves constantly.
+
+Something important for you to know is that we do have plans to do 'bigger' and more long-term work to improve the First Time User Experience throughout 2026, but our focus between now and the end of the year will be on short-term technical fixes (like you've seen with the Tutorial Island changes) while we work through fleshing out the more grandiose stuff. We'll avoid going into detail on our thoughts here because these bigger beats need fleshing out and would be better discussed once we've got more to share.
+
+With all that in mind, here's a top-level overview of those smaller, tactical changes that we're considering which we'd love to hear your thoughts on! Keep in mind that these changes would be visible to new players only and ideally not visible if you're a veteran player making an alternate character, with the exception of the Quest Tab/Journal and Skill Guide tweaks listed below.
+
+Lumbridge
+Better direct new players to the Activity Advisor - it's easy to miss!
+Consider some gentle guidance towards some early game staples like Cook's Assistant, Sheep Shearer, Rune Mysteries, or Romeo & Juliet.
+We could achieve this via a light-weight UI element like an overlay, dialogue or overhead messaging with citizens throughout Lumbridge, or through a 'quest breadcrumb' approach that kicks off with some kind of greeter NPC.
+Declutter the World Map for new players around Lumbridge. We could do this by progressively revealing more icons as new players progress, adding a 'Beginner' filter to the map that turns off after a short time, or hiding unusable icons until players can interact with them.
+On arrival to the mainland, get players to chat to a greeter NPC (e.g. the Lumbridge Guide) for some initial direction or to set the stage for players knowing what they could do to kick off their journey.
+Find ways to adjust or rework Adventure Paths to reduce the lack of clarity after they're completed. Many new players find this system useful but feel like the tasks laid before them don't tie in with the wider game very well, leading to a lack of clarity about what to do afterwards.
+Quests
+Improve the Quest Journal UX:
+Display requirements with skill icons and clear formatting.
+Display rewards from various quests (opt-in, to avoid spoilers)
+Improve filtering to allow for a 'recommended' section of the Quest tab, using similar data to the Activity Advisor to make recommendations based on player progression. Additionally, explore filtering by: skill XP rewards, whether or not Combat is a core part of the quest and how many Quest Points are awarded.
+This includes things like explaining why a quest is recommended and showing how far off of the requirements you are.
+Consider lightweight dialogue additions for Quest givers whose requirements you don't meet so that they can point you in another direction. Meaning they'll tell you which requirements you don't meet and suggest another quest or activity you could get on with in the mean time. This dialogue would have to make diegetic sense, meaning dialogue more like "Perhaps you should chat to the Cook in Lumbridge, he seems like he needs constant help" as opposed to "Go and do the Cook's Assistant quest".
+Allow players to 'pin' a Quest for easy access rather than navigating through their Quest tab to find it repeatedly. If we can make this work, allow the most recent notes in the Quest Journal for the pinned Quest to be visible on-screen as a lightweight Quest tracker.
+Add post-Quest recaps to their respective journal entries. These would detail a top-level overview of the story, notable characters you encountered, rewards that you earned and any significant pieces of content or follow-up Quests that you unlocked.
+Remove the 'strike-through' from completed Quest Journal entries and find a different way to display this information. While it's nice to know what you have and haven't done, the current display can make it annoying to refer back to previous steps for information.
+Miscellaneous
+Add lightweight, beginner-friendly 'How to train' and 'Quests that give (skill) XP' sections to the in-game Skill guides, accessed by clicking on any icon in the Skills tab.
+Remove the inventory/bank restriction on claiming more runes and arrows from the Magic and Ranged tutors. We'd also consider bumping up the number of runes offered by the Magic tutor, since you currently only get enough to kill a handful of cows at most.
+Add a right-click 'Bury' option to dropped bones to alleviate some friction for early-game Prayer. We know that experienced players may never bury a bone, but the extra step of picking it up and then burying it is needless friction for beginners.
+Use skill icons on the Combat Styles tab to indicate more clearly which skills will be granted XP by each of the different style options.
+Add toggle stat tooltips for items that you hover over or long press since new players often have difficulty understanding the stats from items, particularly things like negative Magic bonus from Melee armour.
+
+There's a whole lot of stuff listed here, and that's only the 'quick' wins! Some of these - particularly the Quest- or dialogue-related entries - are likely to be bigger projects than they seem on the surface, so we'd like to make clear that these are all things that we'd like to do but can't guarantee that we'll get to immediately. Of course, if anything listed is ringing alarm bells for you then make sure to let us know and we can always reconsider!
+
+You're all caught up! That's a full look at the short-term, tech/UI/UX-focused changes we'd like to make so that we can better improve the onboarding experience for new players.
+
+Like we've said throughout the blog, let us know your thoughts, comments, queries or concerns in all of the usual places and we'll make any adjustments that feel necessary. Remember that this isn't everything we'd like to look at to improve FTUE, so keep an eye out through 2026 for some discussions on more long-term and large-scale projects.
+
+You can also discuss this update on the 2007Scape subreddit, the Steam forums, or the community-led OSRS Discord in the #gameupdate channel. For more info on the above content, check out the official Old School Wiki.
+
+Mods Abe, Abyss, Acorn, Ape, Arcane, Archie, Argo, Ash, Ayiza, BigRig, Blighted, Blossom, Boko, Bruno, Chilly, Criminal, Curse, Daizong, Ed, Elena, Enigma, Entropi, Freddie, Fuzz, Gecko, Gengis, Gizmo, Goblin, Grace, Grub, Halo, Harold, Hend, Hornet, Husky, Ivory, Jalo, Jamesy, Jerv, Keyser, Kieren, Kirby, Kurotou, Leebleh, Lenny, Light, Liron, Lykos, Mack, Manked, Markos, Maylea, Mobius, Moogle, Morty, Moz, Necro, Nin, Nixon, Nox, Nylu, Ori, Other, Otter, Philomel, Pork, Pumpkin, Puppi, Rach, Redfield, Rice, Roq, Roy, Ry, Saiyan, Sarnie, Schmidt, Shogun, Shroom, Sigma, Skylark, Smithy, Sova, Spyro, Squid, Starry, Suharun, Surma, Sween, Tide, Titania, Titus, TJ, Tomb, Tsourorf, Tyran, Veda, Vegard, West, Wolfy & Yume
+
+The Old School Team.

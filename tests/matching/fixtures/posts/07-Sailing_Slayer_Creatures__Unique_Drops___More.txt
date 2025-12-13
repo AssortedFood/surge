@@ -1,0 +1,855 @@
+Title: Sailing Slayer Creatures, Unique Drops & More
+ID: 7
+Link: https://secure.runescape.com/m=news/a=13/sailing-slayer-creatures-unique-drops--more?oldschool=1
+
+---
+
+Feedback Changes - 25th September
+
+
+
+
+Thank you all so much for taking the time to read this blog. We're almost there! After carefully reviewing community feedback and the responses to our survey, here's what's changing before the poll goes live on the 29th September:
+
+
+
+
+Aquanite Hopper
+
+
+
+
+The Aquanite Hopper's second bolt effect caused confusion due to our wording within the blog. We'd like to clarify that the effect reduces the second bolt by 67% damage, accuracy and enchanted bolt chance, so it is only 33% as effective.
+
+
+
+
+We've seen some community feedback to suggest this feels underpowered compared to the skill levels required to obtain it. To address that, we're lowering the slayer requirement for Aquanites down to level 78. However, we're not looking to increase its power further at present. The goal is for the Hopper to be a strong offhand option while using Crossbows until players get the Twisted Buckler. It's not an end-game item and shouldn't be as strong as one. Unfortunately, that means it probably won't drastically shift up the Ranged meta. We're not looking to make Crossbows more effective than higher tier weapons like the Bow of Faerdhinen, but it should be a reasonable option for mid-game accounts.
+
+
+
+
+Horn of Plenty
+
+
+
+
+Players have asked that we remove the upkeep cost from the Horn of Plenty. Originally, we proposed that it give a +4 invisible boost to your Hunter level when charged, doing nothing when uncharged. If we simply removed the upkeep cost, that +4 boost would affect all kinds of existing activities - Chinchompas, Molch pearls, Monkey tails, etc. - with no cost. We think that'd be a bit too much! Still, we do understand that upkeep costs can be annoying, so we'd like to propose that it give a +2 invisible buff when uncharged, increasing to +4 when you charge it with the Gryphon feathers.
+
+
+
+
+When we create a new loot tables, their value must come from an existing source in the game. For example, alchables come at the cost of inflation and PvM uniques come at the cost of other PvM uniques that they compete with. Rainbow crabs, for example, could have been added to the Gryphons' loot table, making it a profitable and desirable task. However, in doing so, it would have reduced the profitability of Rainbow Crab Hunting. The purpose of Gryphon feathers are to encouarge players to engage with both Slayer and Hunter, as opposed to another resource that would only encourage them to engage with Slayer.
+
+
+
+
+Gleaming Rapier
+
+
+
+
+To address concerns that the Gleaming Rapier is too easy to obtain for the power level that it's sitting at, we're adding a Level 70 Smithing requirement to create it (similar to the Zombie Axe). The item will drop in a tarnished state and you will need to polish it by using it on the polishing wheel in the Giant's Foundry. This means that Giant's Foundry will also be a Quest requirement for the Gleaming Rapier.
+
+
+
+
+We hear your feedback regarding Rapiers being traditionally 4-tick weapons. To avoid confusion, we're pivoting the Gleaming Rapier away from the 'Rapier' weapon category by altering its model and name. Rest assured, its speed and stats will remain the same.
+
+
+
+
+Lava Strykewyrms
+
+
+
+
+There was an error in the blog regarding Strykewyrms being 'unlockable' tasks, which has now been corrected. They are, in fact, being proposed as part of Wyrm tasks, so they will not be unlockable. They are also single-way and not cannonable, similar to Aquanites. Apologies for the mix-up!
+
+
+
+
+Frost Dragons
+
+Frost Dragons will now be weak to crush instead of stab, as we liked the suggestion from players, considering they are made of ice!
+
+
+
+
+On our Livestream Q&A, we addressed concerns about the loot table of Frost Dragons & Strykewyrms in a bit more detail, so go check that out!
+
+
+
+
+Misc
+
+There wasn't a clear winner in our survey for community consensus on what we should do with skill total worlds, so we'll put this to a poll and offer both options stated in the blog.
+
+
+
+
+We'll change the spelling of 'Hemostatic' to 'Haemostatic' (the British way), because tea tastes better with more vowels.
+
+
+
+
+Additionally, we really love the community's suggestions regarding transmog options for pets! We're not able to commit to these for launch, however, we'll certainly keep them in mind for the future. For now, vote on the pet YOU want to see most!
+
+
+
+
+
+
+Welcome to the third and final Sailing content poll, covering new Slayer creatures and unique items found on new islands! Part of your adventures out at sea involve navigating dangerous waters. Those brave enough to venture deep into Gielinor's oceans will stumble upon exciting new areas with lucrative rewards. But be warned! These locations are extremely dangerous for unprepared sailors, with creatures unlike any you've seen before. We've saved the most exciting content poll for last, so prepare yourself...
+
+
+
+
+Before diving into the Slayer-related rewards, it's worth noting that the islands you discover through Sailing will be home to a mix of both familiar and new creatures. Our aim is to bring these areas to life by populating them with wildlife that adds flavour and atmosphere, similar to the way we released content in Varlamore. Most of the flavour creatures will not be polled, as they don't offer any notable rewards or ties to Slayer. They are simply there to make the world feel richer and more alive.
+
+
+
+
+Want to see more? Check out this video by Scritic & Gnomonkey to learn all about it!
+
+
+
+
+
+
+If you can’t see the video above, click here to watch it!
+
+
+
+
+
+Introducing: The Gryphons
+
+
+
+These infographics were made in partnership with GentleTractor. If you want a higher resolution look at the image above, click here!
+
+
+
+
+The Great Conch is the ancestral homeland of the Tortugan race, however, it has been surrounded and inhabited by the Gryphons for centuries. To a Gryphon, Tortugans are no more than their next meal. These terrifying beasts regularly scout the skies and shores for isolated targets, often baby Tortugans who don't know how to protect themselves. While it's rare for humans to be nearby, they won't taste any different to a hungry Gryphon!
+
+
+
+
+You will meet these fantastical apex predators through the Tortugan Questline. They attack with Melee and are particularly weak to Magic (especially air spells), but Melee will also be a viable way to take them down. They will have a special mechanic where, if a player's total weight is too low, the Gryphon will knock them back, dealing unavoidable damage. They have a few more tricks up their claws as well, and you'll need to think carefully about how to avoid their attacks. We won't spoil the details just yet… but let's just say the Tortugans might have a trick or two worth borrowing.
+
+
+
+
+If you want a higher resolution look at the image above, click here!
+
+
+
+
+We're looking to make them their very own unlockable Slayer task, and yes, there's a superior version! This tougher version won't go down easily! Gryphons and their superior variants can be found in single and multi-combat areas and are also cannonable!
+
+
+
+
+We appreciate that players might be concerned about Sailing's impact on the existing Slayer meta. We've carefully balanced all of the new Slayer tasks included within this blog to ensure that the new additions to Slayer feel new and exciting, but they won't shake up the current status quo too much. In the survey linked below, we'll be asking the community how you feel about these tasks. Please rest assured, we're willing to make adjustments based on community concerns. You can let us know how you feel about these tasks (weightings & quantities) in the survey linked at the bottom of the blog. Be sure to tell us if you would like us to make adjustments before we poll this content!
+
+
+
+Creature	Slayer Unlock Requirements	Quantities	Weightings	Slayer Point Unlock
+Gryphons	
+51 Slayer
+Troubled Tortugans (45 Sailing required)
+60 Combat (only relevant if your settings filter tasks by combat level)
+	
+Vannaka: 30 - 80
+Chaeldar: 60 - 100
+Nieve: 110 - 170
+Duradel: 100 - 210
+	
+Vannaka: 5
+Chaeldar: 5
+Nieve: 7
+Duradel: 7
+	
+Wings Spread - Allows Nieve and Duradel to assign Gryphon tasks. Costs 80 Slayer Points.
+
+Unique Drops
+
+Gryphon Feathers
+
+
+All gryphon variants will drop Gryphon Feathers. They're tradeable items specifically used to charge a new unique item, the Horn of Plenty.
+
+
+Horn of Plenty
+
+
+If you want a higher resolution look at the image above, click here!
+
+
+
+
+The Horn of Plenty is a new tradeable Hunter item, equipped in the off-hand slot and requiring level 50 Hunter. When equipped - and charged with Gryphon Feathers - it provides an invisible +4 boost to your Hunter level. When uncharged and equipped, this boost will be +2 Hunter instead. While the Horn is equipped, it consumes a charge every 1/25 Hunter catches. Additionally, you can toggle it on to give a 1/10 chance to double a Hunter catch. If you successfully double a Hunter catch, it will consume an additional Gryphon Feather, but this extra catch does not grant additional XP.
+
+
+
+
+You can only obtain the Horn of Plenty as a drop from regular Gryphons or their superior versions.
+
+
+
+
+Dev Comment: With the Horn of Plenty, we wanted to explore using the off-hand slot for a meaningful skilling purpose, since it's pretty under-utilised for skilling in particular. Skilling rewards from PvM are also relatively rare, and we felt it was a great opportunity to bridge that gap. Traditionally, PvM has often acted as a way to bypass skilling by pumping large amounts of resources into the game. This time, we want to flip that idea on its head by using a PvM encounter to create an item that directly enhances a skill. By doing so, we hope to make Gryphons feel like a more natural addition to the game. Hunter in particular can sometimes feel like it has long stretches where new levels don't unlock much value. The invisible Hunter boost improves your success rate, making those activities feel a bit more rewarding. Meanwhile, the chance to double your catches provides a nice extra benefit, reinforcing our goal of getting PvM to support skilling content.
+
+
+
+
+
+Shellbane Gryphon (Boss)
+
+
+
+These infographics were made in partnership with GentleTractor. If you want a higher resolution look at the image above, click here!
+
+
+
+
+The Shellbane Gryphon is a brand-new, mid-level Slayer boss. It can also only be fought while on a Slayer task. At just 51 Slayer, it will be the lowest-level Slayer boss in the game. We think it can help give players a taste of Slayer bosses and their unique mechanics much earlier than currently available. Just remember, it's a solo-instance fight!
+
+
+
+
+Like normal Gryphons, the Shellbane Gryphon is weak to magic, but melee will also be able to defeat it. It primarily attacks with melee, but has a ranged attack it can use, too.
+
+
+
+
+While it shares traits and mechanics with regular and superior Gryphons, the Shellbane Gryphon brings a few nasty surprises of its own. Its wings are capable of generating immense power, so this battle's sure to be anything but a breeze! Pay very close attention to where you're standing. If that isn't challenging enough, its salivary glands are capable of delivering corrosive spit. Keep your skin covered, preferably with something tanky. Let's just say that sunburn is going to be the least of your worries on the Great Conch.
+
+
+Unique Drops
+
+Gleaming Rapier
+
+
+If you want a higher resolution look at the image above, click here!
+
+
+
+
+The Gleaming Rapier is a new tradeable melee weapon, requiring 65 Attack to equip. It has the following stats:
+
+100 Stab Attack
+78 Slash Attack
+-3 Crush Attack
+15 Slash Defence
+20 Stab Defence
+-9 Crush Defence
+102 Strength Bonus
+5 Attack Speed
+
+Essentially, the Gleaming Rapier is the stab equivalent of the Zombie Axe, sitting between the Dragon Sword and the Zamorakian Hasta as a new mid-level stab weapon.
+
+
+
+
+You can only obtain this as a drop from the Shellbane Gryphon.
+
+
+
+
+Following player feedback, the item will drop in a tarnished state and you will need to polish it by using it on the polishing wheel in the Giant's Foundry. This is locked behind a 70 Smithing requirement, and completion of Giant's Foundry. Additionally, we will be pivoting the Gleaming Rapier away from the 'Rapier' weapon category by altering its model and name. Rest assured, its speed and stats will remain the same.
+
+
+
+
+Dev Comment: Stab options can feel limited in the mid-game with the Tier 60 Dragon Sword being the only option until you get a Zamorakian Hasta, or the coveted Osmumten's Fang. We expect this to hold a similar spot in the game to the Zombie Axe as a Tier 65 stab alternative which could see use for accounts fighting the Eclipse Moon or for accounts dipping their toes into Tombs of Amascut. While it competes with the Zamorakian Hasta in pure stab output, we believe the Hasta will still hold value as a flexible option, capable of all three styles, while still being valuable in the creation of the Dragon Hunter Lance, or when a 4-tick weapon is preferred.
+
+
+Gryphon Pet
+
+
+The Shellbane Gryphon will also have a pet. As we're looking to poll the general Sailing pet, we thought it's worth mentioning here in case you were wondering why a Gryphon isn't in the line-up!
+
+
+
+
+Poll Question: Should we add Gryphons and a superior variant as a new, unlockable Slayer task?
+
+
+
+
+
+Poll Question: Should we add the Shellbane Gryphon as a new Slayer boss?
+
+
+
+
+
+Poll Question: Should we add the Horn of Plenty as described in the blog? This would also include Gryphon Feathers used to charge the Horn of Plenty as a common drop from all Gryphon variants.
+
+
+
+
+
+Poll Question: Should we add a 5-tick Tier 65 weapon as described in the blog?
+
+
+
+
+
+Aquanites
+
+
+
+These infographics were made in partnership with GentleTractor. If you want a higher resolution look at the image above, click here!
+
+
+
+
+Aquanites are a creature some of you might be familiar with from RuneScape history. These amphibian horrors make their homes deep below the Western and Northern Oceans, preying on any creature unwitting enough to stray into the damp caves in which they dwell. One such set of caves can be found on the uninhabited island of Ynysdail near Gwenith. Any sailor able to reach the island will find great danger, but also the potential for great reward, if they dare to confront the Aquanites living there.
+
+
+
+
+If you want a higher resolution look at the image above, click here!
+
+
+
+
+The Aquanites will be their very own, unlockable Slayer task. They have naturally high stats, but you'll be able to remove their advantages. We'll leave you to work out how! They also have superior variants, Elder Aquanites, with another unique special mechanic. We won't spoil too much, suffice to say they will test your ability to swap prayers consistently.
+
+
+
+
+Unlike the Gryphons we talked about earlier, these creatures are found in singleway combat areas and are not cannonable.
+
+
+
+Creature	Slayer Unlock Requirements	Quantities	Weightings	Slayer Point Unlock
+Aquanites	
+78 Slayer
+73 Sailing
+80 Combat (only relevant if your settings filter tasks by combat level)
+	
+Nieve: 40 - 60
+Duradel: 30 - 50
+	
+Nieve: 5
+Duradel: 5
+	
+Let's Stay All Aquanite - Increases the number of Aquanites assigned to 150 - 200. Costs 100 points.
+Aquan't Believe It - Adds the task to Nieve/Duradel's Slayer list. Costs 80 points.
+
+Unique Drops
+
+Aquanite Tendon (Aquanite Hopper)
+
+
+If you want a higher resolution look at the image above, click here!
+
+
+
+
+Aquanites have a chance of dropping an Aquanite Tendon, a tradeable resource which can be combined with a Mithril Bar to create an Aquanite Hopper. This is a tradeable Ranged offhand that provides a 10% chance for Crossbows to fire twice instead of once. The second bolt will be reduced by 67% damage, accuracy, and enchanted bolt chance. Please note that the second bolt's Enchant effect cannot activate if the first bolt already activated it.
+
+
+
+
+The Aquanite Hopper has the following stats:
+
+-5 Stab Attack, -3 Crush Attack, -5 Slash Attack
+-13 Magic Attack
++12 Ranged Attack bonus
+No defensive bonuses
+1 Ranged Strength bonus
+
+
+
+Dev Comment: Currently, most Ranged off-hands have defence (such as shields) or modest accuracy. The Aquanite Hopper should add a noticeable increase to your damage output, opening up more options to use crossbows, particularly for mid-game accounts where the defensive capabilities of a shield aren't required, but it won't replace the Twisted Buckler as the existing best-in-slot Ranged option at the top-end.
+
+
+
+
+Poll Question: Should we add Aquanites and a superior variant as a new, unlockable Slayer task?
+
+
+
+
+Poll Question: Should we add the Aquanite Hopper as described in the blog?
+
+
+
+
+
+
+Lava Strykewyrms
+
+
+
+These infographics were made in partnership with GentleTractor. If you want a higher resolution look at the image above, click here!
+
+
+
+
+Deep within the scorched heart of Charred Island lurk the Lava strykewyrms. Some claim they were born from violent eruptions long ago, while others suggest they are a less natural creation. The truth has long been lost, but some hints might still be found in the dungeon where they dwell. These monstrous creatures pose a constant danger, with larger ones burrowing beneath the ground, ready to erupt without warning and ambush any adventurer who dares to get too close!
+
+
+
+
+If you want a higher resolution look at the image above, click here!
+
+
+
+
+Lava strykewyrms are included under Wyrm tasks. They are relentless, and can attack with Melee or Ranged. Some of your Magic can weaken them, but other spells may only make them stronger! Even more terrifying is their superior version, the Magma strykewyrm. This ferocious beast can burrow underground, so you must be prepared to move quickly if you want to survive!
+
+
+
+
+Similarly, they will be found in singleway combat areas and cannons won't work on them.
+
+
+
+Creature	Slayer Unlock Requirements	Quantities	Weightings	Slayer Point Unlock
+Lava strykewyrms (included under Wyrm tasks)	
+62 Slayer
+60 Sailing
+70 Combat (if filtering by combat level)
+	
+Chaeldar: 40 - 60
+Nieve: 40 - 60
+Duradel: 40 - 60
+	
+Chaeldar: 5
+Nieve: 4
+Duradel: 4
+	
+Wyrm Regards - Increases the number of Wyrms assigned to 200 - 250. Costs 100 points.
+
+Unique Drops
+
+Strykewyrm Bones
+
+
+Strykewyrm Bones are a new type of bone that gives 60 Prayer XP when buried, putting them between Wyrm and Dragon Bones.
+
+
+
+
+When blessing them and breaking them down, they give 48 Blessed Bone Shards.
+
+
+Other Drops
+
+Dragon Sheet
+
+
+Strykewyrms can also drop sheets of Dragon Metal that are used within shipbuilding. Since it is a component used for shipbuilding and not used outside of Sailing, we won't be looking to poll the Dragon Sheets individually.
+
+
+
+
+Poll Question: Should we add Lava strykewyrms and a superior variant as part of Wyrm Slayer tasks?
+
+
+
+
+Poll Question: Should we add Strykewyrm Bones as described in the blog?
+
+
+
+
+
+Frost Dragons
+
+
+
+These infographics were made in partnership with GentleTractor. If you want a higher resolution look at the image above, click here!
+
+
+
+
+If you are an experienced Sailor, you may chart a course to Grimstone, a long-forgotten frozen island. Few who set foot here will ever return, for deep within its icy heart lie the Frost dragons. These ancient beasts are entombed in permafrost, their chilling breath seeping into the air. If you catch a glimpse of their shimmery scales, heed it as a warning and retreat, unless you're willing to take on a trial colder and deadlier than any other!
+
+
+
+
+If you want a higher resolution look at the image above, click here!
+
+
+
+
+Frost dragons can be fought outside of Slayer tasks, but you can also get them as a Slayer task. Frost dragons won't need to be unlocked with slayer points, but are low-weighted tasks with low quantities added to higher level slayer masters. They attack with melee and dragonfire. They will be weaker to stab, heavy ranged and fire spells.
+
+
+
+
+Their breath is icy rather than fiery, much like the King Black Dragon's ice breath attack. Like the new NPCs described above, they will be found in single-way combat areas and cannons won't work on them.
+
+
+
+Creature	Slayer Unlock Requirements	Quantities	Weightings
+Frost Dragons	
+87 Sailing
+85 Combat (if filtering by combat level)
+	
+Nieve: 30 - 40
+Duradel: 20 - 30
+	
+Nieve: 4
+Duradel: 4
+
+Unique Drops
+
+Frost Dragon Bones
+
+
+Frost Dragon Bones are a new type of bone that gives 100 Prayer XP when buried, putting them between Lava Dragon Bones and Hydra Bones.
+
+
+
+
+When blessing them and breaking them down, they give 84 Blessed Bone Shards.
+
+
+Other Drops
+
+Dragon Sheet
+
+
+Like Lava strykewyrms, Frost dragons can also drop sheets of Dragon Metal that are used within shipbuilding.
+
+
+
+
+Poll Question: Should Frost dragons be added as a new Slayer task?
+
+
+
+
+Poll Question: Should we add Frost Dragon Bones as described in the blog?
+
+
+
+
+
+Community Vote: Sailing Pet
+
+
+
+These infographics were made in partnership with GentleTractor. If you want a higher resolution look at the image above, click here!
+
+
+
+
+As promised, we would like to offer the community the opportunity to vote on what pet you'd like for Sailing. Without further ado, take a look at our options:
+
+
+
+
+If you want a higher resolution look at the image above, click here!
+
+
+
+
+Poll Question: Which option for the Sailing pet do you prefer?
+
+
+
+
+We've seen suggestions for the Sailing pet to swim alongside your boat. It's a really fun idea! That said, we want the Sailing pet to feel like a traditional skilling pet, in line with the others already in game. This means we want you to be able to show it off anywhere, not just while you are out at sea.
+
+
+
+
+For that reason, the pet is designed to follow you onto your boat rather than swimming around it. While we would love to explore swimming animations in the future, that won't be possible in time for launch. Instead, each option we've picked works both on land and at sea.
+
+
+
+
+The current pet options are final, but we're still open to hearing your thoughts if there is anything you'd like us to refine. Ultimately, it's up to you to choose which one makes the cut, so let us know what you think!
+
+
+
+
+
+Miscellaneous
+
+
+
+This is our final Sailing poll until launch day, how exciting! With that in mind, we've added an extra section to this blog to catch miscellaneous topics or missed poll questions.
+
+
+Jumbo Squid
+
+
+In our last blog, we polled a series of new fish introduced with Sailing which have integration with both Cooking and Herblore. We included information about Jumbo Squids, but forgot to add the question into the final poll! Here it is:
+
+
+
+
+Poll Question: Should Jumbo Squid be added to the game?
+
+
+
+
+Skill Total Worlds
+
+
+Skill Total worlds are special members-only worlds that require a minimum total level to enter. They don't change the content of the game, but they do offer perks to higher-level players, as they can train on less populated worlds.
+
+
+
+
+Right now, we have 1500, 1750, 2000, and 2200 worlds. The highest tier, 2200, is especially exclusive, usually only accessible to players with maxed or near-maxed accounts. However, when Sailing is added to the game, this will bring the maxed Skill Total to 2376. That naturally raises a question: what happens to Skill Total worlds?
+
+
+
+
+Option 1: Raise the requirement of 2200 worlds
+
+We could raise the requirement from 2200 to 2250, which spaces out a +250 level progression for Skill Total worlds (1500, 1750, 2000 and 2250).
+
+
+
+
+Option 2: Introduce a new Skill Total world
+
+We could keep also add a new tier of Skill Total world, such as 2350.
+
+
+
+
+As we didn't reach a clear consensus in the survey, we'll poll both options as shown below:
+
+
+
+
+Poll Question: When Sailing launches, should we change existing 2200 skill total worlds to be 2250?
+
+
+
+
+Poll Question: When Sailing launches, should we add some 2350 skill total worlds?
+
+
+
+
+
+
+Bank Space
+
+
+We know that as new content arrives, more resources flood into the game and keeping that bank organised can almost feel like a part-time job! To help with that, we're delighted to confirm plans to increase the amount of bank storage available.
+
+
+
+
+Here's what we're proposing:
+
++100 extra spaces for all members at no cost.
++10 spaces per bank space unlock, raising the maximum unlockable slots from 360 to 450.
+
+
+
+So maximum bank space will grow by +190 spaces in total.
+
+
+
+
+This change should give you plenty of breathing room for any treasures you find out at sea!
+
+
+
+
+Poll Question: Should we increase bank space upon the launch of Sailing as described in the blog?
+
+
+
+
+Medallion of the Deep
+
+
+During your Sailing adventures, you'll have the chance to uncover hidden secrets. One such discovery is the Medallion of the Deep, an untradeable neck-slot item that functions as specialised diving equipment, letting you explore underwater without the need for additional gear. Please note, the Medallion of the Deep will not work in areas with a strict oxygen limit, for balancing reasons.
+
+
+
+
+We want to preserve the excitement and mystery of this reward for launch, so we won't be detailing exactly how it's obtained - only that it's something to look forward to on your Sailing journey!
+
+
+
+
+Dev Comment: We wanted the Medallion of the Deep to feel like a true reward for adventurers who enjoy exploration. Obtaining it will encourage players to seek out hidden content and embrace discovery throughout their journey to 99 Sailing.
+
+
+
+
+Poll Question: Should we introduce the Medallion of the Deep as an untradeable neck-slot item as described in the blog?
+
+
+
+
+Anti-Bleed Tonic
+
+
+In our previous blog, we introduced and polled the 'Anti-Bleed Tonic'. After player feedback, we've renamed this item Haemostatic Dressing instead.
+
+
+
+
+Following discussions with the team, we'd like to alter the process of creating it slightly. All steps continue to use Herblore, and the effects of this item are unchanged.
+
+Step 1: Add Elkhorn to a vial to create an unfinished Elkhorn potion.
+Step 2: Mix in Squid Paste to make a Hemostatic Poultice.
+Step 3: Combine with Cotton Yarn to produce the final Hemostatic Dressing.
+
+
+
+Haemostatic Dressings will be made with 3 applications and can be decanted, like potions, to have up to 4 and they will still use the potion delay system when consumed. We're treating this like an honorary potion!
+
+
+
+
+Max Cape Clarification
+
+
+In the Sailing Beta Blog, we explained that players will lose the ability to use the Max Cape when Sailing launches. This was met with a generally positive response from the community, but we didn't provide specifics on how exactly this would work, which brought up questions about whether players would have to re-purchase their cape. We'd like to offer some clarity and reassurance now.
+
+
+
+
+When Sailing launches, you will still own your Max Cape. However, it won't be equip-able until you've re-maxed. If you're wearing it when you next log in, it will be unequipped automatically, similar to how the Quest Cape works when you no longer meet its requirements!
+
+
+
+
+If you own a cosmetic variant of the Max Cape (e.g the Infernal Max Cape), you will be able to dismantle it. Doing so will return both the base Max Cape and the item it was combined with to your inventory. You will not be able to recombine them or use the Max Cape until you've reached 99 Sailing and re-maxed your account.
+
+
+
+
+We hope this approach clears up any confusion. It differs slightly from our original blog where we stated that the Max Cape would not return the base component. However, we are listening to your feedback and we'll keep listening!
+
+
+
+
+
+Sailing Stress Test
+
+
+
+On August 14th, we ran a large-scale Sailing load test to see how the game would hold up under the pressure of thousands of players joining all at once. We were looking to prepare for launch day by throwing our servers into a "worst-case scenario" by subjecting it to a far more intense load than what we actually expect, in order to see what broke, what held and what could be improved.
+
+
+
+
+We're really heartened by how many players showed up, considering this wasn't a beta to show off new content. This test was purely for our own analysis, which in turn should make release day better for you all! Voluntarily wasting XP shows true dedication to the game and a willingness to help carve OSRS into the best thing it can be, so thank you for that.
+
+
+What Happened in the Test
+
+
+At 2pm UTC, Thursday 14th of August, we started the first of multiple tests, restarting every half an hour. We announced it everywhere we could and asked as many of you to hop on at the same time as possible.
+
+
+
+
+Our test was targeted towards:
+
+Performance and reliability of network code transmitting boat updates to everyone nearby.
+Performance of boat movement and collision.
+Performance of core sailing scripts.
+Overall server stability and memory usage.
+Any unexpected overhead that we may not have seen in our internal testing environment.
+
+
+
+To really push things to their absolute limits, every player who logged in was automatically spawned onto a boat and told to sail laps around The Pandemonium (our best score was 47 seconds, shoutout Mod Nin). This world setup meant:
+
+The world reached its 2000-player capacity.
+Hundreds of boats were crammed into the same area.
+Lots of movement was happening all at once.
+Both player and boat scripts were running constantly in the background.
+
+As the tests ran, we captured tonnes of metrics to tell us exactly how long the server was spending executing all of the different bits of code, and how that correlated to things like player count.
+
+
+
+
+In short – absolute chaos. Perfect for testing, stressful for both the servers and us JMods!
+
+
+What We Learned
+
+
+The good news is that most of our core systems worked as intended.
+
+Boat movement was very performant.
+Network code was acceptably performant, with some room for improvement particularly under heavy load.
+Both player and boat scripts were acceptably performant.
+Memory wasn't a concern, staying well within normal ranges.
+
+
+
+We did, unfortunately, experience one issue early in the test that caused major lag, with some game ticks taking upwards of 20 seconds! Upon inspection, we believe that this issue is a consequence of the way we run beta worlds, rather than Sailing code – but we will be investigating this further to make sure it doesn't happen again. Thankfully, this lag subsided after a few minutes and the test continued fairly smoothly!
+
+
+
+
+Overall, we are very pleased with the results here. Once the beta world lag subsided, Sailing was stable and playable, even on a full world with every single player Sailing – that's a heavier load than we can expect even on launch day! Our findings did reveal some problem areas though, both big and small. On the minor end of things, the performance of player and boat scripts were pretty good, but definitely stuck out in our performance graphs. A bit more pressing was the performance of our network visibility code, which decides what you can see, and builds packets of data to send to your client. This scaled fairly poorly with hundreds of boats all in the same area, but the test has revealed some optimisations we can make prior to launch.
+
+
+What This Means For Launch Day and What's Next For Sailing
+
+
+The important takeaway is the stress test went as successfully as we could have hoped. Although we didn't achieve a lag-free test, the results of the data we got means we are confident that Sailing on launch shouldn't experience too many lag issues. But why?
+
+We've now done this test, so have been able to directly target some of the biggest pain points.
+It's unlikely that every single player in a world will be in boats at the same time.
+You'll be spread all across Gielinor rather than clustered in one spot.
+
+
+
+We're using this test to guide some improvements on the way to the launch:
+
+Optimising how the visibility system handles crowded areas.
+Tightening up the performance of boat and player scripts.
+
+
+
+The Sailing load test has given us confidence that we're on course for a smooth launch. Your feedback highlighted areas where we can further improve the experience, and we're deeply grateful for that. Many of you have also been asking whether we're still aiming for a late Autumn release. We are happy to confirm that development is on track and we'll be announcing the release date soon.
+
+
+
+
+Thank you to everyone who joined in, shared the messages on socials, and kept us updated with how it was performing for you. Your participation gave us the data we needed, and it's helping us make sure Sailing launches in the best state it possibly can. We can't wait to set sail with you soon!
+
+
+
+
+
+Survey
+
+
+
+That's a wrap for today's blog! Let us know how you feel about the content in our survey linked below. We'll discuss feedback as a team and address it via a Twitch Sailing Q&A on Tuesday, September 23rd. If we need to make any changes to the design, we'll let you know about it ahead of the poll on Monday, September 29th.
+
+
+
+
+
+
+You can also discuss this update on the 2007Scape subreddit, the Steam forums, or the Sailing Discord. For more info on the above content, check out the official Old School Wiki.
+
+
+
+
+Mods Abe, Abyss, Acorn, Ape, Arcane, Archie, Argo, Ash, Ayiza, BigRig, Blighted, Blossom, Boko, Bruno, Chilly, Criminal, Curse, Daizong, Ed, Elena, Enigma, Entropi, Freddie, Fuzz, Gecko, Gengis, Gizmo, Goblin, Grace, Grub, Halo, Harold, Hend, Hornet, Husky, Ivory, Jalo, Jamesy, Jerv, Keyser, Kieren, Kirby, Kurotou, Leebleh, Lenny, Light, Liron, Lykos, Mack, Manked, Markos, Maylea, Mobius, Moogle, Morty, Moz, Necro, Nin, Nixon, Nox, Nylu, Ori, Other, Otter, Philomel, Pork, Pumpkin, Puppi, Rach, Redfield, Rice, Roq, Roy, Ry, Saiyan, Sarnie, Schmidt, Shogun, Shroom, Sigma, Skylark, Smithy, Sova, Spyro, Squid, Starry, Suharun, Surma, Sween, Tide, Titania, Titus, TJ, Tomb, Tsourorf, Tyran, Veda, Vegard, West, Wolfy & Yume
+
+
+
+
+The Old School Team.

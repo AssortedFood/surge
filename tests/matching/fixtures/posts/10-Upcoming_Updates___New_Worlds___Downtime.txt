@@ -1,0 +1,68 @@
+Title: Upcoming Updates - New Worlds & Downtime
+ID: 10
+Link: https://secure.runescape.com/m=news/a=13/upcoming-updates---new-worlds--downtime?oldschool=1
+
+---
+
+This Week's Update
+
+To prepare for the launch of Grid Master on October 15th there will be no game update this week and instead, there will be reboot on Thursday 9th October for the standard changes to the PvP World Rota. Downtime will be minimal, just like a regular game update.
+
+Universal
+(UTC)	UK
+(BST)	US East
+(ET)	US West
+(PT)	Australia
+(AET)
+10:30am	11:30am	6:30am	3:30am	9:30pm
+
+We recently released the times for when Grid Master goes live, but just in case you missed it in the Get Ready for Grid Master blog, we'll share them here too:
+
+	Timer Begins	Worlds Down	Worlds Up	Grid Master Live
+Universal
+(UTC)	8:45am	9:30am	10am	11am
+UK
+(BST)	9:45am	10:30am	11am	12pm
+US East
+(ET)	4:45am	5:30am	6am	7am
+US West
+(PT)	1:45am	2:30am	3am	4am
+Australia
+(AET)	7:45pm	8:30pm	9pm	10pm
+New Worlds
+
+Alongside the reboot on Thursday, we'll also be adding 60 new worlds! These are being added in preparation for the full release and we'd like to test their performance ahead of time given it's such a high number of worlds being added at once!
+
+We want to ensure that there are enough worlds for players to enjoy our very first community event, alongside those who want to continue progressing on the main game!
+
+Impacts On PvP
+
+With these additional worlds, we know there are concerns around the Wilderness and PvP. More worlds means more hopping, fewer fights, and less fun.
+
+We'd like to clarify that while these new worlds will launch as standard worlds (so we can monitor them ahead of the Grid Master launch to ensure stability), once Grid Master goes live, they will become exclusive to the event. Once the event ends, they'll be removed.
+
+Behind the scenes, we have begun early discussions around the impact that increasing the number of worlds has on player interactions within the Wilderness, and what we might be able to do to alleviate this. There's nothing concrete for us to share yet, but when we're ready we'll look to all of you to get your feedback!
+
+Upcoming Maintenance
+
+We also want to let you know that on Tuesday 14th October there will be approximately a 3 hour period of maintenance to help ensure more robust and safer systems are in place for the launch. During this time, all worlds will be offline. This could also impact some other areas like the website.
+
+	Work Begins (Approximately)	Work Ends (Approximately)
+Universal
+(UTC)	8am	11am
+UK
+(BST)	9am	12pm
+US East
+(ET)	4am	7am
+US West
+(PT)	1am	4am
+Australia
+(AET)	7pm	10pm
+
+We'll keep you updated through our Game Status Page and socials, so stay tuned for more updates there!
+
+You can also discuss this update on the 2007Scape subreddit, the Steam forums, or the community-led OSRS Discord in the #gameupdate channel. For more info on the above content, check out the official Old School Wiki.
+
+Mods Abe, Abyss, Acorn, Ape, Arcane, Archie, Argo, Ash, Ayiza, BigRig, Blighted, Blossom, Boko, Bruno, Chilly, Criminal, Curse, Daizong, Ed, Elena, Enigma, Entropi, Freddie, Fuzz, Gecko, Gengis, Gizmo, Goblin, Grace, Grub, Halo, Harold, Hend, Hornet, Husky, Ivory, Jalo, Jamesy, Jerv, Keyser, Kieren, Kirby, Kurotou, Leebleh, Lenny, Light, Liron, Lykos, Mack, Manked, Markos, Maylea, Mobius, Moogle, Morty, Moz, Necro, Nin, Nixon, Nox, Nylu, Ori, Other, Otter, Philomel, Pork, Pumpkin, Puppi, Rach, Redfield, Rice, Roq, Roy, Ry, Saiyan, Sarnie, Schmidt, Shogun, Shroom, Sigma, Skylark, Smithy, Sova, Spyro, Squid, Starry, Suharun, Surma, Sween, Tide, Titania, Titus, TJ, Tomb, Tsourorf, Tyran, Veda, Vegard, West, Wolfy & Yume
+
+The Old School Team.

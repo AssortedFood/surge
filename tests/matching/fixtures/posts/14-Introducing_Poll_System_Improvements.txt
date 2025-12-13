@@ -1,0 +1,179 @@
+Title: Introducing Poll System Improvements
+ID: 14
+Link: https://secure.runescape.com/m=news/a=13/introducing-poll-system-improvements?oldschool=1
+
+---
+
+We’re revamping our Poll system to be better than ever!
+
+If you can't see this image, click here!
+
+Polls have always been the backbone of Old School RuneScape, giving you the final say on what content makes it into the game and making sure it stays true to the spirit of Old School. It is one of the most unique things about OSRS. Truly, this is democracy manifest!
+
+The system has served us well over the years, but it is also a little limited. Until now, we have only been able to ask very simple, tick-box questions, and even then, we have been tied up by the tech behind the system. We know that sometimes this left us unable to get a full picture of how the community was feeling about an idea.
+
+That is why we are expanding what the Poll System can do. These changes will not affect the Polling Charter or the 70% pass rate, that core principle remains untouched. Instead, we are giving ourselves more ways to hear from you, to test the waters before big decisions, and to make sure your feedback is shaping the game at every step.
+
+So, let’s dive into the improvements that will make polling more flexible, more engaging, and more informative than ever before.
+
+Why The Change?
+
+What do we mean when we talk about the Poll system being limited?
+
+Question types are limited: We can only ask simple, single-choice questions, which means feedback is often too black-and-white.
+Poll timing is clunky: Launching or closing a poll requires certain developers with specific access to be online at the right moment. On top of that, we can only run one poll at a time. Some updates have been pushed back because we simply can't poll what is required for the time it'd be ready for release.
+Survey fatigue is real: When we need deeper insight we sometimes send out external surveys, but these can often suffer from fewer responses the more we send, and it's not ideal having to pull people away from the game.
+
+The new system addresses all of these problems. It makes polling more flexible, more accessible, and more player-friendly.
+
+What’s New In The Improved Poll System?
+New Question Types
+
+We can now go far beyond simple Yes/No. Examples include:
+
+Single-choice
+
+Same as before, but still essential for Yes/No decisions.
+
+Question 1: Same as before, but still essential for Yes/No decisions.
+
+  Yes
+  No
+  Skip
+Multiple-choice
+
+Pick several options from a list, perfect for things like “Which of these rewards interest you most?”.
+
+Question 2: Which themes would you like for a future cape design? (Choose up to 2).
+
+  Completionist Cape
+  More Max Cape Variants
+  Third option (C)
+  Fourth option (D)
+Free-text
+
+Type your own response directly in-game, useful for gathering opinions in your own words.
+
+Question 3: Explain why you will never be able to defeat Cuthbert, Lord of Dread.
+
+Type Your Answer:  
+Ranked
+
+Sort a list by preference, e.g. which skills or features should we prioritise.
+
+Question 4: Rank your favourite Lil' Zik Transmogs.
+
+Maiden
+Bloat
+Nylo
+Sot
+Xarp
+Matrix
+
+Answer a set of related questions at once, like rating different aspects of an idea.
+
+Question 5: Rate each Sailing training method on a scale from “strongly dislike” to “strongly like.”
+
+	Strongly like	Like	Neutral	Dislike	Strongly dislike	Skip
+Courier Tasks	
+	
+	
+	
+	
+	
+
+Bounty Tasks	
+	
+	
+	
+	
+	
+
+Sea Charting	
+	
+	
+	
+	
+	
+
+Shipwreck salvaging	
+	
+	
+	
+	
+	
+
+Barracuda Trials	
+	
+	
+	
+	
+	
+
+These new question types mean we can get a fuller picture of how you feel and why.
+
+Poll Formatting
+
+If you can't see this image, click here!
+
+Polls can now include in-game text blocks, images, headers, and even links that take you to blogs or bigger design explanations. This means we can provide more context directly inside the poll menu without you always needing to leave the game.
+
+Different Poll Types
+
+If you can't see this image, click here!
+
+Not everything has to be a formal Yes/No vote. We now have the ability to run:
+
+Lock-in polls: A lock-in poll is a commitment to release the proposed update if it reaches the usual 70% pass and remains reasonably possible for us to ship. If we hit problems during development, we may change or cancel the update, and we will explain why if that happens.
+Greenlight polls: A greenlight poll asks whether we should explore the idea further. If it reaches the usual 70% pass, we will develop a fuller design and bring it back via a lock-in poll so you can decide whether to commit to it being added to the game.
+Examples: "Do you want Raids 4, details will be revealed at a later date, and rewards will be polled separately" this would be considered to be a Lock-in poll rather than greenlight, as it has been in the past. A typical Greenlight poll might instead look like "Should we explore adding a new area to the game themed around cabbages?" - the emphasis on exploring adding something that is not fully fleshed out, but will give us a good indication on whether or not you feel like it's worth us spending time refining an idea further before we fully commit to adding it to the game via a Lock-in poll.
+Opinion surveys: Flexible questionnaires that let us gather input before content is ready to share for wider feedback.
+
+These two new poll types are especially useful for early-stage designs, where we’d rather hear your thoughts first before locking anything in!
+
+Eligibility
+
+By default, polls will still require members with 25 hours of playtime and 300 total levels. But now we have tools to refine eligibility for specific polls or even specific questions.
+
+For example, we might want feedback from players of a certain combat level, or restrict a question to players who’ve engaged with a particular piece of content. These are mainly going to be used for opinion-based polls or survey questions, rather than content than might be coming into the game.
+
+If we feel there is a need for addition requirements to vote on a particular poll question, we will use this with care. We’d like to share our thoughts on how we believe it will work:
+
+Default stays broad: Content polls that add to the game will continue to follow the standard rules, including the 70% pass requirement and the usual account eligibility. Targeting is mainly for opinion polls or surveys where specialist input helps.
+Ways for everyone to be heard: When we target a question to specialists, we will look to pair it with a wider opinion poll, a free-text question, or a survey open to a broader audience. This helps us capture both expert experience and general sentiment.
+Clear reasons, shared in advance: If we plan to restrict a poll or a question, we will say so before it goes live. We will explain who is eligible, how the criteria work, and why this approach is better for that case. For example, we may ask only players with experience of a boss to rate its drop table, while still running a separate opinion poll open to everyone.
+Simple, game-relevant criteria: Criteria will be based on in-game progress you can understand and verify, such as a quest completed, kill count, total level, league rank, or a recent activity flag.
+Not a blanket change: We are still exploring the best use cases. Targeted questions will be the exception, not the rule. We will review results and share a short note on who was eligible and why, so the process is clear.
+Example you might see in-game: This question is visible to players with at least 10 Vorkath kills. We are using this criterion to collect feedback from players familiar with the fight. A separate opinion poll on Vorkath is open to all players.
+Running Multiple Polls
+
+The new system lets us run more than one poll at a time, something we couldn’t do before. That means smaller, targeted polls won’t need to wait for the big headline content polls to finish.
+
+Automation and Scheduling
+
+It will be possible for Polls to be scheduled in advance, opening and closing automatically. This removes the need for manual intervention and ensures everything runs on time. It also means we can tease polls early by making them visible in the game before voting begins!
+
+A New Look For Web & A More Robust System!
+
+While the poll section on the Old School website holds a lot of nostalgic charm, is has been well overdue a revamp, which includes presenting the results in the same way the game does! No more inconsistencies with voting %'s as we'll finally be counting skip votes in the results displayed! Hurrah!
+
+In addition to this, the new system is much more robust! While there have only been a small number of occasions where poll data became corrupted due to unforeseen circumstances (requiring us to re-run a poll entirely!), the new system is far more robust with the data consistency which will help alleviate the chances of that happening.
+
+Looking Ahead
+
+That is everything we are ready to share for now. The improved Poll System gives us the tools to gather your thoughts in more meaningful ways, while still holding onto the principle that has defined Old School since 2013: if it is coming into the game, it needs 70% of your votes.
+
+With these changes, you will see more variety in the kinds of questions we ask, more opportunities to share your views, and smoother processes behind the scenes to make sure polls run on time. From opinion polls that test early ideas, to flexible question types that go beyond a simple “yes or no,” this is about giving you more ways to shape the game you love.
+
+What's even more exciting is that we're also going to be bringing in all the data from previous polls, meaning you will have the power to see what you voted for in each one! Have fun going back in time and seeing how past you voted!
+
+Mod Lykos
+Because polls have been so important to OSRS's history, we wanted to make sure we did them justice. We think there's a subset of long-time players that will really get a kick out of going through the older ones and seeing what they had voted for (or against) at the time.
+
+We are excited to roll out the new system soon and cannot wait to see what you think of it. As always, keep an eye on the News page and our socials for details on when the first improved poll will go live, and be ready to make your voice heard!
+
+You can also discuss this update on the 2007Scape subreddit, the Steam forums, or the community-led OSRS Discord in the #gameupdate channel. For more info on the above content, check out the official Old School Wiki.
+
+Mods Abe, Abyss, Acorn, Ape, Arcane, Archie, Argo, Ash, Ayiza, BigRig, Blighted, Blossom, Boko, Bruno, Chilly, Criminal, Curse, Daizong, Ed, Elena, Enigma, Entropi, Freddie, Fuzz, Gecko, Gengis, Gizmo, Goblin, Grace, Grub, Halo, Harold, Hend, Hornet, Husky, Ivory, Jalo, Jamesy, Jerv, Keyser, Kieren, Kirby, Kurotou, Leebleh, Lenny, Light, Liron, Lykos, Mack, Manked, Markos, Maylea, Mobius, Moogle, Morty, Moz, Necro, Nin, Nixon, Nox, Nylu, Ori, Other, Otter, Philomel, Pork, Pumpkin, Puppi, Quack, Rach, Redfield, Rice, Roq, Roy, Ry, Saiyan, Sarnie, Schmidt, Shogun, Shroom, Sigma, Skylark, Smithy, Snazzy, Sova, Spyro, Squid, Starry, Suharun, Surma, Sween, Tide, Titania, Titus, TJ, Tomb, Tsourorf, Tyran, Veda, Vegard, West, Wolfy & Yume
+
+The Old School Team.

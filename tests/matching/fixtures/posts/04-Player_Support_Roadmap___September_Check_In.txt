@@ -1,0 +1,482 @@
+Title: Player Support Roadmap - September Check In
+ID: 4
+Link: https://secure.runescape.com/m=news/a=13/player-support-roadmap---september-check-in?oldschool=1
+
+---
+
+Earlier this year, we revealed our Player Support Roadmap – a commitment to improving support services and anti-cheating systems throughout 2025. Today, we want to share an update on progress so far, what’s next, and how this fits into the bigger future we’re building together.
+
+
+
+
+Check out the video below or read on for the highlights!
+
+
+
+
+If you can't see the video above, click here.
+
+
+
+A Roadmap Shaped By Your Feedback
+
+
+
+If you can't see the image above, click here.
+
+
+
+
+Player Support is one of the areas you’ve told us matters most. That’s why we set out a clear roadmap shaped by your feedback, and why we’re now holding ourselves accountable with regular check-ins.
+
+
+
+
+Since the project began, we’ve surveyed thousands of RuneScape and Old School players, helping us refine our priorities. Here's some of the wins you’ve told us you value so far:
+
+Clearer updates and transparency from the Jagex team
+Improved Contact Forms and the new My Requests feature to track tickets
+Feedback when you report cheating in-game
+
+
+
+And you’ve also told us where we still need to go further:
+
+Realtime live chat support remains the #1 request
+More transparency and flexibility in ban appeals
+Faster support response times
+Expanded account recovery options
+
+
+
+We’re already working on these areas, with major updates due later this year. We’ll be checking in again with another survey in October to get your read!
+
+
+
+Part of a Bigger Journey
+
+
+
+These improvements are not happening in isolation. We have an ambitious vision to improve your end-to-end player experience, alongside a greater focus on integrity and fairness across our games.
+
+
+
+
+By improving how we support you day to day, we’re laying the foundation for everything else to come in 2026 and beyond.
+
+
+
+
+
+
+For Our Players
+
+
+
+
+Player Support is an area you’ve long asked us to improve, and our Roadmap was built around your most consistently mentioned features or expectations for what good looks like.
+
+
+
+
+As part of our commitment to transparency and ongoing improvements, we promised to gather feedback after major releases. Your input helps us stay accountable and makes sure we’re building the experience that matters most to you!
+
+
+
+
+Following our survey in December that informed our entire project, we ran a post Roadmap survey in May 2025. We received over 5,000 responses, from a variety of active and lapsed players from both RuneScape and Old School.
+
+
+
+
+There were some great things to hear we’re doing well! Some of the key highlights:
+
+Many players appreciated clearer updates from Jagex regarding our roadmap and future plans.
+The revamp of our Contact Forms and the new My Requests feature, which lets players view current and previous tickets on our Support Centre, were seen as helpful improvements.
+The majority of players appreciated the new functionality that provides feedback to in-game cheating reports.
+
+
+
+There were also some important improvements you want to see from us, all of which have even between recently released or are planned in our Roadmap for the rest of the year.
+
+Real-time live chat support remains our most requested feature.
+There was some clear frustration with the ban appeal process, with players wanting greater transparency and more flexible options for appeals.
+Extended waits for support responses remained a pain point.
+Some players asked for more flexible account recovery options if they’ve lost access to their account.
+
+
+
+With some key releases on the horizon, we’ll be sending out another survey in October to check in with you – both on if you’re feeling the effects of these new releases, and to make sure we’re still prioritising what matters most!
+
+
+
+
+
+
+Our Progress So Far
+
+
+
+
+In the six months since we announced our Roadmap, we’re already seeing some great progress based on the features and updates that we’ve dropped so far.
+
+
+
+Improved Player Support Response Times
+
+
+
+We have more than doubled the size of our Player Support Team as part of our efforts to reach our 48-hour response time commitment. While this has helped, we’re not there just yet – but we’re confident we’ll get there through our larger team and other Roadmap work.
+
+
+
+New Chat Spam Model
+
+
+
+Our Chat Spam model launched late last year, keeping the airways clear for those proper conversations.
+
+
+
+
+We’ve been continuing to refine it over 2025, leading to 17,000 chat spam bans since it launched.
+
+
+
+Showing Reports Matter
+
+
+
+Alongside our complex detection models, player reports are a huge help for helping us identify bad actors. It’s important we show that these reports do often result in action!
+
+
+
+
+Our new Reporting system now notifies you if we’ve acted on any of your recent reports, so you can see your reports matter. To date, we’ve sent 700,000 right to player inboxes! A big thank you to everyone who uses this feature, it really helps.
+
+
+
+
+If you can't see the image above, click here.
+
+
+
+Single Point of Contact Phase 1: Single Location Tracking
+
+
+
+We’ve launched a new system that makes it easy to open a ticket with our Player Support team, and for Jagex Accounts; track its progress all in one location. We call this our Single Point of Contact service!
+
+
+
+Single Point of Contact Phase 2: Scaper
+
+
+
+Our AI assistant Scaper launched last month, helping players find answers to questions they may not need a ticket to resolve. While Scaper will help plenty of requests, we’ll always let you skip the AI chit chat and open a chat or ticket with a real person if you’d prefer.
+
+
+
+
+Scaper has handled over 22,000 player chats so far, with a satisfaction score of 70%. Over the next year we’ll start to explore ways for Scaper to handle self-service directly in the chat so you can instantly resolve certain support requests without the wait!
+
+
+
+Strengthening Actions Against Bots
+
+
+
+Since our last update, we’ve continued to strike at Botting with mass removals of accounts linked to Botters.
+
+
+
+
+We’ve also made our penalties for Real World Trading significantly harsher as a deterrence for players buying gold, with a goal of reducing RWT Gold demand and the value of Botting within our games, and continue to develop further detection and removal capability.
+
+
+
+Improved Ban Appeal Process
+
+
+
+Most bans and mutes can be avoided by following the rules and Terms & Conditions, but if something does go wrong, we want you to feel confident that we’ll listen and review things fairly.
+
+
+
+
+In our survey back in December 2024, 77% of players who appealed a ban or mute were unsatisfied with the experience. That’s why, on September 15th, we made some big improvements to our offence appeal process, with more human involvement and clearer communication.
+
+
+
+
+How It Works
+
+First appeal: Submit your appeal and a Jagex Moderator will review it, checking account ownership, looking closely at all available evidence, and removing offences caused by hijackers or applied incorrectly.
+Clear explanations: If your appeal is denied, we’ll email you a more detailed explanation of the decision.
+Second appeal: If you still believe the outcome is wrong, you can appeal again for a second review, following the same process.
+
+
+
+Even past offences under 6 years old that were previously denied can be appealed again under the new system. We are unable to review bans over 6 years old due to legal requirements to delete those accounts under Data Privacy Laws and retention policies.
+
+
+
+
+Every appeal is reviewed by a real person, with evidence carefully checked in two stages. While our error rate is very low, we know mistakes can happen and we’re committed to fixing them when they do. Real world trading offences have already been thoroughly checked prior to being applied, as such these appeals will only be reviewed once more.
+
+
+
+Improved Security Defaults & Education
+
+
+
+In our last update, we mentioned that adoption of Jagex Account security features was lower than we’d like.
+
+
+
+
+Since then, we’ve been working to raise awareness with additional education and recommended changes throughout our account processes.
+
+
+
+
+We’ve also disabled automatically disabling email authentication when you add another form of 2FA, providing more flexibility in how you authenticate your account.
+
+
+
+
+The result of these changes has been an increase in players enabling extra security measures, which is great to see!
+
+
+
+
+Remember: relying only on email codes leaves your account vulnerable if your email is ever compromised. Make sure your email is secure and add extra protections through your Jagex Account for peace of mind.
+
+
+
+Launcher Logout Extension
+
+
+
+Sometimes small changes can really help. We recently extended the inactivity of the log out timer on the Jagex launcher from 30 days to 90 days.
+
+
+
+
+This extension means a better experience if you step away for a while but also reduces the chance of you needing to go through recovery if your old password eludes you. We hope it doesn’t, but it happens!
+
+
+
+
+
+
+Pillar 1: Support Experience
+
+
+
+
+The first pillar of our plans is all about providing a simple, effective and fast support experiences to you.
+
+
+
+Live Chat Is Almost Here!
+
+
+
+This long-requested feature is about to be real. We’re just weeks away from delivering Live Chat during peak hours with real Mods in Player Support!
+
+
+
+
+To make sure we have an opportunity to learn and refine our processes, we’ll initially soft launch Live Chat soon for payment related tickets only. We’ll then begin rolling out chat for accounts management and technical help over the following month, aiming to have completed a full rollout by the end of October!
+
+
+
+48 Hour Ticket Response Time
+
+
+
+As we mentioned earlier, our team has more than doubled! Our Respone Times are trending down, and alongside other improvements, we aim to hit 48 Hour average ticket response time by the end of the year.
+
+
+
+
+We’ve seen ticket satisfaction scores increase from 60% to 79% this year as a result of the changes we’ve already made, and we’ll continue to improve your experience, and aim to increase CSAT to consistently over the gold standard of 80%.
+
+
+
+
+If you can't see the image above, click here.
+
+
+
+
+
+
+Pillar 2: Account Issues & Security
+
+
+
+
+The second pillar of our plans are all about keeping your accounts safe and giving you greater control.
+
+
+
+Hijacking Protection
+
+
+
+In the Dec 2024 survey, 87% of players wanted Jagex to lock their account if hijacked so they can recover it.
+
+
+
+
+As a result, we’re developing a new detection model designed to identify when an account may have been hijacked. At first, this system will notify players via email when suspicious activity is detected. Soon, it will go further by locking accounts to kick out hijackers.
+
+
+
+
+To support this, we’ve improved the “End all sessions” function. Previously, ending sessions would log you out of websites but wouldn’t remove your character from the game instantly.
+
+
+
+
+Now, when you hit End all sessions in your account settings, your character is immediately logged out of RuneScape, Old School RuneScape, the Launcher and our Website.
+
+
+
+
+From there, you’ll need to re-authenticate before getting back into the game, ensuring that only you can regain access.
+
+
+
+Launcher Security Updates
+
+
+
+We’ll be releasing a brand-new Security tab in the Jagex Launcher. If your account is missing important protections, such as a TOTP authenticator app or backup codes, this tab will pop up to encourage you to secure your account.
+
+
+
+Account Recovery
+
+
+
+Finally, we know account recovery is one of the most critical aspects of Player Support. We’re currently designing a smoother, more secure recovery process to help you get back into your account safely if the worst happens.
+
+
+
+
+This is a complex piece of work, so we want to make sure we get it right. Expect to hear more in future roadmap updates.
+
+
+
+Jagex Account Pain Points
+
+
+
+We’ve been working on addressing Jagex Account pain points across multiple areas and platforms based on your feedback.
+
+
+
+
+Mobile Character Switching is on the way, due to be released before the end of this year.
+
+
+
+
+We're also still on track to improve the elevated permissions issue by the end of this year. Players should see an improvement to installing the Launcher on devices without admin access for RuneScape and Old School via RuneLite. This will help you install some of our clients on public computers, such as in the library or workplace, for those extra XP gains!
+
+
+
+
+We continue to invest in ensuring our games are accessible for as many people to play as possible. For our Linux players, we’re actively investigating bringing the Launcher to Linux platforms. While we don’t have any specific updates today, it’s still on our radar.
+
+
+
+
+There are also planned improvements on Mac. We’re committed to ensuring Mac players aren’t impacted by the upcoming deprecation of Rossetta 2 in coming years. For those users playing on Apple Silicon Mac devices, we will be providing a native build of the Launcher and games that supports this architecture, in ample time of the deprecation.
+
+
+
+
+We’ll also be improving your experience by giving flexibility to change the behaviour of various aspects of the Launcher, first being the close button, coming soon.
+
+
+
+Jagex Launcher & Account Reliability
+
+
+
+In our December 2024 survey, around half of Legacy account players said they were hesitant to switch because they’d seen Jagex Account users run into Launcher login issues.
+
+
+
+
+Since then, we’ve rolled out optimisations that make the Launcher run smoother and more reliably during those busy spikes around big updates. We’re pleased to report there were no performance issues during significant launches – like the Varlamore update in July or the RuneScape Leagues launch on September 15th.
+
+
+
+
+
+
+Pillar 3: Cheating Detection & Removal
+
+
+
+
+Our third pillar is about keeping the game fair for everyone.
+
+
+
+
+We know dealing with Bots and Cheaters is of huge importance to the community – and it is to us too. There’s been huge amount of time and effort put into this area over the past few months, and we are far from done.
+
+
+
+New Bot Detection Models
+
+
+
+While we can’t go into details on this one to avoid tipping off Botters, we are investing in our technology and detection methods to better identify and flag Bot accounts to be banned.
+
+
+
+Real World Trading
+
+
+
+To further deter Botters, we’re also improving our ability to tackle likely Real World Trading – and in combination with our harsher penalties, ensure we continue to deter both buyers and sellers of RWT gold as much as possible.
+
+
+
+
+
+
+Our Next Updates
+
+
+
+
+Player Support matters, and we know it’s something you’ve long wanted to see improved.
+
+
+
+
+We want you to feel the effects of all these improvements across a ton of areas, and we know some of your most desired features are still to come – like better cheating detection, Live Chat for all tickets, and more flexibility in Account Recovery.
+
+
+
+
+There’s plenty still ahead of us to deliver on, and we’ll keep you updated every step of the way. Expect further news in the coming months as these features go live!
+
+
+
+
+Thank you for your continued support and feedback along this journey. See you in Gielinor.
+
+
+
+
+
+Jagex Player Support

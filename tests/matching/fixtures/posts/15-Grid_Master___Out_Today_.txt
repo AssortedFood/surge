@@ -1,0 +1,338 @@
+Title: Grid Master - Out Today!
+ID: 15
+Link: https://secure.runescape.com/m=news/a=13/grid-master---out-today?oldschool=1
+
+---
+
+Known Issues	Status
+We are aware that for some players the Gemstone Crab on Grid Master won't bury, meaning the task can't be completed.	We've put a hotfix live that in the short-term, has reduced the amount of players who receive the message to 100. We will continue to work on removing the cap gradually. Thanks for your patience.
+Some players are currently unable to hand in the four decorations to Fred during the Halloween event.	Hotfixed. If you have been affected prior to the fix, you can resolve this by deleting the painting and obtaining a new one from Seth to continue your progress.
+We are aware that the Spooky Chair can be brought into the Gauntlet.	Hotfixed.
+   
+
+Old School’s first community event is here: Grid Master awaits! Dive in, climb the ranks, but don't forget to stop by Lumbridge for some Halloween antics with Fred the Farmer!
+
+Changelog
+Click Here To Show
+Grid Master
+Grid Master is here! Start your journey off by selecting one of the worlds marked in green on the World Select page!
+Halloween
+The Halloween event has arrived. Speak to Fred the Farmer by visiting his farmhouse, located northwest of Lumbridge, to get started!
+Client & Mobile
+We’ve smoothed out visual flickering and layering issues on the new renderer beta across several areas and NPCs, including Darkmeyer, Slepe, the Desert, and more.
+Other Changes
+Fixed an issue where Bloodveld and Nechryael tasks could be assigned without completing Priest in Peril.
+Fixed an issue where Partner slayer didn’t properly respect quest requirements - it should now work as intended.
+Fixed an issue where Dragon tasks incorrectly required full completion of Dragon slayer - they now only require it to be started.
+Players can once again pick up food from the floor in free to play worlds and the Bounty hunter crater - these areas were unintentionally affected by recent wilderness changes.
+Using the new hat retrieval menu on Rantz will now add the hats to the collection log. Any hats collected through this menu over the past few weeks will be added to the collection log and trigger any achievement diary task completion on login.
+Order has been restored to the spelling of 'Chaos fanatic' in the rune pouch load-out menu.
+The world map hotkey tooltip has been mildly shortened and will no longer show if you've toggled it off.
+Looting the Moon chest from now on will no longer attribute the loot to Tormented demons.
+Grammar corrections have been made to Ava's and Azzanadra's dialogue.
+PvP Rota
+
+The PvP rota has moved to Period B
+
+560 - (UK) - PvP World
+319 - (US) - Bounty Hunter World
+579 - (US) - High-Risk PvP World
+561 - (UK) - Free-to-Play PvP World
+580 - (US) - LMS Competitive
+
+World 390 (AUS) for LMS Competitive has been de-activated with this rota.
+
+World 569 (AUS) for Bounty Hunter has been de-activated with this rota.
+
+The PvP Arena is using 'Max/Med' loadouts in Ranked Duels and Tournaments this week.
+
+Grid Master
+
+Today's the day for Grid Master's launch, Old School RuneScape's very first community event! Keep an eye on the Get Ready For Grid Master! newspost, as there might be some more small teasers coming before launch!
+
+If you're looking for our launch plan times, we've got them right here:
+
+	Timer Begins	Worlds Down	Worlds Up	Grid Master Live
+Universal (UTC)	8:45am	9:30am	10am	11am
+UK (BST)	9:45am	10:30am	11am	12pm
+US East (ET)	4:45am	5:30am	6am	7am
+US West (PT)	1:45am	2:30am	3am	4am
+Australia (AET)	7:45pm	8:30pm	9pm	10pm
+
+To start your journey off both members and free-to-play players will have access to begin Grid Master by selecting one of the worlds marked in green on the World Select page. There will be 121 worlds total which will include:
+
+	EU	UK	US East	US West	Australia
+F2P	456, 455	498, 499	417, 648	436, 437	537, 691
+Members	335, 384, 397, 399, 451, 452, 453, 454, 677, 678	380, 382, 661, 662, 663, 664, 665, 666, 667, 623	629, 630, 631, 632, 633, 634, 635, 636, 637, 638, 618, 617, 616, 615, 614, 613, 612, 611, 610, 609, 575, 574, 490, 489, 488	418, 430, 431, 433, 435, 650, 651, 608, 607, 606, 605, 604, 603, 602, 601, 600, 599, 547, 546, 545, 544, 543, 542, 541, 538	591
+Gemstone Crab	686	675	647	659	690
+Yama	685	674	645	658	689
+Hueycoatl	684	673	644	657	688
+Ent Totems	683	672	643	656	687
+Raids	682	671	642	655	595
+Blast Furnace	681	670	641	654	594
+Skilling Bosses	680	669	640	653	593
+Forestry	679	668	639	652	592
+
+To confirm some of the other details we've been speaking about throughout Grid Master, here's the some extra information:
+
+Starting Information
+Bonuses
+
+Base Multiplier = +400% (or x5)
+
+Drop Rate = x8
+
+Minigame Points = x8
+
+Farming Tickrate = x5
+
+Slayer Points = x5
+
+Start with a Dramen Staff
+
+Quests Completed
+
+The Corsair Curse
+
+Prince Ali Rescue
+
+The Restless Ghost
+
+Rune Mysteries
+
+X Marks the Spot
+
+The Ascent of Arceuus
+
+Beneath Cursed Sands
+
+Bone Voyage
+
+Children of the Sun
+
+Client of Kourend
+
+Contact!
+
+Death Plateau
+
+The Depths of Despair
+
+The Dig Site
+
+Druidic Ritual
+
+Fairytale I - Growing Pains
+
+Fairytale II - Cure a Queen
+
+The Forsaken Tower
+
+Getrude's Cat
+
+Icthlarin's Little Helper
+
+Jungle Potion
+
+A Kingdom Divided
+
+Lost City
+
+Nature Spirit
+
+Priest in Peril
+
+The Queen of Thieves
+
+Shilo Village
+
+Tai Bwo Wannai Trio
+
+Tale of the Righteous
+
+The Tourist Trap
+
+If you need a quick refresher on what Grid Master is and how to play, then check out the fantastic video from JoshIsntGaming below:
+
+If you can't see the video above, click here!
+
+The Grid
+
+We'll be releasing the full Grid just before the event starts, so keep an eye on the Wiki page to get the full breakdown! But, just incase you've missed it, here are the current roster of tiles revealed:
+
+If you can't see the image above, click here!
+
+If you can't see the image above, click here!
+
+   
+Relic Design Race Competition
+
+In the spirit of our very first community event, we're also here with first-of-its-kind competition...
+
+The first three players to fully complete the grid will have a chance to work with us to create a brand new Relic for the upcoming Leagues VI.
+
+We're excited to see you think on the fly and push to become the grid's masters - get that podium finish!
+
+For full details and to check if you're eligible to participate, check out T&Cs for more info!!
+
+
+
+
+Finally, we wanted to say good luck and have fun to everyone hoping into Grid Master, we'll see you there!
+
+Halloween 2025
+
+Golden crispy leaves outside the window, Pumpkin Spice drinks buffing your IRL Warmth Meter, jack-o-lanterns slowly spawning on doorsteps... Autumn has already worked its magic, and now the Spooktober vibe has hit Gielinor, too!
+
+Not a bad doggo >:( Just a bat doggo ^.^
+If you can't see the image above, click here!
+
+Getting the Event Started
+
+Talking of Halloween-themed house decorations popping up everywhere... Apparently Death, the Grim Reaper himself, is hosting the Spook-a-thon Decoration Contest. Fred has signed up and wants to turn his humble home into a full-on spook fest, but he gravely needs your help to do so. Help him if you dare...
+
+If you can't see the image above, click here!
+
+To start this year's Halloween Event, speak to Fred the Farmer by visiting his farmhouse north-west of Lumbridge.
+
+If you can't see the image above, click here!
+
+Rewards
+
+As always, once you complete the quest, there are some wicked rewards up for grabs!
+
+Spooky Chair
+
+Remember those spooky chairs at the Draynor Manor moving on their own as if they're possessed? Now you can summon one of those to follow you around for a little while! Not to be confused with a pet though, it will tag along with you for around 10 seconds once you click the "Drop" option on the chair in your inventory. But you may still have a spooky feeling like you're being followed...
+
+If you can't see the image above, click here!
+
+Chair Spinner
+
+Similar to above, the spooky chair will go full spinny and cursed if you use the "Spin" option on the chair in your inventory.
+
+If you can't see the image above, click here!
+
+Grim Reaper Outfit
+
+Currently, the Grim Reaper Hood already exists in-game, but it doesn't have a matching complete outfit. Tut tut tut, that's about to change! You can now complete your killer fashionscape with the Grim Reaper Top, Grim Reaper Bottom and Grim Reaper Gloves.
+
+If you can't see the image above, click here!
+
+Don't have the Grim Reaper Hood? No worries, all the rewards from previous Halloween events, including the hood, can still be unlocked. Just speak to Diango in Draynor to claim them!
+
+Spooky Pumpkin Lantern
+
+What more do we need to say? The previous image says it all. It wouldn't be Halloween without a new spooky jack-o-lantern you can haunt the streets of Gielinor with...
+
+Halloween Livestream
+
+If you can't see the image above, click here!
+
+Tomorrow, October 16th 3pm UTC, following the event release, we'll be hosting a Halloween livestream, consisting of:
+
+Spooky Parade: Put on the spooky fashionscape of your choice and meet us outside the Draynor Manor garden at 3pm UTC on World 520!
+The parade will be led by Mod Rach who will also be on screen for her livestream debut! Come say hi and give her a warm welcome!
+JMods Draw - Halloween Edition: We're continuing our JMods Draw tradition, but with a Halloween twist. Mods West and Jerv will be sharing their designs inspired by your suggestions in the #jmods-draw-halloween channel on Discord. Reminder that this is purely for funsies only.
+Pumpkin Carving Competition Finals: We'll be voting on finalist entries of the Pumpkin Carving Competition on Twitch chat and your votes will determine the winners!
+Mass Corps Event in Spooky Fashionscape: At the end of the stream, we’ll also do a mass Corporeal Beast run in all its chaos, befitting Halloween. Put on your most Halloween inspired outfits and meet Mod Manked at the entrance of Corporeal Beast’s lair (this is not a lure, we promise... Use the Games Necklace to teleport to the entrance of the lair) on World 519. If you wanna go for DPS gear instead, go ahead - you do you! Any fashionscape/gear preference is welcome.
+
+If you can't see the image above, click here!
+
+Halloween Discord Banner Competition
+
+If you can't see the image above, click here!
+
+Calling all artsy 'Scapers to grind an IRL skill this time: Draw a Halloween-themed, OSRS-inspired Discord banner, and drop it at the #halloween-banner channel on our Discord. If you get the W, you'll:
+
+Have your banner displayed on our official Discord until November 1st!
+Grab 3 months of OSRS membership
+
+If you can't see the image above, click here!
+
+Banner requirements
+
+Size: 960 x 540 pixels with an aspect ratio of 16:9
+Formats: PNG or JPG
+Max file size: 10 MB
+
+You have until Sunday, October 19th 9am UTC to submit your design, so get started if you haven't already! We're looking forward to seeing what you talented lot come up with!
+
+Check out the T&Cs here.
+
+Client & Mobile
+We’ve smoothed out visual flickering and layering issues on the new renderer beta across several areas and NPCs, including Darkmeyer, Slepe, the Desert, and more.
+Merch
+Max Cape Anniversary - Max Cape Variant Restock!
+
+If you can't see the image above, click here!
+
+Today is the anniversary of when the Max Cape was first added to game back in 2015! To celebrate, we are restocking a host of max cape variants on the merch store. Mastery in keyring form, customized to your in game achievements!
+
+Check out all the variants available here, and don't forget the OG as well!
+
+If you can't see the image above, click here!
+
+Other Changes
+Fixed an issue where Bloodveld and Nechryael tasks could be assigned without completing Priest in Peril.
+Fixed an issue where Partner slayer didn’t properly respect quest requirements - it should now work as intended.
+Fixed an issue where Dragon tasks incorrectly required full completion of Dragon slayer - they now only require it to be started.
+Players can once again pick up food from the floor in free to play worlds and the Bounty hunter crater - these areas were unintentionally affected by recent wilderness changes.
+Using the new hat retrieval menu on Rantz will now add the hats to the collection log. Any hats collected through this menu over the past few weeks will be added to the collection log and trigger any achievement diary task completion on login.
+Order has been restored to the spelling of 'Chaos fanatic' in the rune pouch load-out menu.
+The world map hotkey tooltip has been mildly shortened and will no longer show if you've toggled it off.
+Looting the Moon chest from now on will no longer attribute the loot to Tormented demons.
+Grammar corrections have been made to Ava's and Azzanadra's dialogue.
+Community Discord Event
+JMod Wars
+
+Join us for another round of JMod Castle Wars action!
+
+If you can't see the image above, click here!
+
+When?
+
+Friday, October 24th
+4:00-5:00 PM BST (Massing from 3:45 PM – be ready! 14.45 UTC / 10.45 ET / 07:45 PT / 01:45 AET)
+
+Where?
+
+The official OSRS Discord - Streamed on a stage for anyone who wants to just watch the chaos!
+World 522
+
+What?
+
+We're flipping your classic Castle Wars experience on its head and unleashing some chaos.
+
+Two J-Mods, Mod Nerco and Mod Rach, will join the fray as each team's unkillable, flag-thieving behemoths. These aren’t just mascots… they’re mobile mega Mods with 1,000,000 Hit points and a dream!
+
+The plan?
+
+As soon as the game starts, the enemy J-Mod will teleport into your base to steal your flag. Your team must stop them at all costs, while also escorting your own J-Mod and their mountain of hitpoints back to safety. The JMods will have a few tricks up their sleeve - so watch out.
+
+Bring your gear, bring your A-game, and get ready for the most absurd Castle Wars match you’ve ever seen!
+
+PvP World Rota
+
+The PvP rota has moved to Period B
+
+560 - (UK) - PvP World
+319 - (US) - Bounty Hunter World
+579 - (US) - High-Risk PvP World
+561 - (UK) - Free-to-Play PvP World
+580 - (US) - LMS Competitive
+
+World 390 (AUS) for LMS Competitive has been de-activated with this rota.
+
+World 569 (AUS) for Bounty Hunter has been de-activated with this rota.
+
+The PvP Arena is using 'Max/Med' loadouts in Ranked Duels and Tournaments this week.
+
+You can also discuss this update on the 2007Scape subreddit, the Steam forums, or the community-led OSRS Discord in the #gameupdate channel. For more info on the above content, check out the official Old School Wiki.
+
+Mods Abe, Abyss, Acorn, Ape, Arcane, Archie, Argo, Ash, Ayiza, BigRig, Blighted, Blossom, Boko, Bruno, Chilly, Criminal, Curse, Daizong, Ed, Elena, Enigma, Entropi, Freddie, Fuzz, Gecko, Gengis, Gizmo, Goblin, Grace, Grub, Halo, Harold, Hend, Hornet, Husky, Ivory, Jalo, Jamesy, Jerv, Keyser, Kieren, Kirby, Kurotou, Leebleh, Lenny, Light, Liron, Lykos, Mack, Manked, Markos, Maylea, Mobius, Moogle, Morty, Moz, Necro, Nin, Nixon, Nox, Nylu, Ori, Other, Otter, Philomel, Pork, Pumpkin, Puppi, Rach, Redfield, Rice, Roq, Roy, Ry, Saiyan, Sarnie, Schmidt, Shogun, Shroom, Sigma, Skylark, Smithy, Sova, Spyro, Squid, Starry, Suharun, Surma, Sween, Tide, Titania, Titus, TJ, Tomb, Tsourorf, Tyran, Veda, Vegard, West, Wolfy & Yume
+
+
+
+
+The Old School Team.
