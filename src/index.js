@@ -170,13 +170,22 @@ async function pollAndProcess() {
 }
 
 // --- Main Post Pipeline ---
+let pipelineRunning = false;
+
 async function runPostPipeline() {
+  if (pipelineRunning) {
+    console.log('--- Pipeline already running, skipping ---');
+    return;
+  }
+  pipelineRunning = true;
   console.log('--- Running Post Pipeline ---');
   try {
     await syncNewPosts();
     await pollAndProcess();
   } catch (err) {
     console.error('❌ Error in Post Pipeline:', err);
+  } finally {
+    pipelineRunning = false;
   }
 }
 

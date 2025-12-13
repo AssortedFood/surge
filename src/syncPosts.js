@@ -11,11 +11,48 @@ const RSS_PAGE_URL = process.env.RSS_PAGE_URL;
 const PUPPETEER_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36';
 
-// NEW: Read the interval from .env and provide a default of 60 seconds
+// RSS check interval (how often to poll for new posts)
 const RSS_CHECK_INTERVAL_SECONDS =
   parseInt(process.env.RSS_CHECK_INTERVAL_SECONDS, 10) || 60;
 
+// Article fetch delay (delay between fetching individual article pages)
+const ARTICLE_FETCH_DELAY_SECONDS =
+  parseInt(process.env.ARTICLE_FETCH_DELAY_SECONDS, 10) || 5;
+
+// Key for tracking last RSS fetch time in database
+const LAST_RSS_FETCH_KEY = 'lastRssFetchTimestamp';
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function canFetchRss() {
+  const lastFetch = await prisma.appState.findUnique({
+    where: { key: LAST_RSS_FETCH_KEY },
+  });
+  if (!lastFetch) return true;
+
+  const elapsed = Date.now() - new Date(lastFetch.value).getTime();
+  const canFetch = elapsed >= RSS_CHECK_INTERVAL_SECONDS * 1000;
+
+  if (!canFetch) {
+    const remaining = Math.ceil(
+      (RSS_CHECK_INTERVAL_SECONDS * 1000 - elapsed) / 1000
+    );
+    console.log(
+      `[POST SYNC] Rate limit: ${remaining}s remaining before next RSS fetch allowed.`
+    );
+  }
+
+  return canFetch;
+}
+
+async function updateLastRssFetch() {
+  const now = new Date().toISOString();
+  await prisma.appState.upsert({
+    where: { key: LAST_RSS_FETCH_KEY },
+    update: { value: now },
+    create: { key: LAST_RSS_FETCH_KEY, value: now },
+  });
+}
 
 async function fetchRssXml() {
   const res = await fetch(RSS_PAGE_URL);
@@ -75,6 +112,11 @@ async function syncNewPosts() {
     return;
   }
 
+  // Check rate limit before fetching RSS
+  if (!(await canFetchRss())) {
+    return;
+  }
+
   console.log('[POST SYNC] Checking for new posts...');
 
   try {
@@ -82,6 +124,7 @@ async function syncNewPosts() {
     const seenLinks = new Set(seenPosts.map((p) => p.link));
 
     const xml = await fetchRssXml();
+    await updateLastRssFetch();
     const allPostsFromFeed = scrapeTitlesAndUrls(xml);
     const newPosts = allPostsFromFeed.filter((p) => !seenLinks.has(p.link));
 
@@ -124,12 +167,10 @@ async function syncNewPosts() {
         nextId++;
 
         if (i < newPosts.length - 1) {
-          // MODIFIED: Use the configured interval for the log message
           console.log(
-            `[POST SYNC] Waiting ${RSS_CHECK_INTERVAL_SECONDS} seconds to respect rate limit...`
+            `[POST SYNC] Waiting ${ARTICLE_FETCH_DELAY_SECONDS}s before fetching next article...`
           );
-          // MODIFIED: Use the configured interval (converted to milliseconds) for the delay
-          await sleep(RSS_CHECK_INTERVAL_SECONDS * 1000);
+          await sleep(ARTICLE_FETCH_DELAY_SECONDS * 1000);
         }
       } catch (err) {
         console.error(
