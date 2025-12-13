@@ -95,7 +95,7 @@ async function fetchPostContent(link) {
   }
 }
 
-async function syncNewPosts() {
+export async function syncNewPosts() {
   if (!RSS_PAGE_URL) {
     console.error(
       '[POST SYNC] Error: RSS_PAGE_URL is not defined in the .env file.'
