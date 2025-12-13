@@ -1,0 +1,561 @@
+#!/usr/bin/env node
+// tests/matching/benchmark.js
+//
+// Comprehensive benchmark system for item extraction models.
+// Stores results in database with algorithm versioning.
+//
+// Usage:
+//   node tests/matching/benchmark.js                    # Run all configs, 10 runs each
+//   node tests/matching/benchmark.js --runs 5           # 5 runs per config
+//   node tests/matching/benchmark.js --config o4-mini:low --runs 3
+//   node tests/matching/benchmark.js --hybrid           # Use hybrid extraction (LLM + algorithmic)
+//   node tests/matching/benchmark.js --stats            # Show statistics from DB
+//   node tests/matching/benchmark.js --stats --config o4-mini:low
+
+import 'dotenv/config';
+import { createHash } from 'crypto';
+import { readFileSync, existsSync } from 'fs';
+import { dirname, join } from 'path';
+import { fileURLToPath } from 'url';
+import OpenAI from 'openai';
+import { zodResponseFormat } from 'openai/helpers/zod';
+import { PrismaClient } from '@prisma/client';
+import { ItemExtractionSchema } from '../../schemas/ItemExtractionSchema.js';
+import { cleanPostContent } from '../../src/contentCleaner.js';
+import { validateItemCandidates } from '../../src/itemValidator.js';
+import { hybridExtract } from '../../src/hybridExtractor.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const FIXTURES_DIR = join(__dirname, 'fixtures');
+
+const prisma = new PrismaClient();
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+// 8 diverse posts selected for comprehensive testing
+const BENCHMARK_POST_IDS = [2, 3, 5, 6, 7, 8, 12, 15];
+
+// Model configurations to benchmark
+const MODEL_CONFIGS = {
+  'o4-mini:low': { model: 'o4-mini', reasoning: 'low' },
+  'o4-mini:medium': { model: 'o4-mini', reasoning: 'medium' },
+  'gpt-5-mini:low': { model: 'gpt-5-mini', reasoning: 'low' },
+  'gpt-5-mini:medium': { model: 'gpt-5-mini', reasoning: 'medium' },
+};
+
+// Core files that define the algorithm - changes trigger new version
+const ALGORITHM_FILES = [
+  'src/itemExtractor.js',
+  'src/contentCleaner.js',
+  'src/itemValidator.js',
+  'src/hybridExtractor.js',
+  'schemas/ItemExtractionSchema.js',
+];
+
+// ============================================================================
+// ALGORITHM VERSIONING
+// ============================================================================
+
+function computeAlgorithmHash() {
+  const hash = createHash('sha256');
+
+  for (const file of ALGORITHM_FILES) {
+    const filePath = join(__dirname, '../../', file);
+    if (existsSync(filePath)) {
+      const content = readFileSync(filePath, 'utf-8');
+      hash.update(content);
+    }
+  }
+
+  return hash.digest('hex').substring(0, 16); // First 16 chars
+}
+
+async function getOrCreateAlgorithm(description = null) {
+  const hash = computeAlgorithmHash();
+
+  let algorithm = await prisma.benchmarkAlgorithm.findUnique({
+    where: { hash },
+  });
+
+  if (!algorithm) {
+    algorithm = await prisma.benchmarkAlgorithm.create({
+      data: {
+        hash,
+        description,
+        hashedFiles: JSON.stringify(ALGORITHM_FILES),
+      },
+    });
+    console.log(`Created new algorithm version: ${hash}`);
+  } else {
+    console.log(`Using existing algorithm version: ${hash}`);
+  }
+
+  return algorithm;
+}
+
+// ============================================================================
+// DATA LOADING
+// ============================================================================
+
+async function loadFixtures() {
+  const postsDir = join(FIXTURES_DIR, 'posts');
+  const labelsPath = join(FIXTURES_DIR, 'labels', 'human-approved.json');
+  const itemsPath = join(FIXTURES_DIR, 'items.json');
+
+  const labels = JSON.parse(readFileSync(labelsPath, 'utf-8'));
+  const items = JSON.parse(readFileSync(itemsPath, 'utf-8'));
+
+  const posts = [];
+  const labelsByPostId = {};
+
+  // Get list of post files
+  const { readdirSync } = await import('fs');
+  const postFiles = readdirSync(postsDir);
+
+  for (const postData of labels.posts) {
+    if (!BENCHMARK_POST_IDS.includes(postData.postId)) continue;
+
+    // Find actual file matching this post ID
+    const prefix = String(postData.postId).padStart(2, '0') + '-';
+    const matchingFile = postFiles.find((f) => f.startsWith(prefix));
+
+    if (matchingFile) {
+      const actualPath = join(postsDir, matchingFile);
+      posts.push({
+        id: postData.postId,
+        title: postData.postTitle,
+        content: readFileSync(actualPath, 'utf-8'),
+      });
+    }
+
+    labelsByPostId[postData.postId] = (postData.matches || []).map((m) => m.itemName.toLowerCase());
+  }
+
+  return { posts, items, labelsByPostId };
+}
+
+// ============================================================================
+// EXTRACTION
+// ============================================================================
+
+const systemPrompt = `You are an Old School RuneScape expert. Extract ALL tradeable items mentioned or implied in this news post. Be thorough and comprehensive.
+
+Rules:
+- Only include items that can be traded on the Grand Exchange
+- Do NOT include: quest items, untradeable rewards, currencies (coins/gp), NPCs, locations, skills
+- IMPORTANT: When an item category is mentioned, include ALL tradeable variants:
+  - "nails" → Bronze nails, Iron nails, Steel nails, Black nails, Mithril nails, Adamantite nails, Rune nails
+  - "pickaxe" → Bronze pickaxe, Iron pickaxe, Steel pickaxe, Black pickaxe, Mithril pickaxe, Adamant pickaxe, Rune pickaxe, Dragon pickaxe, Infernal pickaxe, Crystal pickaxe
+  - "impling jar" → Baby impling jar, Young impling jar, Gourmet impling jar, Earth impling jar, Essence impling jar, Eclectic impling jar, Nature impling jar, Magpie impling jar, Ninja impling jar, Crystal impling jar, Dragon impling jar, Lucky impling jar
+  - Armour sets → Include each piece AND the set box
+  - Potions → Include all dose variants
+- Include the exact snippet where the item is mentioned (max 200 chars)
+- Classify WHY the item is mentioned
+
+Common false positives to AVOID:
+- "staff" when referring to Jagex employees
+- JMod names that match items
+- Generic words in non-item context
+- Untradeable items: quest capes, skill capes, void equipment
+
+Context classifications:
+- buff: Item is being made stronger
+- nerf: Item is being made weaker
+- supply_change: Drop rate or availability changing
+- new_content: Part of new content
+- bug_fix: Bug related to item being fixed
+- mention_only: Item mentioned but no gameplay change`;
+
+async function extractWithModel(config, postTitle, cleanedContent) {
+  const userMessage = `Post Title: "${postTitle}"
+
+Content:
+"""
+${cleanedContent}
+"""
+
+Extract all tradeable OSRS items mentioned in this post.`;
+
+  const requestParams = {
+    model: config.model,
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ],
+    response_format: zodResponseFormat(ItemExtractionSchema, 'response'),
+  };
+
+  if (config.reasoning) {
+    requestParams.reasoning_effort = config.reasoning;
+  }
+
+  const startTime = Date.now();
+  const response = await openai.chat.completions.create(requestParams);
+  const latency = Date.now() - startTime;
+
+  const message = response.choices?.[0]?.message;
+  let items = [];
+
+  if (message?.parsed) {
+    items = message.parsed.items || [];
+  } else if (message?.content) {
+    try {
+      items = JSON.parse(message.content).items || [];
+    } catch {
+      items = [];
+    }
+  }
+
+  return {
+    items,
+    latency,
+    promptTokens: response.usage?.prompt_tokens || 0,
+    completionTokens: response.usage?.completion_tokens || 0,
+    reasoningTokens: response.usage?.completion_tokens_details?.reasoning_tokens || 0,
+  };
+}
+
+// ============================================================================
+// EVALUATION
+// ============================================================================
+
+function evaluateExtraction(extracted, expected) {
+  const extractedSet = new Set(extracted.map((n) => n.toLowerCase()));
+  const expectedSet = new Set(expected);
+
+  let tp = 0,
+    fp = 0,
+    fn = 0;
+
+  for (const item of extractedSet) {
+    if (expectedSet.has(item)) {
+      tp++;
+    } else {
+      fp++;
+    }
+  }
+
+  for (const item of expectedSet) {
+    if (!extractedSet.has(item)) {
+      fn++;
+    }
+  }
+
+  const precision = tp + fp > 0 ? tp / (tp + fp) : 0;
+  const recall = tp + fn > 0 ? tp / (tp + fn) : 0;
+  const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+
+  return { tp, fp, fn, precision, recall, f1 };
+}
+
+// ============================================================================
+// BENCHMARK EXECUTION
+// ============================================================================
+
+async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, labelsByPostId, useHybrid = false) {
+  const run = await prisma.benchmarkRun.create({
+    data: {
+      algorithmId: algorithm.id,
+      model: config.model,
+      reasoningEffort: config.reasoning,
+      configKey,
+      runNumber,
+    },
+  });
+
+  let totalTp = 0,
+    totalFp = 0,
+    totalFn = 0;
+  let totalPromptTokens = 0,
+    totalCompletionTokens = 0,
+    totalReasoningTokens = 0;
+  let totalLatencyMs = 0;
+
+  for (const post of posts) {
+    const cleanedContent = cleanPostContent(post.content);
+    const expected = labelsByPostId[post.id] || [];
+
+    let result;
+    try {
+      let validatedNames;
+      let extraction;
+
+      if (useHybrid) {
+        // Hybrid extraction: LLM + algorithmic search combined
+        const startTime = Date.now();
+        const hybridResult = await hybridExtract(post.title, cleanedContent, items);
+        const latency = Date.now() - startTime;
+
+        // Use all items with confidence >= 0.3 (includes algo-only)
+        validatedNames = hybridResult.items.map((v) => v.itemName || v.name);
+        extraction = {
+          items: hybridResult.items,
+          latency,
+          promptTokens: 0, // TODO: track from inner LLM call
+          completionTokens: 0,
+          reasoningTokens: 0,
+        };
+      } else {
+        // Standard extraction: LLM only
+        extraction = await extractWithModel(config, post.title, cleanedContent);
+        const validated = validateItemCandidates(extraction.items, items);
+        validatedNames = validated.map((v) => v.name);
+      }
+
+      const metrics = evaluateExtraction(validatedNames, expected);
+
+      result = {
+        runId: run.id,
+        postId: post.id,
+        postTitle: post.title,
+        tp: metrics.tp,
+        fp: metrics.fp,
+        fn: metrics.fn,
+        precision: metrics.precision,
+        recall: metrics.recall,
+        f1: metrics.f1,
+        promptTokens: extraction.promptTokens,
+        completionTokens: extraction.completionTokens,
+        reasoningTokens: extraction.reasoningTokens,
+        latencyMs: extraction.latency,
+      };
+
+      totalTp += metrics.tp;
+      totalFp += metrics.fp;
+      totalFn += metrics.fn;
+      totalPromptTokens += extraction.promptTokens;
+      totalCompletionTokens += extraction.completionTokens;
+      totalReasoningTokens += extraction.reasoningTokens;
+      totalLatencyMs += extraction.latency;
+    } catch (err) {
+      result = {
+        runId: run.id,
+        postId: post.id,
+        postTitle: post.title,
+        tp: 0,
+        fp: 0,
+        fn: expected.length,
+        latencyMs: 0,
+        error: err.message,
+      };
+      totalFn += expected.length;
+    }
+
+    await prisma.benchmarkPostResult.create({ data: result });
+  }
+
+  // Calculate aggregate metrics
+  const precision = totalTp + totalFp > 0 ? totalTp / (totalTp + totalFp) : 0;
+  const recall = totalTp + totalFn > 0 ? totalTp / (totalTp + totalFn) : 0;
+  const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+
+  await prisma.benchmarkRun.update({
+    where: { id: run.id },
+    data: {
+      completedAt: new Date(),
+      totalTp,
+      totalFp,
+      totalFn,
+      precision,
+      recall,
+      f1,
+      totalPromptTokens,
+      totalCompletionTokens,
+      totalReasoningTokens,
+      totalLatencyMs,
+    },
+  });
+
+  return { runId: run.id, f1, precision, recall, totalLatencyMs };
+}
+
+// ============================================================================
+// STATISTICS
+// ============================================================================
+
+function computeStats(values) {
+  if (values.length === 0) return null;
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const n = sorted.length;
+
+  const sum = sorted.reduce((a, b) => a + b, 0);
+  const mean = sum / n;
+  const median = n % 2 === 0 ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2 : sorted[Math.floor(n / 2)];
+
+  const p5Index = Math.floor(n * 0.05);
+  const p95Index = Math.min(Math.floor(n * 0.95), n - 1);
+  const p5 = sorted[p5Index];
+  const p95 = sorted[p95Index];
+
+  const min = sorted[0];
+  const max = sorted[n - 1];
+
+  const variance = sorted.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / n;
+  const stdDev = Math.sqrt(variance);
+
+  return { mean, median, min, max, p5, p95, stdDev, count: n };
+}
+
+async function showStatistics(configFilter = null) {
+  const where = configFilter ? { configKey: configFilter } : {};
+
+  const runs = await prisma.benchmarkRun.findMany({
+    where,
+    include: { algorithm: true },
+    orderBy: { startedAt: 'desc' },
+  });
+
+  if (runs.length === 0) {
+    console.log('No benchmark data found.');
+    return;
+  }
+
+  // Group by algorithm + config
+  const groups = {};
+  for (const run of runs) {
+    const key = `${run.algorithm.hash}|${run.configKey}`;
+    if (!groups[key]) {
+      groups[key] = {
+        algorithmHash: run.algorithm.hash,
+        configKey: run.configKey,
+        runs: [],
+      };
+    }
+    groups[key].runs.push(run);
+  }
+
+  console.log('\n' + '='.repeat(100));
+  console.log('BENCHMARK STATISTICS');
+  console.log('='.repeat(100));
+
+  for (const [key, group] of Object.entries(groups)) {
+    const f1Values = group.runs.filter((r) => r.f1 !== null).map((r) => r.f1);
+    const precisionValues = group.runs.filter((r) => r.precision !== null).map((r) => r.precision);
+    const recallValues = group.runs.filter((r) => r.recall !== null).map((r) => r.recall);
+    const latencyValues = group.runs.map((r) => r.totalLatencyMs);
+
+    const f1Stats = computeStats(f1Values);
+    const precisionStats = computeStats(precisionValues);
+    const recallStats = computeStats(recallValues);
+    const latencyStats = computeStats(latencyValues);
+
+    console.log(`\n${group.configKey} (algorithm: ${group.algorithmHash})`);
+    console.log('-'.repeat(80));
+    console.log(`Runs: ${group.runs.length}`);
+
+    if (f1Stats) {
+      const pct = (v) => (v * 100).toFixed(1) + '%';
+      const ms = (v) => (v / 1000).toFixed(1) + 's';
+
+      console.log(`\n  F1 Score:`);
+      console.log(`    Mean: ${pct(f1Stats.mean)}  Median: ${pct(f1Stats.median)}  StdDev: ${pct(f1Stats.stdDev)}`);
+      console.log(`    Min: ${pct(f1Stats.min)}  Max: ${pct(f1Stats.max)}  P5: ${pct(f1Stats.p5)}  P95: ${pct(f1Stats.p95)}`);
+
+      console.log(`\n  Precision:`);
+      console.log(`    Mean: ${pct(precisionStats.mean)}  Median: ${pct(precisionStats.median)}`);
+
+      console.log(`\n  Recall:`);
+      console.log(`    Mean: ${pct(recallStats.mean)}  Median: ${pct(recallStats.median)}`);
+
+      console.log(`\n  Latency (total per run):`);
+      console.log(`    Mean: ${ms(latencyStats.mean)}  Median: ${ms(latencyStats.median)}`);
+      console.log(`    Min: ${ms(latencyStats.min)}  Max: ${ms(latencyStats.max)}`);
+    }
+  }
+
+  console.log('\n' + '='.repeat(100));
+}
+
+// ============================================================================
+// MAIN
+// ============================================================================
+
+async function main() {
+  const args = process.argv.slice(2);
+
+  // Parse arguments
+  let numRuns = 10;
+  let configFilter = null;
+  let showStatsMode = false;
+  let useHybrid = false;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--runs' && args[i + 1]) {
+      numRuns = parseInt(args[i + 1], 10);
+      i++;
+    } else if (args[i] === '--config' && args[i + 1]) {
+      configFilter = args[i + 1];
+      i++;
+    } else if (args[i] === '--stats') {
+      showStatsMode = true;
+    } else if (args[i] === '--hybrid') {
+      useHybrid = true;
+    }
+  }
+
+  if (showStatsMode) {
+    await showStatistics(configFilter);
+    await prisma.$disconnect();
+    return;
+  }
+
+  // Run benchmarks
+  console.log('Loading fixtures...');
+  const { posts, items, labelsByPostId } = await loadFixtures();
+  console.log(`Loaded ${posts.length} posts, ${items.length} items`);
+
+  const algorithm = await getOrCreateAlgorithm();
+
+  const configsToRun = configFilter ? { [configFilter]: MODEL_CONFIGS[configFilter] } : MODEL_CONFIGS;
+
+  if (configFilter && !MODEL_CONFIGS[configFilter]) {
+    console.error(`Unknown config: ${configFilter}`);
+    console.log('Available configs:', Object.keys(MODEL_CONFIGS).join(', '));
+    await prisma.$disconnect();
+    return;
+  }
+
+  console.log(`\nRunning ${numRuns} runs for each config: ${Object.keys(configsToRun).join(', ')}`);
+  console.log(`Posts: ${BENCHMARK_POST_IDS.join(', ')}`);
+  console.log(`Mode: ${useHybrid ? 'HYBRID (LLM + Algorithmic)' : 'Standard (LLM only)'}`);
+  console.log('');
+
+  for (const [configKey, config] of Object.entries(configsToRun)) {
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`CONFIG: ${configKey}`);
+    console.log('='.repeat(60));
+
+    const runResults = [];
+
+    for (let run = 1; run <= numRuns; run++) {
+      process.stdout.write(`  Run ${run}/${numRuns}... `);
+      try {
+        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, labelsByPostId, useHybrid);
+        runResults.push(result);
+        console.log(`F1: ${(result.f1 * 100).toFixed(1)}%, Latency: ${(result.totalLatencyMs / 1000).toFixed(1)}s`);
+      } catch (err) {
+        console.log(`ERROR: ${err.message}`);
+      }
+    }
+
+    // Summary for this config
+    if (runResults.length > 0) {
+      const f1Values = runResults.map((r) => r.f1);
+      const stats = computeStats(f1Values);
+      console.log(`\n  Summary: Mean F1: ${(stats.mean * 100).toFixed(1)}%, Median: ${(stats.median * 100).toFixed(1)}%, StdDev: ${(stats.stdDev * 100).toFixed(2)}%`);
+    }
+  }
+
+  console.log('\n\nBenchmark complete. Run with --stats to see full statistics.');
+  await prisma.$disconnect();
+}
+
+main().catch(async (err) => {
+  console.error(err);
+  await prisma.$disconnect();
+  process.exit(1);
+});
