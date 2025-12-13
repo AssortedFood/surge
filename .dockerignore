@@ -1,4 +1,44 @@
+# Dependencies
 node_modules/
-data/
+
+# Git
+.git/
+.gitignore
+
+# Environment and secrets
 .env
-.git
+.env.*
+
+# Database files
+*.db
+*.db-journal
+data/
+
+# Dev tooling configs
+.claude/
+.husky/
+eslint.config.js
+.prettierrc
+vitest.config.js
+pnpm-workspace.yaml
+
+# Test files
+tests/
+src/*.test.js
+**/*.test.js
+**/*.spec.js
+
+# Documentation
+README.md
+TODO.md
+LICENSE
+*.md
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Misc
+.DS_Store
+*.log

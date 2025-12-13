@@ -15,8 +15,7 @@ const prisma = new PrismaClient();
 // --- Configuration from .env ---
 const DATA_SYNC_INTERVAL_MINUTES =
   parseInt(process.env.DATA_SYNC_INTERVAL_MINUTES, 10) || 360;
-const RSS_CHECK_INTERVAL_SECONDS =
-  parseInt(process.env.RSS_CHECK_INTERVAL_SECONDS, 10) || 60;
+const RATE_LIMIT_SECONDS = parseInt(process.env.RATE_LIMIT_SECONDS, 10) || 60;
 const INCLUDED_CHANGE_TYPES = process.env.INCLUDED_CHANGE_TYPES
   ? JSON.parse(process.env.INCLUDED_CHANGE_TYPES)
   : ['Price increase', 'Price decrease', 'No change'];
@@ -200,8 +199,6 @@ async function runPostPipeline() {
 
   // 2. Set up the frequent post pipeline (checks for new posts and analyzes)
   await runPostPipeline();
-  setInterval(runPostPipeline, RSS_CHECK_INTERVAL_SECONDS * 1000);
-  console.log(
-    `⏰ Post pipeline running every ${RSS_CHECK_INTERVAL_SECONDS} seconds.`
-  );
+  setInterval(runPostPipeline, RATE_LIMIT_SECONDS * 1000);
+  console.log(`⏰ Post pipeline running every ${RATE_LIMIT_SECONDS} seconds.`);
 })();

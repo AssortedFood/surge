@@ -11,46 +11,37 @@ const RSS_PAGE_URL = process.env.RSS_PAGE_URL;
 const PUPPETEER_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36';
 
-// RSS check interval (how often to poll for new posts)
-const RSS_CHECK_INTERVAL_SECONDS =
-  parseInt(process.env.RSS_CHECK_INTERVAL_SECONDS, 10) || 60;
+// Shared rate limit for RSS feed and article pages (same domain)
+const RATE_LIMIT_SECONDS = parseInt(process.env.RATE_LIMIT_SECONDS, 10) || 60;
 
-// Article fetch delay (delay between fetching individual article pages)
-const ARTICLE_FETCH_DELAY_SECONDS =
-  parseInt(process.env.ARTICLE_FETCH_DELAY_SECONDS, 10) || 5;
-
-// Key for tracking last RSS fetch time in database
-const LAST_RSS_FETCH_KEY = 'lastRssFetchTimestamp';
+// Key for tracking last fetch time in database
+const LAST_FETCH_KEY = 'lastFetchTimestamp';
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function canFetchRss() {
+async function canFetch() {
   const lastFetch = await prisma.appState.findUnique({
-    where: { key: LAST_RSS_FETCH_KEY },
+    where: { key: LAST_FETCH_KEY },
   });
   if (!lastFetch) return true;
 
   const elapsed = Date.now() - new Date(lastFetch.value).getTime();
-  const canFetch = elapsed >= RSS_CHECK_INTERVAL_SECONDS * 1000;
+  const allowed = elapsed >= RATE_LIMIT_SECONDS * 1000;
 
-  if (!canFetch) {
-    const remaining = Math.ceil(
-      (RSS_CHECK_INTERVAL_SECONDS * 1000 - elapsed) / 1000
-    );
-    console.log(
-      `[POST SYNC] Rate limit: ${remaining}s remaining before next RSS fetch allowed.`
-    );
+  if (!allowed) {
+    const remaining = Math.ceil((RATE_LIMIT_SECONDS * 1000 - elapsed) / 1000);
+    console.log(`[POST SYNC] Rate limit: ${remaining}s remaining.`);
   }
 
-  return canFetch;
+  return allowed;
 }
 
-async function updateLastRssFetch() {
+async function updateLastFetch() {
   const now = new Date().toISOString();
   await prisma.appState.upsert({
-    where: { key: LAST_RSS_FETCH_KEY },
+    where: { key: LAST_FETCH_KEY },
     update: { value: now },
-    create: { key: LAST_RSS_FETCH_KEY, value: now },
+    create: { key: LAST_FETCH_KEY, value: now },
   });
 }
 
@@ -113,7 +104,7 @@ async function syncNewPosts() {
   }
 
   // Check rate limit before fetching RSS
-  if (!(await canFetchRss())) {
+  if (!(await canFetch())) {
     return;
   }
 
@@ -124,7 +115,7 @@ async function syncNewPosts() {
     const seenLinks = new Set(seenPosts.map((p) => p.link));
 
     const xml = await fetchRssXml();
-    await updateLastRssFetch();
+    await updateLastFetch();
     const allPostsFromFeed = scrapeTitlesAndUrls(xml);
     const newPosts = allPostsFromFeed.filter((p) => !seenLinks.has(p.link));
 
@@ -168,9 +159,10 @@ async function syncNewPosts() {
 
         if (i < newPosts.length - 1) {
           console.log(
-            `[POST SYNC] Waiting ${ARTICLE_FETCH_DELAY_SECONDS}s before fetching next article...`
+            `[POST SYNC] Waiting ${RATE_LIMIT_SECONDS}s before fetching next article...`
           );
-          await sleep(ARTICLE_FETCH_DELAY_SECONDS * 1000);
+          await sleep(RATE_LIMIT_SECONDS * 1000);
+          await updateLastFetch();
         }
       } catch (err) {
         console.error(
