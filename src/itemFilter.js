@@ -3,7 +3,8 @@ import 'dotenv/config';
 
 // Read configuration from .env with sensible defaults
 const MARGIN_THRESHOLD = parseInt(process.env.MARGIN_THRESHOLD, 10) || 1000000;
-const PRICE_VARIANCE_PERCENT = parseFloat(process.env.PRICE_VARIANCE_PERCENT) || 0.05;
+const PRICE_VARIANCE_PERCENT =
+  parseFloat(process.env.PRICE_VARIANCE_PERCENT) || 0.05;
 
 /**
  * Queries the database for all items and their latest prices, then filters them
@@ -24,7 +25,9 @@ export async function getEconomicallySignificantItems(prisma) {
     },
   });
 
-  console.log(`[FILTER] Found ${itemsWithPrices.length} total items. Applying filters...`);
+  console.log(
+    `[FILTER] Found ${itemsWithPrices.length} total items. Applying filters...`
+  );
 
   const significantItems = [];
   for (const item of itemsWithPrices) {
@@ -61,6 +64,8 @@ export async function getEconomicallySignificantItems(prisma) {
     significantItems.push(item);
   }
 
-  console.log(`[FILTER] Found ${significantItems.length} economically significant items.`);
+  console.log(
+    `[FILTER] Found ${significantItems.length} economically significant items.`
+  );
   return significantItems;
 }

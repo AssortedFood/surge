@@ -28,7 +28,9 @@ function getSnapshotTime(now = new Date()) {
 }
 
 export async function syncItemsAndPrices() {
-  console.log(`[SYNC] Starting ${PRICE_FETCH_INTERVAL} data synchronization...`);
+  console.log(
+    `[SYNC] Starting ${PRICE_FETCH_INTERVAL} data synchronization...`
+  );
   const snapshotTime = getSnapshotTime();
   console.log(`[SYNC] Using snapshot time: ${snapshotTime.toISOString()}`);
 
@@ -51,18 +53,18 @@ export async function syncItemsAndPrices() {
     for (const item of mappingData) {
       if (!item.id || !item.name) continue;
 
-    dbOperations.push(
+      dbOperations.push(
         prisma.item.upsert({
-        where: { id: item.id },
-        update: {
+          where: { id: item.id },
+          update: {
             name: item.name,
             limit: item.limit ?? null,
             value: item.value ?? 0,
             highalch: item.highalch ?? null,
             lowalch: item.lowalch ?? null,
             members: item.members ?? false,
-        },
-        create: {
+          },
+          create: {
             id: item.id,
             name: item.name,
             examine: item.examine,
@@ -72,39 +74,45 @@ export async function syncItemsAndPrices() {
             icon: item.icon,
             highalch: item.highalch ?? null,
             lowalch: item.lowalch ?? null,
-        },
+          },
         })
-    );
+      );
 
-        const priceInfo = priceMap.get(String(item.id));
-        if (priceInfo) {
-            dbOperations.push(
-            prisma.priceSnapshot.create({
-                data: {
-                itemId: item.id,
-                highPrice: priceInfo.high,
-                lowPrice: priceInfo.low,
-                snapshotTime: snapshotTime,
-                },
-            })
-            );
-        }
-        }
+      const priceInfo = priceMap.get(String(item.id));
+      if (priceInfo) {
+        dbOperations.push(
+          prisma.priceSnapshot.create({
+            data: {
+              itemId: item.id,
+              highPrice: priceInfo.high,
+              lowPrice: priceInfo.low,
+              snapshotTime: snapshotTime,
+            },
+          })
+        );
+      }
+    }
 
     const result = await prisma.$transaction(dbOperations);
-    console.log(`[SYNC] Synchronization complete. Processed ${result.length} database operations.`);
-
+    console.log(
+      `[SYNC] Synchronization complete. Processed ${result.length} database operations.`
+    );
   } catch (err) {
     if (err.code === 'P2002') {
-       console.warn(`[SYNC] Warning: Some price snapshots already existed for this interval. This is normal if the script runs more than once per interval. Run completed.`);
+      console.warn(
+        `[SYNC] Warning: Some price snapshots already existed for this interval. This is normal if the script runs more than once per interval. Run completed.`
+      );
     } else {
-       console.error('[SYNC] An error occurred during synchronization:', err);
+      console.error('[SYNC] An error occurred during synchronization:', err);
     }
   } finally {
     await prisma.$disconnect();
   }
 }
 
-if (import.meta.url.startsWith('file://') && import.meta.url.endsWith(process.argv[1])) {
+if (
+  import.meta.url.startsWith('file://') &&
+  import.meta.url.endsWith(process.argv[1])
+) {
   syncItemsAndPrices();
 }

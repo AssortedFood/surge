@@ -11,8 +11,8 @@ function normalizeName(name) {
   return name
     .toLowerCase()
     .replace(/\s*\([^)]+\)/g, '') // Remove text in parentheses, e.g. (4)
-    .replace(/- broken$/, '')      // Remove suffix '- broken'
-    .replace(/[^a-z0-9\s]/g, '')    // Remove remaining non-alphanumeric characters
+    .replace(/- broken$/, '') // Remove suffix '- broken'
+    .replace(/[^a-z0-9\s]/g, '') // Remove remaining non-alphanumeric characters
     .trim();
 }
 
@@ -22,7 +22,9 @@ function normalizeName(name) {
  * @returns {Set<string>} A set of significant words.
  */
 function getSignificantWords(cleanedName) {
-  return new Set(cleanedName.split(/\s+/).filter(word => word && !GENERIC_WORDS.has(word)));
+  return new Set(
+    cleanedName.split(/\s+/).filter((word) => word && !GENERIC_WORDS.has(word))
+  );
 }
 
 /**
@@ -51,8 +53,9 @@ export function findMatches(rawText, allItems) {
     let isMatch = false;
     if (wordCount >= 2) {
       // Rule for Multi-Word Items: Flexible subset match.
-      isMatch = [...itemWords].every(word => postWords.has(word));
-    } else { // wordCount === 1
+      isMatch = [...itemWords].every((word) => postWords.has(word));
+    } else {
+      // wordCount === 1
       // Rule for Single-Word Items: Strict phrase match.
       const pattern = new RegExp(`\\b${cleanedItemName}\\b`, 'i');
       isMatch = pattern.test(rawText);
@@ -87,13 +90,15 @@ export function findMatches(rawText, allItems) {
   });
 
   for (const match of potentialMatches) {
-    const alreadyClaimed = [...match.significantWords].some(word => matchedWords.has(word));
+    const alreadyClaimed = [...match.significantWords].some((word) =>
+      matchedWords.has(word)
+    );
     if (alreadyClaimed) continue;
 
     if (!seenIds.has(match.id)) {
       finalMatches.push(match);
       seenIds.add(match.id);
-      match.significantWords.forEach(word => matchedWords.add(word));
+      match.significantWords.forEach((word) => matchedWords.add(word));
     }
   }
 

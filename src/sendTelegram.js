@@ -4,7 +4,7 @@ import 'dotenv/config';
 import TelegramBot from 'node-telegram-bot-api';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const CHAT_ID  = process.env.TELEGRAM_CHAT_ID;
+const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 if (!BOT_TOKEN || !CHAT_ID) {
   console.error(

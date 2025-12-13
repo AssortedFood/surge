@@ -5,7 +5,7 @@ import { ItemAnalysisSchema } from '../schemas/ItemAnalysisSchema.js';
 
 const MODEL = process.env.OPENAI_API_MODEL || process.env.OPENAI_MODEL;
 if (!MODEL) {
-  console.error("❌ Error: OPENAI_MODEL is not defined in the .env file.");
+  console.error('❌ Error: OPENAI_MODEL is not defined in the .env file.');
   process.exit(1);
 }
 
@@ -40,7 +40,7 @@ Return:
 
     const message = rawResponse.choices?.[0]?.message;
     if (!message) {
-      throw new Error("No choices[0].message found in OpenAI response.");
+      throw new Error('No choices[0].message found in OpenAI response.');
     }
 
     if (message.parsed) {
@@ -49,10 +49,12 @@ Return:
     if (message.content) {
       return JSON.parse(message.content);
     }
-    
-    throw new Error("Neither message.parsed nor message.content contained a valid JSON payload.");
+
+    throw new Error(
+      'Neither message.parsed nor message.content contained a valid JSON payload.'
+    );
   } catch (err) {
-    console.error("❌ fetchStructuredResponse threw an error:", err);
+    console.error('❌ fetchStructuredResponse threw an error:', err);
     throw err;
   }
 }

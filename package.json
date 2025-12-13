@@ -1,5 +1,14 @@
 {
   "name": "surge",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma",
+      "puppeteer"
+    ]
+  },
   "version": "1.0.0",
   "description": "Create a lean, modular service that:",
   "homepage": "https://github.com/AssortedFood/surge#readme",
@@ -16,9 +25,21 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "test": "vitest --run"
+    "test": "vitest --run",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
     "prisma": "^6.17.1",
     "vitest": "^3.1.4"
   },
@@ -34,5 +55,11 @@
     "openai": "^5.0.1",
     "puppeteer": "^24.22.3",
     "zod": "^3.25.42"
+  },
+  "lint-staged": {
+    "src/**/*.js": [
+      "eslint --fix",
+      "prettier --write"
+    ]
   }
 }

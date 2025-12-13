@@ -13,8 +13,10 @@ import { syncNewPosts } from './syncPosts.js';
 const prisma = new PrismaClient();
 
 // --- Configuration from .env ---
-const DATA_SYNC_INTERVAL_MINUTES = parseInt(process.env.DATA_SYNC_INTERVAL_MINUTES, 10) || 360;
-const RSS_CHECK_INTERVAL_SECONDS = parseInt(process.env.RSS_CHECK_INTERVAL_SECONDS, 10) || 60;
+const DATA_SYNC_INTERVAL_MINUTES =
+  parseInt(process.env.DATA_SYNC_INTERVAL_MINUTES, 10) || 360;
+const RSS_CHECK_INTERVAL_SECONDS =
+  parseInt(process.env.RSS_CHECK_INTERVAL_SECONDS, 10) || 60;
 const INCLUDED_CHANGE_TYPES = process.env.INCLUDED_CHANGE_TYPES
   ? JSON.parse(process.env.INCLUDED_CHANGE_TYPES)
   : ['Price increase', 'Price decrease', 'No change'];
@@ -24,7 +26,9 @@ const LAST_DATA_SYNC_KEY = 'lastDataSyncTimestamp';
 
 // --- Scheduler for Infrequent Data Sync ---
 async function shouldRunDataSync() {
-  const lastRunState = await prisma.appState.findUnique({ where: { key: LAST_DATA_SYNC_KEY } });
+  const lastRunState = await prisma.appState.findUnique({
+    where: { key: LAST_DATA_SYNC_KEY },
+  });
   if (!lastRunState) return true;
 
   const lastRunTime = new Date(lastRunState.value);
@@ -45,7 +49,9 @@ async function updateLastDataSync() {
 async function runDataSyncScheduler() {
   console.log('--- Scheduler checking for due data sync ---');
   if (await shouldRunDataSync()) {
-    console.log(`[SCHEDULER] Triggering item & price data sync (interval: ${DATA_SYNC_INTERVAL_MINUTES} mins)...`);
+    console.log(
+      `[SCHEDULER] Triggering item & price data sync (interval: ${DATA_SYNC_INTERVAL_MINUTES} mins)...`
+    );
     try {
       await syncItemsAndPrices();
       await updateLastDataSync();
@@ -59,17 +65,22 @@ async function runDataSyncScheduler() {
 // --- Analysis Logic ---
 function toPriceChangeEnum(changeString) {
   switch (changeString) {
-    case 'Price increase': return PriceChange.PriceIncrease;
-    case 'Price decrease': return PriceChange.PriceDecrease;
-    default: return PriceChange.NoChange;
+    case 'Price increase':
+      return PriceChange.PriceIncrease;
+    case 'Price decrease':
+      return PriceChange.PriceDecrease;
+    default:
+      return PriceChange.NoChange;
   }
 }
 
 async function analyzeOneItem(post, item) {
-  console.log(`⚙️ Starting analysis for item “${item.name}” (ID: ${item.id}) in post ${post.id}.`);
+  console.log(
+    `⚙️ Starting analysis for item “${item.name}” (ID: ${item.id}) in post ${post.id}.`
+  );
   try {
     const result = await analyzeItemImpact(post.content, item.name);
-    
+
     await prisma.itemAnalysis.create({
       data: {
         postId: post.id,
@@ -80,16 +91,25 @@ async function analyzeOneItem(post, item) {
     });
 
     if (INCLUDED_CHANGE_TYPES.includes(result.expected_price_change)) {
-      const emoji = { 'Price increase': '🟢', 'Price decrease': '🔴', 'No change': '🟡' }[result.expected_price_change];
+      const emoji = {
+        'Price increase': '🟢',
+        'Price decrease': '🔴',
+        'No change': '🟡',
+      }[result.expected_price_change];
       const msg = [
-        `<b>${item.name}</b>`, ``, `“${result.relevant_text_snippet}”`, ``,
-        `${emoji} ${result.expected_price_change}`
+        `<b>${item.name}</b>`,
+        ``,
+        `“${result.relevant_text_snippet}”`,
+        ``,
+        `${emoji} ${result.expected_price_change}`,
       ].join('\n');
-      
+
       await sendTelegramMessage(msg);
       console.log(`✉️ Sent analysis for “${item.name}” in post ${post.id}.`);
     } else {
-      console.log(`ℹ️ Skipped Telegram for “${item.name}” – change type not included.`);
+      console.log(
+        `ℹ️ Skipped Telegram for “${item.name}” – change type not included.`
+      );
     }
   } catch (err) {
     const errMsg = `⚠️ Analysis failed for item “${item.name}” (ID: ${item.id}):\n${err.message}`;
@@ -101,27 +121,34 @@ async function analyzeOneItem(post, item) {
 async function processOnePost(post) {
   try {
     console.log(`🔍 Processing post ${post.id}: "${post.title}"`);
-    
+
     const significantItems = await getEconomicallySignificantItems(prisma);
     const matchedItems = findMatches(post.content, significantItems);
-    console.log(`➡️ Found ${matchedItems.length} matched item(s) in post ${post.id}.`);
+    console.log(
+      `➡️ Found ${matchedItems.length} matched item(s) in post ${post.id}.`
+    );
 
     if (matchedItems.length === 0) return;
 
     // 'item' is now the full object from the matcher, so we use it directly.
-    const analysisPromises = matchedItems.map(item => analyzeOneItem(post, item));
+    const analysisPromises = matchedItems.map((item) =>
+      analyzeOneItem(post, item)
+    );
     await Promise.all(analysisPromises);
-
   } catch (err) {
     console.error(`❌ Error processing post ${post.id}:`, err);
-    await sendTelegramMessage(`⚠️ Failed to process post ID ${post.id}:\n${err.message}`);
+    await sendTelegramMessage(
+      `⚠️ Failed to process post ID ${post.id}:\n${err.message}`
+    );
   }
 }
 
 async function pollAndProcess() {
   console.log('--- Polling for unprocessed posts ---');
   try {
-    const postsToProcess = await prisma.post.findMany({ where: { isAnalyzed: false } });
+    const postsToProcess = await prisma.post.findMany({
+      where: { isAnalyzed: false },
+    });
 
     if (postsToProcess.length === 0) {
       console.log('No new posts to process.');
@@ -156,14 +183,16 @@ async function runPostPipeline() {
 // --- Main Application Entrypoint ---
 (async () => {
   console.log('Application starting...');
-  
+
   // 1. Set up the infrequent data sync scheduler (checks every minute)
   await runDataSyncScheduler();
-  setInterval(runDataSyncScheduler, 60 * 1000); 
+  setInterval(runDataSyncScheduler, 60 * 1000);
   console.log(`⏰ Data sync scheduler running, will check every minute.`);
 
   // 2. Set up the frequent post pipeline (checks for new posts and analyzes)
   await runPostPipeline();
   setInterval(runPostPipeline, RSS_CHECK_INTERVAL_SECONDS * 1000);
-  console.log(`⏰ Post pipeline running every ${RSS_CHECK_INTERVAL_SECONDS} seconds.`);
+  console.log(
+    `⏰ Post pipeline running every ${RSS_CHECK_INTERVAL_SECONDS} seconds.`
+  );
 })();
