@@ -19,7 +19,7 @@ const ItemExtractionSchema = z.object({
       "implied",
       "category_expansion"
     ]).describe("How the item was identified: direct mention, implied from context, or expanded from a category like 'pickaxes'"),
-    variantCategory: z.string().optional().describe("If this item is part of a category expansion (e.g., 'nails', 'pickaxes', 'potions'), name the category")
+    variantCategory: z.string().nullable().describe("If this item is part of a category expansion (e.g., 'nails', 'pickaxes', 'potions'), name the category; null if not applicable")
   }))
 });
 

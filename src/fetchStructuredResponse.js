@@ -21,6 +21,10 @@ async function fetchStructuredResponse(
         reasoningEffort: options.reasoningEffort,
       });
 
+      // Reasoning models (o-series, gpt-5-series) don't support temperature
+      const isReasoningModel =
+        model.startsWith('o') || model.startsWith('gpt-5');
+
       const requestParams = {
         model: model,
         messages: [
@@ -28,12 +32,15 @@ async function fetchStructuredResponse(
           { role: 'user', content: userMessage },
         ],
         response_format: zodResponseFormat(zodSchemaObject, 'response'),
-        // Use temperature=0 for deterministic, consistent extraction
-        temperature: options.temperature ?? 0,
       };
 
+      // Only set temperature for non-reasoning models (gpt-4o, gpt-4o-mini, etc.)
+      if (!isReasoningModel && options.temperature !== undefined) {
+        requestParams.temperature = options.temperature;
+      }
+
       // Add reasoning_effort for reasoning models (o4-mini, gpt-5-mini)
-      if (options.reasoningEffort) {
+      if (isReasoningModel && options.reasoningEffort) {
         requestParams.reasoning_effort = options.reasoningEffort;
       }
 

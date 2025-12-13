@@ -311,6 +311,8 @@ For each candidate, determine if it's actually mentioned as a tradeable item in 
             name: original.name,
             snippet: item.snippet || '[Validated by LLM]',
             context: 'mention_only',
+            confidence: 0.8, // High confidence since LLM validated the algo match
+            mentionType: 'direct',
             itemId: original.id,
             itemName: original.name,
           });
@@ -375,16 +377,19 @@ async function hybridExtract(
 
   // Process LLM results
   for (const item of llmValidated) {
+    // Use LLM's confidence if provided, otherwise use source-based defaults
+    const llmConfidence = item.confidence ?? 0.9;
+
     if (algoMatches.has(item.itemId)) {
       confirmed.push({
         ...item,
-        confidence: CONFIDENCE_SCORES.confirmed,
+        confidence: Math.max(llmConfidence, CONFIDENCE_SCORES.confirmed),
         source: 'both',
       });
     } else {
       llmOnly.push({
         ...item,
-        confidence: CONFIDENCE_SCORES.llmOnly,
+        confidence: Math.min(llmConfidence, CONFIDENCE_SCORES.llmOnly),
         source: 'llm',
       });
     }

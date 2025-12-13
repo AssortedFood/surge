@@ -152,7 +152,9 @@ function loadFixtures() {
   const labelsPath = join(FIXTURES_DIR, 'labels', 'human-approved.json');
   const itemsPath = join(FIXTURES_DIR, 'items.json');
 
-  const labels = JSON.parse(readFileSync(labelsPath, 'utf-8'));
+  const labelsContent = readFileSync(labelsPath, 'utf-8');
+  const labels = JSON.parse(labelsContent);
+  const groundTruthHash = hashContent(labelsContent);
   const items = JSON.parse(readFileSync(itemsPath, 'utf-8'));
 
   const posts = [];
@@ -186,7 +188,7 @@ function loadFixtures() {
     }
   }
 
-  return { posts, items, labelsByPostId };
+  return { posts, items, labelsByPostId, groundTruthHash };
 }
 
 // ============================================================================
@@ -238,7 +240,7 @@ function evaluateExtraction(extracted, expected) {
 // BENCHMARK EXECUTION
 // ============================================================================
 
-async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, labelsByPostId, verbose = false) {
+async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, labelsByPostId, groundTruthHash, verbose = false) {
   const run = await prisma.benchmarkRun.create({
     data: {
       algorithmId: algorithm.id,
@@ -246,6 +248,7 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
       reasoningEffort: config.reasoning,
       configKey,
       runNumber,
+      groundTruthHash,
     },
   });
 
@@ -288,6 +291,10 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
         completionTokens: hybridResult.usage.completionTokens,
         reasoningTokens: hybridResult.usage.reasoningTokens,
         latencyMs: hybridResult.latencyMs,
+        // Store detailed extraction results for analysis
+        extractedItems: JSON.stringify(validatedNames),
+        fpItems: JSON.stringify(metrics.fpItems),
+        fnItems: JSON.stringify(metrics.fnItems),
       };
 
       totalTp += metrics.tp;
@@ -557,8 +564,9 @@ async function main() {
 
   // Run benchmarks
   console.log('Loading fixtures...');
-  const { posts, items, labelsByPostId } = loadFixtures();
+  const { posts, items, labelsByPostId, groundTruthHash } = loadFixtures();
   console.log(`Loaded ${posts.length} posts, ${items.length} items`);
+  console.log(`Ground truth hash: ${groundTruthHash}`);
 
   const algorithm = await getOrCreateAlgorithm();
 
@@ -576,7 +584,7 @@ async function main() {
     for (let run = 1; run <= numRuns; run++) {
       process.stdout.write(`  Run ${run}/${numRuns}... `);
       try {
-        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, labelsByPostId, verboseMode);
+        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, labelsByPostId, groundTruthHash, verboseMode);
         runResults.push(result);
         console.log(`F1: ${(result.f1 * 100).toFixed(1)}%, Latency: ${(result.totalLatencyMs / 1000).toFixed(1)}s`);
       } catch (err) {

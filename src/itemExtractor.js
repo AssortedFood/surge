@@ -92,7 +92,19 @@ Context classifications:
 Mention types:
 - direct: Item name appears explicitly in the text
 - implied: Item is implied but not named (e.g., "the weapon from CoX" implies Twisted bow)
-- category_expansion: You expanded from a category mention (e.g., "nails" → "Bronze nails")`;
+- category_expansion: You expanded from a category mention (e.g., "nails" → "Bronze nails")
+
+OUTPUT REQUIREMENTS - For EACH item you MUST provide:
+1. name: The exact item name as it appears in-game
+2. snippet: The text where this item is mentioned (max 400 chars)
+3. context: One of buff/nerf/supply_change/new_content/bug_fix/mention_only
+4. confidence: A number 0.0-1.0 indicating certainty this is a tradeable item
+   - 0.9-1.0: Exact item name mentioned, clearly tradeable
+   - 0.7-0.9: Strong context suggests this item
+   - 0.5-0.7: Item implied or uncertain tradeability
+   - <0.5: Weak evidence, might not be an item
+5. mentionType: One of direct/implied/category_expansion
+6. variantCategory: If from category expansion, name the category (e.g., "nails", "pickaxes"); otherwise omit`;
 
 /**
  * Extracts item candidates from cleaned post content using LLM.

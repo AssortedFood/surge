@@ -106,6 +106,9 @@ model BenchmarkRun {
   startedAt       DateTime  @default(now())
   completedAt     DateTime?
 
+  // Ground truth versioning
+  groundTruthHash String?   // Hash of human-approved.json for comparison validity
+
   // Aggregate metrics for this run
   totalTp         Int       @default(0)
   totalFp         Int       @default(0)
@@ -155,6 +158,11 @@ model BenchmarkPostResult {
 
   // Error tracking
   error       String?
+
+  // Detailed extraction results for analysis (stored as JSON arrays)
+  extractedItems String?  // JSON: All items extracted by the algorithm
+  fpItems        String?  // JSON: False positive item names (extracted but not in ground truth)
+  fnItems        String?  // JSON: False negative item names (in ground truth but not extracted)
 
   @@unique([runId, postId])
 }
