@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // src/sendTelegram.js
 import 'dotenv/config';
-import TelegramBot from 'node-telegram-bot-api';
+import { Bot } from 'grammy';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -13,16 +13,16 @@ if (!BOT_TOKEN || !CHAT_ID) {
   process.exit(1);
 }
 
-// Instantiate the bot (no polling needed for sendMessage)
-const bot = new TelegramBot(BOT_TOKEN, { polling: false });
+// Instantiate the bot
+const bot = new Bot(BOT_TOKEN);
 
 /**
  * Sends a message to the configured Telegram chat.
  * @param {string} text
- * @returns {Promise<import('node-telegram-bot-api').Message>}
+ * @returns {Promise<import('grammy').Message.TextMessage>}
  */
 export async function sendTelegramMessage(text) {
-  return bot.sendMessage(CHAT_ID, text, { parse_mode: 'HTML' });
+  return bot.api.sendMessage(CHAT_ID, text, { parse_mode: 'HTML' });
 }
 
 // If this file is run directly via `node src/sendTelegram.js "some text"`, use the CLI entrypoint below:
