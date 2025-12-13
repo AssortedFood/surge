@@ -50,7 +50,8 @@ LATEST_API_URL="https://prices.runescape.wiki/api/v1/osrs/latest"
 RATE_LIMIT_SECONDS="60"
 DATA_SYNC_INTERVAL_MINUTES="360"
 OPENAI_API_KEY="sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-OPENAI_MODEL="gpt-4.1-mini"
+OPENAI_MODEL="o4-mini"
+OPENAI_REASONING_EFFORT="low"
 TELEGRAM_BOT_TOKEN="123456789:ABCDEFGHIJKLMNOPQRSTUVWX"
 TELEGRAM_CHAT_ID="1234567890"
 INCLUDED_CHANGE_TYPES=["Price increase","Price decrease"]
@@ -66,7 +67,22 @@ PRICE_VARIANCE_PERCENT="0.05"
 * `RATE_LIMIT_SECONDS`: Seconds between RSS/article fetches (shared rate limit).
 * `DATA_SYNC_INTERVAL_MINUTES`: Minutes between item & price data syncs.
 * `OPENAI_API_KEY`: Your OpenAI secret key.
-* `OPENAI_MODEL`: Model name (e.g., `gpt-4.1-mini`).
+* `OPENAI_MODEL`: Model name for item extraction (see benchmark table below).
+* `OPENAI_REASONING_EFFORT`: Reasoning effort for `o4-mini`/`gpt-5-mini` models (`low`, `medium`, `high`). Omit for non-reasoning models.
+
+### Model Benchmarks
+
+| Model | Reasoning | Precision | Recall | F1 | Latency |
+|-------|-----------|-----------|--------|-----|---------|
+| gpt-5-mini | medium | 94.4% | 82.9% | 88.3% | 99s |
+| gpt-5-mini | low | 90.8% | 72.0% | 80.3% | 49s |
+| **o4-mini** | **low** | **100%** | 63.4% | 77.6% | **16s** |
+| o4-mini | high | 88.1% | 63.4% | 73.8% | 90s |
+| o4-mini | medium | 100% | 54.9% | 70.9% | 38s |
+| gpt-4.1-mini | - | 83.3% | 36.6% | 50.8% | 9s |
+
+**Recommendation:** `o4-mini` with `low` reasoning offers the best speed/accuracy tradeoff for time-sensitive trading (16s latency, 100% precision).
+
 * `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`: For sending alerts.
 * `INCLUDED_CHANGE_TYPES`: Valid options are `"Price increase"`, `"Price decrease"`, `"No change"`.
 * `MARGIN_THRESHOLD`: Minimum potential profit for item to be considered significant.
@@ -127,6 +143,7 @@ services:
       DATA_SYNC_INTERVAL_MINUTES: ${SURGE_DATA_SYNC_INTERVAL_MINUTES}
       OPENAI_API_KEY: ${SURGE_OPENAI_API_KEY}
       OPENAI_MODEL: ${SURGE_OPENAI_MODEL}
+      OPENAI_REASONING_EFFORT: ${SURGE_OPENAI_REASONING_EFFORT}
       TELEGRAM_BOT_TOKEN: ${SURGE_TELEGRAM_BOT_TOKEN}
       TELEGRAM_CHAT_ID: ${SURGE_TELEGRAM_CHAT_ID}
       INCLUDED_CHANGE_TYPES: ${SURGE_INCLUDED_CHANGE_TYPES}
@@ -155,7 +172,8 @@ SURGE_LATEST_API_URL="https://prices.runescape.wiki/api/v1/osrs/latest"
 SURGE_RATE_LIMIT_SECONDS="60"
 SURGE_DATA_SYNC_INTERVAL_MINUTES="360"
 SURGE_OPENAI_API_KEY="sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-SURGE_OPENAI_MODEL="gpt-4.1-mini"
+SURGE_OPENAI_MODEL="o4-mini"
+SURGE_OPENAI_REASONING_EFFORT="low"
 SURGE_TELEGRAM_BOT_TOKEN="123456789:ABCDEFGHIJKLMNOPQRSTUVWX"
 SURGE_TELEGRAM_CHAT_ID="1234567890"
 SURGE_INCLUDED_CHANGE_TYPES=["Price increase","Price decrease"]
