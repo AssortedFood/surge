@@ -11,13 +11,15 @@
 //   node tests/matching/benchmark.js --stats            # Show statistics from DB
 //   node tests/matching/benchmark.js --stats --config o4-mini:low
 //
-// Uses hybrid extraction (LLM + algorithmic with LLM validation) by default.
+// When a new algorithm version is detected (based on hash of core files),
+// you will be prompted to enter a label for this version.
 
 import 'dotenv/config';
 import { createHash } from 'crypto';
 import { readFileSync, existsSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
+import { createInterface } from 'readline';
 import { PrismaClient } from '@prisma/client';
 import { cleanPostContent } from '../../src/contentCleaner.js';
 import { hybridExtract } from '../../src/hybridExtractor.js';
@@ -85,7 +87,26 @@ function computeAlgorithmHash() {
   return hash.digest('hex').substring(0, 16); // First 16 chars
 }
 
-async function getOrCreateAlgorithm(description = null) {
+/**
+ * Prompts the user for input via stdin
+ * @param {string} question - The question to ask
+ * @returns {Promise<string>} - The user's response
+ */
+function promptUser(question) {
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
+async function getOrCreateAlgorithm() {
   const hash = computeAlgorithmHash();
 
   let algorithm = await prisma.benchmarkAlgorithm.findUnique({
@@ -93,16 +114,26 @@ async function getOrCreateAlgorithm(description = null) {
   });
 
   if (!algorithm) {
+    // New algorithm detected - prompt for label
+    console.log(`\nNew algorithm version detected: ${hash}`);
+    console.log('Files included in hash:');
+    for (const file of ALGORITHM_FILES) {
+      console.log(`  - ${file}`);
+    }
+    console.log('');
+
+    const label = await promptUser('Enter a label for this algorithm version (e.g., "hybrid-v1"): ');
+
     algorithm = await prisma.benchmarkAlgorithm.create({
       data: {
         hash,
-        description,
+        label: label || null,
         hashedFiles: JSON.stringify(ALGORITHM_FILES),
       },
     });
-    console.log(`Created new algorithm version: ${hash}`);
+    console.log(`Created algorithm: ${hash}${label ? ` (${label})` : ''}\n`);
   } else {
-    console.log(`Using existing algorithm version: ${hash}`);
+    console.log(`Using existing algorithm: ${hash}${algorithm.label ? ` (${algorithm.label})` : ''}`);
   }
 
   return algorithm;
@@ -359,7 +390,9 @@ async function showStatistics(configFilter = null) {
     const recallStats = computeStats(recallValues);
     const latencyStats = computeStats(latencyValues);
 
-    console.log(`\n${group.configKey} (algorithm: ${group.algorithmHash})`);
+    const algoLabel = group.runs[0]?.algorithm?.label;
+    const algoDisplay = algoLabel ? `${algoLabel} [${group.algorithmHash}]` : group.algorithmHash;
+    console.log(`\n${group.configKey} (algorithm: ${algoDisplay})`);
     console.log('-'.repeat(80));
     console.log(`Runs: ${group.runs.length}`);
 
@@ -486,7 +519,6 @@ async function main() {
 
   console.log(`\nRunning ${numRuns} runs for each config: ${Object.keys(configsToRun).join(', ')}`);
   console.log(`Posts: ${BENCHMARK_POST_IDS.join(', ')}`);
-  console.log(`Mode: Hybrid (LLM + Algorithmic with LLM validation)`);
   console.log('');
 
   for (const [configKey, config] of Object.entries(configsToRun)) {

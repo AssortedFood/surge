@@ -80,7 +80,8 @@ model ItemAnalysis {
 model BenchmarkAlgorithm {
   id            Int      @id @default(autoincrement())
   hash          String   @unique // SHA-256 of core component files
-  description   String?  // Optional description of changes
+  label         String?  // Human-readable label (e.g., "hybrid-v1", "llm-only")
+  description   String?  // Optional longer description of changes
   createdAt     DateTime @default(now())
 
   // Files included in hash (stored as JSON array)
