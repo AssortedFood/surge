@@ -32,7 +32,8 @@ import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
 import { PrismaClient } from '@prisma/client';
 import { cleanPostContent } from '../../src/contentCleaner.js';
-import { hybridExtractInline } from '../../src/hybridExtractor.js';
+import { hybridExtractInline as extractItems } from '../../src/hybridExtractor.js';
+import { getSignificantItems } from '../../src/significantItems.js';
 import { diffLines } from 'diff';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -83,9 +84,6 @@ const ALGORITHM_FILES = [
   'src/itemFilter.js',
   'schemas/ItemExtractionSchema.js',
 ];
-
-// Economic significance threshold - can be overridden via CLI --threshold
-let MARGIN_THRESHOLD = parseInt(process.env.MARGIN_THRESHOLD, 10) || 1000000;
 
 // ============================================================================
 // ALGORITHM VERSIONING
@@ -188,32 +186,22 @@ async function getOrCreateAlgorithm() {
 // DATA LOADING
 // ============================================================================
 
-function loadFixtures() {
+async function loadFixtures() {
   const postsDir = join(FIXTURES_DIR, 'posts');
   const labelsPath = join(FIXTURES_DIR, 'labels', 'human-approved.json');
-  const itemsPath = join(FIXTURES_DIR, 'items.json');
+
+  // Load significant items from database cache (auto-recalculates if items.json changed)
+  const { items: significantItems, fromCache, threshold } = await getSignificantItems();
+  console.log(`Significant items: ${significantItems.length} items ${fromCache ? '(cached)' : '(recalculated)'} - threshold: ${threshold.toLocaleString()} GP`);
+
+  // Build item lookup by name (lowercase) for ground truth filtering
+  const significantItemNames = new Set(
+    significantItems.map((item) => item.name.toLowerCase())
+  );
 
   const labelsContent = readFileSync(labelsPath, 'utf-8');
   const labels = JSON.parse(labelsContent);
   const groundTruthHash = hashContent(labelsContent);
-  const items = JSON.parse(readFileSync(itemsPath, 'utf-8'));
-
-  // Build item lookup by name (lowercase) for economic filter
-  const itemByName = new Map();
-  for (const item of items) {
-    itemByName.set(item.name.toLowerCase(), item);
-  }
-
-  /**
-   * Checks if an item meets the economic significance threshold
-   * Uses value * limit >= MARGIN_THRESHOLD (matches production filter)
-   */
-  function isEconomicallySignificant(itemName) {
-    const item = itemByName.get(itemName.toLowerCase());
-    if (!item) return false; // Item not in DB = can't trade it
-    const margin = (item.value || 0) * (item.limit || 0);
-    return margin >= MARGIN_THRESHOLD;
-  }
 
   const posts = [];
   const labelsByPostId = {};
@@ -246,9 +234,9 @@ function loadFixtures() {
         hash: hashContent(content),
       });
 
-      // Apply economic filter to ground truth labels
+      // Filter ground truth labels to only significant items
       const allLabels = (postData.matches || []).map((m) => m.itemName.toLowerCase());
-      const significantLabels = allLabels.filter(isEconomicallySignificant);
+      const significantLabels = allLabels.filter((name) => significantItemNames.has(name));
 
       totalLabels += allLabels.length;
       filteredLabels += significantLabels.length;
@@ -257,14 +245,7 @@ function loadFixtures() {
     }
   }
 
-  console.log(`Economic filter: ${filteredLabels}/${totalLabels} ground truth items meet threshold (${MARGIN_THRESHOLD.toLocaleString()} GP margin)`);
-
-  // Pre-filter items once (cached for all algorithm calls)
-  const significantItems = items.filter((item) => {
-    const margin = (item.value || 0) * (item.limit || 0);
-    return margin >= MARGIN_THRESHOLD;
-  });
-  console.log(`Significant items: ${significantItems.length}/${items.length} items cached`);
+  console.log(`Ground truth: ${filteredLabels}/${totalLabels} items are economically significant`);
 
   return { posts, significantItems, labelsByPostId, groundTruthHash };
 }
@@ -330,91 +311,91 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
     },
   });
 
-  let totalTp = 0,
-    totalFp = 0,
-    totalFn = 0;
-  let totalPromptTokens = 0,
-    totalCompletionTokens = 0,
-    totalReasoningTokens = 0;
+  // Process all posts in parallel
+  const modelConfig = { model: config.model, reasoning: config.reasoning };
+
+  const postResults = await Promise.all(
+    posts.map(async (post) => {
+      const cleanedContent = cleanPostContent(post.content);
+      const expected = labelsByPostId[post.id] || [];
+
+      try {
+        // Call the algorithm - all design decisions are inside the algorithm
+        const extractionResult = await extractItems(post.title, cleanedContent, significantItems, modelConfig);
+
+        // Algorithm is responsible for filtering - benchmark just measures output
+        const validatedNames = extractionResult.items.map((v) => v.itemName || v.name);
+        const metrics = evaluateExtraction(validatedNames, expected);
+
+        return {
+          runId: run.id,
+          postId: post.id,
+          postTitle: post.title,
+          postHash: post.hash,
+          tp: metrics.tp,
+          fp: metrics.fp,
+          fn: metrics.fn,
+          precision: metrics.precision,
+          recall: metrics.recall,
+          f1: metrics.f1,
+          promptTokens: extractionResult.usage.promptTokens,
+          completionTokens: extractionResult.usage.completionTokens,
+          reasoningTokens: extractionResult.usage.reasoningTokens,
+          latencyMs: extractionResult.latencyMs,
+          extractedItems: JSON.stringify(validatedNames),
+          fpItems: JSON.stringify(metrics.fpItems),
+          fnItems: JSON.stringify(metrics.fnItems),
+          _metrics: metrics, // Keep for verbose output
+        };
+      } catch (err) {
+        return {
+          runId: run.id,
+          postId: post.id,
+          postTitle: post.title,
+          postHash: post.hash,
+          tp: 0,
+          fp: 0,
+          fn: expected.length,
+          latencyMs: 0,
+          error: err.message,
+          _metrics: { fpItems: [], fnItems: [] },
+        };
+      }
+    })
+  );
+
+  // Aggregate results
+  let totalTp = 0, totalFp = 0, totalFn = 0;
+  let totalPromptTokens = 0, totalCompletionTokens = 0, totalReasoningTokens = 0;
   let totalLatencyMs = 0;
 
-  const postResults = [];
+  for (const result of postResults) {
+    totalTp += result.tp;
+    totalFp += result.fp;
+    totalFn += result.fn;
+    totalPromptTokens += result.promptTokens || 0;
+    totalCompletionTokens += result.completionTokens || 0;
+    totalReasoningTokens += result.reasoningTokens || 0;
+    totalLatencyMs += result.latencyMs || 0;
 
-  for (const post of posts) {
-    const cleanedContent = cleanPostContent(post.content);
-    const expected = labelsByPostId[post.id] || [];
-
-    let result;
-    try {
-      // Hybrid extraction with inline embedding
-      const modelConfig = { model: config.model, reasoning: config.reasoning };
-      const hybridResult = await hybridExtractInline(post.title, cleanedContent, significantItems, modelConfig);
-
-      // Algorithm is responsible for filtering - benchmark just measures output
-      const validatedNames = hybridResult.items.map((v) => v.itemName || v.name);
-
-      const metrics = evaluateExtraction(validatedNames, expected);
-
-      result = {
-        runId: run.id,
-        postId: post.id,
-        postTitle: post.title,
-        postHash: post.hash,
-        tp: metrics.tp,
-        fp: metrics.fp,
-        fn: metrics.fn,
-        precision: metrics.precision,
-        recall: metrics.recall,
-        f1: metrics.f1,
-        promptTokens: hybridResult.usage.promptTokens,
-        completionTokens: hybridResult.usage.completionTokens,
-        reasoningTokens: hybridResult.usage.reasoningTokens,
-        latencyMs: hybridResult.latencyMs,
-        // Store detailed extraction results for analysis
-        extractedItems: JSON.stringify(validatedNames),
-        fpItems: JSON.stringify(metrics.fpItems),
-        fnItems: JSON.stringify(metrics.fnItems),
-      };
-
-      totalTp += metrics.tp;
-      totalFp += metrics.fp;
-      totalFn += metrics.fn;
-      totalPromptTokens += hybridResult.usage.promptTokens;
-      totalCompletionTokens += hybridResult.usage.completionTokens;
-      totalReasoningTokens += hybridResult.usage.reasoningTokens;
-      totalLatencyMs += hybridResult.latencyMs;
-
-      // Verbose output for error analysis
-      if (verbose && (metrics.fp > 0 || metrics.fn > 0)) {
-        console.log(`\n    Post ${post.id}: "${post.title.substring(0, 50)}..."`);
-        console.log(`      TP: ${metrics.tp}, FP: ${metrics.fp}, FN: ${metrics.fn}`);
-        if (metrics.fpItems.length > 0) {
-          console.log(`      False Positives: ${metrics.fpItems.slice(0, 10).join(', ')}${metrics.fpItems.length > 10 ? '...' : ''}`);
-        }
-        if (metrics.fnItems.length > 0) {
-          console.log(`      False Negatives: ${metrics.fnItems.slice(0, 10).join(', ')}${metrics.fnItems.length > 10 ? '...' : ''}`);
-        }
+    // Verbose output for error analysis (after all posts complete)
+    if (verbose && (result.fp > 0 || result.fn > 0)) {
+      console.log(`\n    Post ${result.postId}: "${result.postTitle.substring(0, 50)}..."`);
+      console.log(`      TP: ${result.tp}, FP: ${result.fp}, FN: ${result.fn}`);
+      if (result._metrics.fpItems.length > 0) {
+        console.log(`      False Positives: ${result._metrics.fpItems.slice(0, 10).join(', ')}${result._metrics.fpItems.length > 10 ? '...' : ''}`);
       }
-    } catch (err) {
-      result = {
-        runId: run.id,
-        postId: post.id,
-        postTitle: post.title,
-        postHash: post.hash,
-        tp: 0,
-        fp: 0,
-        fn: expected.length,
-        latencyMs: 0,
-        error: err.message,
-      };
-      totalFn += expected.length;
+      if (result._metrics.fnItems.length > 0) {
+        console.log(`      False Negatives: ${result._metrics.fnItems.slice(0, 10).join(', ')}${result._metrics.fnItems.length > 10 ? '...' : ''}`);
+      }
     }
-
-    postResults.push(result);
   }
 
+  // Clean up internal fields before database insert
+  const dbResults = postResults.map(({ _metrics, ...rest }) => rest);
+
   // Batch insert all post results
-  await prisma.benchmarkPostResult.createMany({ data: postResults });
+  await prisma.benchmarkPostResult.createMany({ data: dbResults });
 
   // Calculate aggregate metrics
   const { precision, recall, f1 } = calculateMetrics(totalTp, totalFp, totalFn);
@@ -802,12 +783,6 @@ async function main() {
     } else if (args[i] === '--restore' && args[i + 1]) {
       restoreHash = args[i + 1];
       i++;
-    } else if (args[i] === '--threshold' && args[i + 1]) {
-      const thresholdValue = parseInt(args[i + 1], 10);
-      if (!isNaN(thresholdValue) && thresholdValue > 0) {
-        MARGIN_THRESHOLD = thresholdValue;
-      }
-      i++;
     }
   }
 
@@ -861,7 +836,7 @@ async function main() {
 
   // Run benchmarks
   console.log('Loading fixtures...');
-  const { posts, significantItems, labelsByPostId, groundTruthHash } = loadFixtures();
+  const { posts, significantItems, labelsByPostId, groundTruthHash } = await loadFixtures();
   console.log(`Loaded ${posts.length} posts, ${significantItems.length} significant items`);
   console.log(`Ground truth hash: ${groundTruthHash}`);
 

@@ -14,6 +14,10 @@ const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'o4-mini';
 const DEFAULT_REASONING_EFFORT =
   process.env.OPENAI_REASONING_EFFORT || 'medium';
 
+// Voting configuration - set VOTING_RUNS > 0 to enable voting
+const VOTING_RUNS = parseInt(process.env.VOTING_RUNS, 10) || 5;
+const VOTING_THRESHOLD = parseFloat(process.env.VOTING_THRESHOLD) || 0.6;
+
 // Confidence scores for different extraction sources
 // These can be tuned based on benchmark results
 const CONFIDENCE_SCORES = {
@@ -181,36 +185,48 @@ function escapeRegex(str) {
  * Performs lenient algorithmic search for item names in post content
  * Uses word boundary matching to avoid partial matches
  *
+ * Greedy mode uses progressive prefix matching:
+ * 1. Try exact full item name match first (least greedy)
+ * 2. If no match, try N-1 words, N-2, etc.
+ * 3. Fall back to single-word only if multi-word fails AND word not blocklisted
+ *
+ * Example: "Blue Moon tassets" in content with item "Blue Moon helm"
+ * - Try "blue moon helm" → no match
+ * - Try "blue moon" → MATCH! → include as greedy match
+ *
+ * Example: "Virtus set effect" in content with item "Virtus mask"
+ * - Try "virtus mask" → no match
+ * - Try "virtus" → MATCH! (specific word, not blocklisted)
+ *
  * @param {string} content - The post content to search
  * @param {Array<{id: number, name: string}>} allItems - All items from database
- * @returns {Map<number, {item: object, matchType: string}>} - Map of itemId to match info
+ * @param {boolean} greedy - Enable progressive prefix matching (default: false)
+ * @returns {Map<number, {item: object, matchType: string, matchedPrefix?: string}>}
  */
-// Greedy matching mode - also match items by their first word (e.g., "Virtus" → "Virtus mask")
 const GREEDY_MATCHING = process.env.GREEDY_MATCHING === 'true';
 
-// Additional blocklist for greedy prefix matching (common words that match too many items)
-const GREEDY_PREFIX_BLOCKLIST = new Set([
-  // Common words that appear in posts but match many items
-  'blighted',
-  'blood',
-  'combat',
-  'crystal',
-  'light',
-  'fire',
-  'energy',
+// Blocklist for single-word prefix matches only
+// These are common words that have non-item meanings and would cause false positives
+// Multi-word matches (2+ words) are NOT affected by this blocklist
+const SINGLE_WORD_BLOCKLIST = new Set([
+  // Common words with multiple meanings
   'ancient',
-  'super',
-  'divine',
-  'small',
-  'large',
-  'blessed',
-  'holy',
+  'blood',
+  'chaos',
+  'combat',
   'dark',
+  'demon',
+  'dragon',
+  'fire',
+  'holy',
+  'light',
+  'master',
+  'nature',
+  'shadow',
   'soul',
   'spirit',
+  'super',
   'death',
-  'chaos',
-  'nature',
   'earth',
   'water',
   'smoke',
@@ -218,30 +234,50 @@ const GREEDY_PREFIX_BLOCKLIST = new Set([
   'dust',
   'lava',
   'mud',
-  'shadow',
-  'arcane',
-  'mystic',
-  'void',
+  // Item category words
+  'long',
+  'short',
+  'small',
+  'large',
+  'bird',
+  'spotted',
+  // Equipment types that are too generic
+  'abyssal',
+  'blessed',
+  'crystal',
+  'divine',
   'elite',
-  'master',
-  'team',
-  'bounty',
-  'hunter',
-  'fishing',
-  'slayer',
-  'cannon',
   'infernal',
+  'mystic',
+  'arcane',
   'barrows',
+  'bandos',
+  'twisted',
+  'eclipse',
+  // Equipment/mechanic words that match item names
+  'cannon',
+  'ring',
+  'necklace',
+  'bracelet',
+  'amulet',
+  'games',
+  'skills',
+]);
+
+// Blocklist for multi-word prefix matches
+// These phrases have meanings beyond item names (bosses, activities, locations)
+const MULTI_WORD_BLOCKLIST = new Set([
+  'blood moon', // Boss/activity name
+  'eclipse moon', // Boss/activity name
+  'blue moon', // Boss/activity name
+  'ring of', // Too generic prefix
+  'necklace of', // Too generic prefix
+  'old school', // Refers to the game, not items
 ]);
 
 function algorithmicSearch(content, allItems, greedy = GREEDY_MATCHING) {
   const found = new Map();
   const contentLower = content.toLowerCase();
-
-  // For greedy mode, extract all words from content for prefix matching
-  const contentWords = greedy
-    ? new Set(contentLower.match(/\b[a-z]{4,}\b/g) || [])
-    : null;
 
   for (const item of allItems) {
     const nameLower = item.name.toLowerCase();
@@ -256,6 +292,8 @@ function algorithmicSearch(content, allItems, greedy = GREEDY_MATCHING) {
 
     // Try exact substring match first (fast path)
     let matchType = null;
+    let matchedPrefix = null;
+
     if (contentLower.includes(nameLower)) {
       // Verify with word boundary regex (slower but accurate)
       // This prevents "gold" matching inside "marigold"
@@ -270,26 +308,48 @@ function algorithmicSearch(content, allItems, greedy = GREEDY_MATCHING) {
       }
     }
 
-    // Greedy mode: also match if first word of item name appears in content
-    // e.g., "Virtus" in content → match "Virtus mask", "Virtus robe top"
-    if (!matchType && greedy && contentWords) {
-      // Normalize: remove possessive "'s" to match "inquisitor's" → "inquisitor"
-      const firstWord = nameLower.split(/\s+/)[0].replace(/'s$/, '');
-      if (
-        firstWord.length >= 4 &&
-        !ALGO_BLOCKLIST.has(firstWord) &&
-        !GREEDY_PREFIX_BLOCKLIST.has(firstWord) &&
-        contentWords.has(firstWord)
-      ) {
-        matchType = 'greedy';
+    // Greedy mode: progressive prefix matching
+    // Try progressively shorter prefixes: full name → 2 words → 1 word
+    // Only fall back to single-word if all multi-word prefixes fail
+    if (!matchType && greedy) {
+      // Extract words from item name (normalize possessives)
+      const words = baseName
+        .replace(/'s\b/g, '') // Remove possessives
+        .split(/\s+/)
+        .filter((w) => w.length > 0);
+
+      // Try progressively shorter prefixes, including single word as last resort
+      for (let len = words.length - 1; len >= 1 && !matchType; len--) {
+        const prefix = words.slice(0, len).join(' ');
+
+        // Skip if prefix is too short
+        if (prefix.length < 4) continue;
+        if (ALGO_BLOCKLIST.has(prefix)) continue;
+
+        // For single-word prefixes, check SINGLE_WORD_BLOCKLIST
+        if (len === 1 && SINGLE_WORD_BLOCKLIST.has(prefix)) continue;
+
+        // For multi-word prefixes, check MULTI_WORD_BLOCKLIST
+        if (len >= 2 && MULTI_WORD_BLOCKLIST.has(prefix)) continue;
+
+        // Check if this prefix appears in content with word boundaries
+        try {
+          const prefixPattern = new RegExp(`\\b${escapeRegex(prefix)}\\b`, 'i');
+          if (prefixPattern.test(content)) {
+            matchType = 'greedy';
+            matchedPrefix = prefix;
+            break; // Use longest matching prefix
+          }
+        } catch {
+          continue;
+        }
       }
     }
 
     if (matchType) {
-      found.set(item.id, {
-        item,
-        matchType,
-      });
+      const matchInfo = { item, matchType };
+      if (matchedPrefix) matchInfo.matchedPrefix = matchedPrefix;
+      found.set(item.id, matchInfo);
     }
   }
 
@@ -767,17 +827,59 @@ async function hybridExtractInline(
   significantItems,
   modelConfig = {}
 ) {
+  // If voting is enabled, delegate to voting implementation
+  if (VOTING_RUNS > 0) {
+    return _hybridExtractInlineVoting(
+      postTitle,
+      cleanedContent,
+      significantItems,
+      modelConfig,
+      VOTING_RUNS,
+      VOTING_THRESHOLD
+    );
+  }
+
+  // Single-pass extraction (no voting)
+  return _hybridExtractInlineSinglePass(
+    postTitle,
+    cleanedContent,
+    significantItems,
+    modelConfig
+  );
+}
+
+/**
+ * Single-pass inline extraction (internal implementation)
+ */
+async function _hybridExtractInlineSinglePass(
+  postTitle,
+  cleanedContent,
+  significantItems,
+  modelConfig = {}
+) {
   const startTime = Date.now();
 
   // Run algorithmic search with greedy mode on significant items
   const algoMatches = algorithmicSearch(cleanedContent, significantItems, true);
 
-  // Group items by their trigger keyword (first word, normalized)
+  // Group items by their matched prefix (2+ words for greedy, or exact match)
+  // For exact matches, use the full item name as the "trigger"
+  // For greedy matches, use the matchedPrefix (the 2+ word phrase found in content)
   const triggerToItems = new Map();
   for (const [, matchInfo] of algoMatches) {
     const itemName = matchInfo.item.name;
-    // Normalize: remove possessive "'s" to match content words
-    const trigger = itemName.split(/\s+/)[0].toLowerCase().replace(/'s$/, '');
+
+    // Use matchedPrefix if greedy match, otherwise use the base name for exact matches
+    let trigger;
+    if (matchInfo.matchType === 'greedy' && matchInfo.matchedPrefix) {
+      trigger = matchInfo.matchedPrefix.toLowerCase();
+    } else {
+      // For exact matches, use the base name (without parenthetical suffixes)
+      trigger = itemName
+        .toLowerCase()
+        .replace(/\s*\([^)]*\)\s*$/, '')
+        .trim();
+    }
 
     if (!triggerToItems.has(trigger)) {
       triggerToItems.set(trigger, []);
@@ -785,76 +887,81 @@ async function hybridExtractInline(
     triggerToItems.get(trigger).push(itemName);
   }
 
-  // Embed suggestions inline using «» syntax
+  // Embed suggestions inline with clear labeling
+  // Format: trigger [SUGGESTED ITEMS: item1, item2, item3]
+  // For single exact matches: trigger [ITEM DETECTED: item1]
   let annotatedContent = cleanedContent;
+  let suggestionCount = 0;
+
   for (const [trigger, itemNames] of triggerToItems) {
-    // Limit to 5 suggestions per trigger to avoid overwhelming the prompt
+    // Limit to 5 suggestions per trigger
     const suggestions = itemNames.slice(0, 5).join(', ');
-    // Replace first occurrence of trigger word with trigger + suggestions
+    // Use different labels for single vs multiple items
+    const label = itemNames.length === 1 ? 'ITEM DETECTED' : 'SUGGESTED ITEMS';
+    // Replace first occurrence with clearly labeled suggestion
     const regex = new RegExp(`\\b(${escapeRegex(trigger)})\\b`, 'i');
-    annotatedContent = annotatedContent.replace(regex, `$1 «${suggestions}»`);
+    annotatedContent = annotatedContent.replace(
+      regex,
+      `$1 [${label}: ${suggestions}]`
+    );
+    suggestionCount++;
   }
 
-  logger.debug('Inline embedding: annotated content', {
+  logger.debug('Inline suggestions embedded', {
     postTitle,
-    triggers: triggerToItems.size,
+    suggestionCount,
     totalHints: [...triggerToItems.values()].reduce(
       (sum, arr) => sum + arr.length,
       0
     ),
   });
 
-  // Build custom system prompt with inline syntax explanation
+  // Build custom system prompt with clear instructions
   const model = modelConfig.model || DEFAULT_MODEL;
   const reasoning = modelConfig.reasoning || DEFAULT_REASONING_EFFORT;
 
-  const inlineSystemPrompt = `You are an Old School RuneScape expert. Extract tradeable items that are EXPLICITLY mentioned in this news post.
+  const inlineSystemPrompt = `You are an Old School RuneScape expert extracting tradeable items from a news post.
 
-INLINE SUGGESTIONS: The content contains hints in «item1, item2» format next to trigger words. These are algorithmically-detected item names that may be relevant. Use greedy matching:
-- If "Virtus" appears with «Virtus mask, Virtus robe top, Virtus robe bottom», extract ALL those items since "Virtus" refers to the set
-- If "cannonball" appears with «Cannonball», extract Cannonball
-- ONLY include suggestions if the trigger word genuinely refers to the item (not coincidental matches)
+## INLINE MARKERS
+The content contains two types of algorithmic markers (NOT part of the original text):
 
-CRITICAL: Only extract items that are actually discussed in the post. Do NOT speculatively expand categories or guess at items.
+**[ITEM DETECTED: X]** = Exact item name found. ACCEPT if the item is genuinely discussed:
+- "Dragon Bones [ITEM DETECTED: Dragon bones]" in "gives 72 XP like Dragon Bones" → ACCEPT (comparing items)
+- "Dragon Bones [ITEM DETECTED: Dragon bones]" in "the dragon bones of the earth" → REJECT (metaphor)
 
-Rules:
-- Only include items tradeable on the Grand Exchange
-- Extract items that are NAMED or CLEARLY IMPLIED in the text
-- If a specific item is named (e.g., "Dragon Bones", "Wyrm Bones"), extract it
-- Do NOT expand generic category words into full lists (e.g., "bones" alone → don't list all bone types)
-- Do NOT include: quest items, untradeable rewards, currencies (coins/gp), NPCs, locations, skills
-- When an armor SET is mentioned by name (e.g., "Virtus", "Inquisitor's"), include ALL individual pieces
+**[SUGGESTED ITEMS: X, Y, Z]** = Possible item set expansion. ACCEPT if trigger refers to ITEMS:
+- "Virtus [SUGGESTED ITEMS: Virtus mask, ...]" → set name → ACCEPT all pieces
+- "Blood Moon [SUGGESTED ITEMS: Blood Moon helm, ...]" → BOSS name → REJECT
 
-FALSE POSITIVES TO AVOID:
-- "staff" referring to Jagex employees (NOT Staff of X items)
-- JMod names that match items: Ash, Grace, Acorn, Pumpkin
-- Generic category words without specific items
-- Ignore «» suggestions if the trigger word isn't actually referring to an item
+## WHEN TO ACCEPT
+- Item is being discussed as a tradeable item (stats, price, drop, comparison, requirement)
+- Item is mentioned as a reference point ("between X and Y")
+- Set name mentioned with set bonus or armor context
 
-Context classifications:
-- buff: Item being made stronger
-- nerf: Item being made weaker
-- supply_change: Drop rate or availability changing
-- new_content: New item being added
-- bug_fix: Bug fix related to item
-- mention_only: Item mentioned without gameplay change
+## WHEN TO REJECT
+- Trigger is a boss, activity, location, or mechanic name
+- Word is used metaphorically or in a non-item context
+- "staff" = Jagex employees, NOT Staff of X items
 
-OUTPUT REQUIREMENTS:
-1. name: Exact item name as it appears in-game
-2. snippet: Text where item is mentioned (max 400 chars, exclude «» annotations)
-3. context: One of the classifications above
-4. confidence: 0.0-1.0 (0.9+ for explicit mentions, lower for implied)
-5. mentionType: "direct" (named), "implied" (referenced indirectly), or "category_expansion" (expanded from set name)
-6. variantCategory: Only if expanded from a set/category name, otherwise null`;
+## CONTEXT TYPES
+buff | nerf | supply_change | new_content | bug_fix | mention_only
+
+## OUTPUT
+- name: Exact in-game item name
+- snippet: Text where mentioned (max 400 chars, EXCLUDE markers)
+- context: One type above
+- confidence: 0.0-1.0
+- mentionType: "direct" | "implied" | "category_expansion"
+- variantCategory: Set name if expanded, else null`;
 
   const userMessage = `Post Title: "${postTitle}"
 
-Content (with inline «suggestions»):
+Content:
 """
 ${annotatedContent}
 """
 
-Extract all tradeable OSRS items mentioned in this post. Use the «» suggestions as hints for greedy matching when the trigger word refers to item sets or variants.`;
+Extract tradeable OSRS items. For [SUGGESTED ITEMS] markers, only accept if the preceding word genuinely refers to items (not bosses, mechanics, or metaphors).`;
 
   try {
     const rawResponse = await fetchStructuredResponse(
@@ -927,6 +1034,151 @@ Extract all tradeable OSRS items mentioned in this post. Use the «» suggestion
     });
     throw err;
   }
+}
+
+/**
+ * Voting-based inline extraction (internal implementation)
+ * Runs multiple single-pass extractions in parallel and uses voting to filter noise.
+ */
+async function _hybridExtractInlineVoting(
+  postTitle,
+  cleanedContent,
+  significantItems,
+  modelConfig = {},
+  numRuns = 5,
+  votingThreshold = 0.6
+) {
+  const startTime = Date.now();
+
+  logger.debug('Starting inline voting extraction', {
+    postTitle,
+    numRuns,
+    votingThreshold,
+  });
+
+  // Run N single-pass extractions in parallel
+  const allRuns = await Promise.all(
+    Array(numRuns)
+      .fill()
+      .map(() =>
+        _hybridExtractInlineSinglePass(
+          postTitle,
+          cleanedContent,
+          significantItems,
+          modelConfig
+        )
+      )
+  );
+
+  // Aggregate votes per item
+  const itemVotes = new Map(); // itemId -> { appearances, scores, sources, items }
+
+  for (const run of allRuns) {
+    for (const item of run.items) {
+      const vote = itemVotes.get(item.itemId) || {
+        appearances: 0,
+        scores: [],
+        sources: [],
+        items: [],
+      };
+      vote.appearances++;
+      vote.scores.push(item.confidence);
+      vote.sources.push(item.source);
+      vote.items.push(item);
+      itemVotes.set(item.itemId, vote);
+    }
+  }
+
+  // Filter by voting threshold and compute aggregated confidence
+  const votedItems = [];
+  for (const [, vote] of itemVotes) {
+    const appearanceRatio = vote.appearances / numRuns;
+    if (appearanceRatio >= votingThreshold) {
+      // Use the item with highest confidence as the representative
+      const bestItem = vote.items.reduce((a, b) =>
+        a.confidence > b.confidence ? a : b
+      );
+
+      // Compute aggregated confidence from voting results
+      const avgConfidence =
+        vote.scores.reduce((a, b) => a + b, 0) / vote.scores.length;
+
+      // Source consistency: 1.0 if all same, lower if varied
+      const uniqueSources = new Set(vote.sources).size;
+      const sourceConsistency = 1.0 / uniqueSources;
+
+      // Final score: weighted combination
+      const votingConfidence =
+        0.5 * appearanceRatio + 0.3 * avgConfidence + 0.2 * sourceConsistency;
+
+      votedItems.push({
+        ...bestItem,
+        confidence: Math.max(avgConfidence, votingConfidence),
+        votingStats: {
+          appearances: vote.appearances,
+          totalRuns: numRuns,
+          appearanceRatio,
+          avgConfidence,
+          sourceConsistency,
+        },
+      });
+    }
+  }
+
+  // Sort by confidence
+  votedItems.sort((a, b) => b.confidence - a.confidence);
+
+  // Aggregate usage across all runs
+  const totalUsage = {
+    promptTokens: allRuns.reduce((sum, r) => sum + r.usage.promptTokens, 0),
+    completionTokens: allRuns.reduce(
+      (sum, r) => sum + r.usage.completionTokens,
+      0
+    ),
+    reasoningTokens: allRuns.reduce(
+      (sum, r) => sum + r.usage.reasoningTokens,
+      0
+    ),
+  };
+
+  const latencyMs = Date.now() - startTime;
+
+  // Aggregate stats
+  const avgStats = {
+    triggers: Math.round(
+      allRuns.reduce((sum, r) => sum + r.stats.triggers, 0) / numRuns
+    ),
+    totalHints: Math.round(
+      allRuns.reduce((sum, r) => sum + r.stats.totalHints, 0) / numRuns
+    ),
+    llmExtracted: Math.round(
+      allRuns.reduce((sum, r) => sum + r.stats.llmExtracted, 0) / numRuns
+    ),
+    validated: Math.round(
+      allRuns.reduce((sum, r) => sum + r.stats.validated, 0) / numRuns
+    ),
+  };
+
+  const votingStats = {
+    runsExecuted: numRuns,
+    votingThreshold,
+    candidatesSeen: itemVotes.size,
+    itemsAfterVoting: votedItems.length,
+    avgLatencyPerRun: Math.round(latencyMs / numRuns),
+  };
+
+  logger.debug('Inline voting extraction complete', {
+    postTitle,
+    ...votingStats,
+    latencyMs,
+  });
+
+  return {
+    items: votedItems,
+    stats: { ...avgStats, voting: votingStats },
+    usage: totalUsage,
+    latencyMs,
+  };
 }
 
 export {

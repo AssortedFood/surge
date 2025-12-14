@@ -171,3 +171,18 @@ model BenchmarkPostResult {
 
   @@unique([runId, postId])
 }
+
+// ============================================================================
+// SIGNIFICANT ITEMS CACHE - Pre-computed economically significant items
+// ============================================================================
+
+model SignificantItem {
+  id        Int     @id @default(autoincrement())
+  itemId    Int     @unique  // Original item ID from items.json
+  name      String
+  value     Int
+  limit     Int
+  examine   String?
+  members   Boolean
+  icon      String?
+}
