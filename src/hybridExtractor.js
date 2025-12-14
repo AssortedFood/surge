@@ -11,7 +11,8 @@ import { z } from 'zod';
 
 // Default model config from env vars (used when no config passed)
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'o4-mini';
-const DEFAULT_REASONING_EFFORT = process.env.OPENAI_REASONING_EFFORT || 'low';
+const DEFAULT_REASONING_EFFORT =
+  process.env.OPENAI_REASONING_EFFORT || 'medium';
 
 // Confidence scores for different extraction sources
 // These can be tuned based on benchmark results
