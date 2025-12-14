@@ -4,7 +4,7 @@ import { PrismaClient, PriceChange } from '@prisma/client';
 
 // Import all necessary functions from other modules
 import { cleanPostContent } from './contentCleaner.js';
-import { hybridExtractWithVoting } from './hybridExtractor.js';
+import { hybridExtractInline } from './hybridExtractor.js';
 import { predictPriceChange } from './pricePredictor.js';
 import { sendTelegramMessage } from './sendTelegram.js';
 import { getEconomicallySignificantItems } from './itemFilter.js';
@@ -181,15 +181,13 @@ export async function processOnePost(post) {
       cleanedLength: cleanedContent.length,
     });
 
-    // 2. Extract items using 5-run voting for consistency
+    // 2. Extract items using voting (configured via VOTING_RUNS and VOTING_THRESHOLD env vars)
     const allItems = await getAllItemsCached();
-    const extractionResult = await hybridExtractWithVoting(
+    const extractionResult = await hybridExtractInline(
       post.title,
       cleanedContent,
       allItems,
-      {}, // use default model config (o4-mini:medium)
-      5, // 5 parallel runs
-      0.6 // 60% voting threshold (3/5 agreement)
+      {} // use default model config
     );
     logger.info('Extracted items with voting', {
       postId: post.id,
