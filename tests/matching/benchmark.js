@@ -839,37 +839,74 @@ async function main() {
 
   const algorithm = await getOrCreateAlgorithm();
 
-  console.log(`\nRunning ${numRuns} runs for each config: ${Object.keys(configsToRun).join(', ')}`);
+  const configEntries = Object.entries(configsToRun);
+  const totalRuns = configEntries.length * numRuns;
+  console.log(`\nRunning ${totalRuns} total runs (${numRuns} runs × ${configEntries.length} configs) in PARALLEL`);
+  console.log(`Configs: ${Object.keys(configsToRun).join(', ')}`);
   console.log(`Posts: ${BENCHMARK_POST_IDS.join(', ')}`);
   console.log('');
 
-  for (const [configKey, config] of Object.entries(configsToRun)) {
-    console.log(`\n${'='.repeat(60)}`);
+  // Build all run tasks
+  const runTasks = configEntries.flatMap(([configKey, config]) =>
+    Array(numRuns).fill().map((_, i) => ({
+      configKey,
+      config,
+      runNumber: i + 1,
+    }))
+  );
+
+  console.log(`Starting ${runTasks.length} parallel benchmark runs...`);
+  const startTime = Date.now();
+
+  // Run ALL configs and runs in parallel
+  const allResults = await Promise.all(
+    runTasks.map(async ({ configKey, config, runNumber }) => {
+      try {
+        const result = await runSingleBenchmark(
+          algorithm, configKey, config, runNumber,
+          posts, significantItems, labelsByPostId, groundTruthHash, verboseMode
+        );
+        return { configKey, runNumber, result, error: null };
+      } catch (err) {
+        return { configKey, runNumber, result: null, error: err.message };
+      }
+    })
+  );
+
+  const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
+  console.log(`\nAll runs completed in ${totalTime}s\n`);
+
+  // Group results by config and display
+  const resultsByConfig = {};
+  for (const { configKey, runNumber, result, error } of allResults) {
+    if (!resultsByConfig[configKey]) resultsByConfig[configKey] = [];
+    resultsByConfig[configKey].push({ runNumber, result, error });
+  }
+
+  for (const [configKey, runs] of Object.entries(resultsByConfig)) {
+    console.log(`${'='.repeat(60)}`);
     console.log(`CONFIG: ${configKey}`);
     console.log('='.repeat(60));
 
-    const runResults = [];
+    const successfulRuns = runs.filter(r => r.result);
+    const failedRuns = runs.filter(r => r.error);
 
-    for (let run = 1; run <= numRuns; run++) {
-      process.stdout.write(`  Run ${run}/${numRuns}... `);
-      try {
-        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, significantItems, labelsByPostId, groundTruthHash, verboseMode);
-        runResults.push(result);
-        console.log(`F1: ${(result.f1 * 100).toFixed(1)}%, Latency: ${(result.totalLatencyMs / 1000).toFixed(1)}s`);
-      } catch (err) {
-        console.log(`ERROR: ${err.message}`);
-      }
+    for (const { runNumber, result } of successfulRuns) {
+      console.log(`  Run ${runNumber}: F1: ${(result.f1 * 100).toFixed(1)}%, Latency: ${(result.totalLatencyMs / 1000).toFixed(1)}s`);
+    }
+    for (const { runNumber, error } of failedRuns) {
+      console.log(`  Run ${runNumber}: ERROR: ${error}`);
     }
 
-    // Summary for this config
-    if (runResults.length > 0) {
-      const f1Values = runResults.map((r) => r.f1);
+    if (successfulRuns.length > 0) {
+      const f1Values = successfulRuns.map(r => r.result.f1);
       const stats = computeStats(f1Values);
       console.log(`\n  Summary: Mean F1: ${(stats.mean * 100).toFixed(1)}%, Median: ${(stats.median * 100).toFixed(1)}%, StdDev: ${(stats.stdDev * 100).toFixed(2)}%`);
     }
+    console.log('');
   }
 
-  console.log('\n\nBenchmark complete. Run with --stats to see full statistics.');
+  console.log('Benchmark complete. Run with --stats to see full statistics.');
   await prisma.$disconnect();
 }
 
