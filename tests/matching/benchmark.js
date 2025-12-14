@@ -60,8 +60,8 @@ function hashContent(content) {
 // CONFIGURATION
 // ============================================================================
 
-// 7 diverse posts selected for comprehensive testing
-// Excludes posts with 0 items (Post 2) - can't measure F1 with no ground truth
+// Posts with labeled ground truth items in human-approved.json
+// Posts 1, 2, 4, 9, 10, 11, 13, 14 excluded (no tradeable items or not labeled)
 const BENCHMARK_POST_IDS = [3, 5, 6, 7, 8, 12, 15];
 
 // Model configurations to benchmark
