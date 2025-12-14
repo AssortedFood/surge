@@ -88,7 +88,7 @@ const textPresent = llmValidated.filter((item) => {
 ---
 
 ## Issue 4: Benchmark Parallelization
-**Status:** [ ] Not Started
+**Status:** [x] Complete ✓ commit a51dc5c
 
 ### Problem
 Benchmarks run SEQUENTIALLY. Should be parallel.
@@ -159,25 +159,25 @@ Many JS files not connected to anything.
 ---
 
 ## Issue 6: Unused Database Tables/Columns
-**Status:** [ ] Not Started
+**Status:** [x] Complete (schema updated, migration deferred)
 
 ### Problem
 Schema has unused tables and columns.
 
-### Analysis
+### Analysis (CORRECTED after code verification)
 | Table/Column | Status | Notes |
 |--------------|--------|-------|
-| `BenchmarkAlgorithm.description` | UNUSED | Never set, never read |
-| `Item` | PARTIAL | Used by itemFilter.js, but benchmark uses SignificantItem |
-| `ItemAnalysis` | UNUSED | Only referenced by dead semanticItemAnalysis.js |
-| `Post` | PARTIAL | Used by syncPosts.js, but benchmark uses fixture files |
-| `PriceSnapshot` | UNUSED | No code references except schema relations |
+| `BenchmarkAlgorithm.description` | UNUSED | Never set, never read - **REMOVED from schema** |
+| `Item` | USED | Used by itemFilter.js for production filtering |
+| `ItemAnalysis` | USED | Used by index.js:117 for production analysis storage |
+| `Post` | USED | Used by syncPosts.js and index.js for production |
+| `PriceSnapshot` | USED | Used by syncData.js:97 and itemFilter.js for prices |
 
 ### Tasks
-- [ ] 6.1 Remove `description` column from BenchmarkAlgorithm (migration)
-- [ ] 6.2 Decide: Keep Item/Post/PriceSnapshot for production use, or delete if benchmarking only
-- [ ] 6.3 Delete ItemAnalysis table if semanticItemAnalysis.js is deleted
-- [ ] 6.4 Run prisma migrate to clean schema
+- [x] 6.1 Remove `description` column from BenchmarkAlgorithm (schema updated)
+- [x] 6.2 Keep Item/Post/PriceSnapshot/ItemAnalysis - all used by production
+- [x] 6.3 ItemAnalysis NOT deleted - it's used by index.js production pipeline
+- [ ] 6.4 Migration deferred - DB has drift, would require full reset and data loss
 
 ---
 
@@ -188,16 +188,16 @@ Schema has unused tables and columns.
 2. [x] Remove text filter from hybridExtractor.js (Issue 3.1) ✓ commit b9fd8e8
 
 ### Phase 2: Cleanup
-3. [ ] Delete dead JS files (Issue 5.2)
-4. [ ] Update ALGORITHM_FILES (Issue 5.3)
-5. [ ] Update benchmark comments (Issue 2.1)
+3. [x] Delete dead JS files (Issue 5.2) ✓ commit 6f457d7
+4. [x] Update ALGORITHM_FILES (Issue 5.3) ✓ commit 8c706ba
+5. [x] Update benchmark comments (Issue 2.1) ✓ commit 5859626
 
 ### Phase 3: Performance
-6. [ ] Parallelize benchmark loops (Issue 4.1, 4.2)
+6. [x] Parallelize benchmark loops (Issue 4.1, 4.2) ✓ commit a51dc5c
 
 ### Phase 4: Schema Cleanup
-7. [ ] Remove unused DB columns/tables (Issue 6)
-8. [ ] Run prisma migrate
+7. [x] Remove unused DB columns/tables (Issue 6) - only description column was unused
+8. [ ] Run prisma migrate - DEFERRED (DB drift requires reset, would lose benchmark data)
 
 ### Phase 5: Validation
 9. [ ] Run benchmark to verify nothing broke
