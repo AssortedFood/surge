@@ -431,6 +431,15 @@ async function _hybridExtractInlineSinglePass(
     suggestionCount++;
   }
 
+  // Collect ALL items from markers for hard validation later
+  // This is the whitelist - LLM output MUST be in this set
+  const markerItemsSet = new Set();
+  for (const itemNames of triggerToItems.values()) {
+    for (const name of itemNames) {
+      markerItemsSet.add(name.toLowerCase());
+    }
+  }
+
   logger.debug('Inline suggestions embedded', {
     postTitle,
     suggestionCount,
@@ -438,53 +447,66 @@ async function _hybridExtractInlineSinglePass(
       (sum, arr) => sum + arr.length,
       0
     ),
+    markerItems: markerItemsSet.size,
   });
 
-  // Build custom system prompt with clear instructions
+  // Build custom system prompt with strict anti-hallucination rules
   const model = modelConfig.model || DEFAULT_MODEL;
   const reasoning = modelConfig.reasoning || DEFAULT_REASONING_EFFORT;
 
   const inlineSystemPrompt = `You are an Old School RuneScape expert extracting tradeable items from a news post.
 
-## CRITICAL: NO HALLUCINATION
-- ONLY extract items whose EXACT NAME appears in the text or in [ITEM DETECTED]/[SUGGESTED ITEMS] markers
-- Do NOT infer items from related concepts (e.g., "Frost Dragons" does NOT mean "dragonfire shield")
-- Do NOT extract items associated with mentioned monsters/bosses unless the ITEM NAME is written
-- "dragonfire" as attack type ≠ "dragonfire shield" item
-- "Hydra bones" ≠ "hydra's claw", "hydra leather", "hydra tail"
+## CRITICAL OUTPUT CONSTRAINT
+You may ONLY output items that appear in [ITEM DETECTED] or [SUGGESTED ITEMS] markers.
+If an item is NOT in a marker, do NOT extract it - even if you think it's relevant.
+This is a HARD CONSTRAINT to prevent hallucinations.
 
 ## INLINE MARKERS
-The content contains two types of algorithmic markers (NOT part of the original text):
+The content contains algorithmic markers (NOT part of the original text):
 
-**[ITEM DETECTED: X]** = Exact item name found. ACCEPT if the item is genuinely discussed:
-- "Dragon Bones [ITEM DETECTED: Dragon bones]" in "gives 72 XP like Dragon Bones" → ACCEPT
-- "Dragon Bones [ITEM DETECTED: Dragon bones]" in "the dragon bones of the earth" → REJECT (metaphor)
+**[ITEM DETECTED: X]** = Exact item name found in text.
+- ACCEPT if the item is genuinely discussed as a tradeable item
+- REJECT if metaphorical, idiomatic, or refers to something else
 
-**[SUGGESTED ITEMS: X, Y, Z]** = Possible item set expansion. ACCEPT if trigger refers to ITEMS:
-- "Virtus [SUGGESTED ITEMS: Virtus mask, ...]" → set name → ACCEPT all pieces
-- "Blood Moon [SUGGESTED ITEMS: Blood Moon helm, ...]" → BOSS name → REJECT
+**[SUGGESTED ITEMS: X, Y, Z]** = Possible item set expansion from a trigger word.
+- ACCEPT if trigger word refers to ITEMS (armor set, item category)
+- REJECT if trigger is a boss name, activity, location, or mechanic
 
-## WHEN TO ACCEPT
-- Item's EXACT NAME appears in text (via marker or written out)
-- Set name mentioned with set bonus or armor context → expand to pieces
+## ACCEPTANCE RULES
+- Item appears in a marker AND is genuinely discussed as tradeable
+- Set name with armor/set bonus context → accept all pieces from marker
+- Specific item named in requirements/drops/comparisons → accept
 
-## WHEN TO REJECT
-- Item name NOT explicitly written (no inference from related words)
-- Trigger is a boss, activity, location, or mechanic name
-- Word is used metaphorically or in a non-item context
-- "staff" = Jagex employees, NOT Staff of X items
-- Monster drops you associate with a boss (only extract if explicitly named)
+## REJECTION RULES (from voting-5run-v1)
+- Item NOT in any marker → REJECT (no exceptions)
+- Trigger word is boss/activity name (Blood Moon, Eclipse Moon, Blue Moon) → REJECT suggestions
+- "staff" referring to Jagex employees → NOT Staff of X items
+- JMod names that match items: Ash, Grace, Acorn, Pumpkin → REJECT
+- Generic category without specifics: "bones", "ores", "logs" → only accept if SPECIFIC item in marker
+- Untradeable items: quest capes, skill capes, void, graceful → REJECT
+- Monster drops you associate mentally → only extract if the ITEM NAME is in a marker
+
+## COMMON FALSE POSITIVE TRAPS
+- "polish your pickaxes" = idiomatic, not item reference
+- "bare bones" / "backbone" = metaphor, not Bones item
+- "dragonfire" attack type ≠ "Dragonfire shield" item
+- Boss names suggesting drops: "Hydra" ≠ hydra's claw/leather/tail unless those items are in markers
+
+## SET EXPANSIONS (only when trigger refers to armor/items)
+- "Virtus" with set bonus context → Virtus mask, Virtus robe top, Virtus robe bottom
+- "Inquisitor's" armor → all pieces from marker
+- But "Blood Moon" (boss) → REJECT even if items suggested
 
 ## CONTEXT TYPES
 buff | nerf | supply_change | new_content | bug_fix | mention_only
 
-## OUTPUT
-- name: Exact in-game item name
-- snippet: Text where mentioned (max 400 chars, EXCLUDE markers)
-- context: One type above
-- confidence: 0.0-1.0
+## OUTPUT FORMAT
+- name: EXACT in-game item name (must be from a marker)
+- snippet: Text where mentioned (max 400 chars, EXCLUDE markers from snippet)
+- context: One of the types above
+- confidence: 0.9+ for direct mentions, lower for implied
 - mentionType: "direct" | "implied" | "category_expansion"
-- variantCategory: Set name if expanded, else null`;
+- variantCategory: Set name if expanded from set, else null`;
 
   const userMessage = `Post Title: "${postTitle}"
 
@@ -528,8 +550,21 @@ Extract tradeable OSRS items. For [SUGGESTED ITEMS] markers, only accept if the 
       significantItems
     );
 
+    // HARD VALIDATION: Filter to ONLY items that appeared in markers
+    // This is the nuclear option against hallucinations
+    const markerFiltered = llmValidated.filter((item) => {
+      const inMarker = markerItemsSet.has(item.itemName.toLowerCase());
+      if (!inMarker) {
+        logger.debug('Rejected hallucination (not in marker)', {
+          postTitle,
+          item: item.itemName,
+        });
+      }
+      return inMarker;
+    });
+
     // Build results with confidence scores
-    const items = llmValidated.map((item) => {
+    const items = markerFiltered.map((item) => {
       const wasAlgoMatch = algoMatches.has(item.itemId);
       return {
         ...item,
@@ -548,8 +583,11 @@ Extract tradeable OSRS items. For [SUGGESTED ITEMS] markers, only accept if the 
         (sum, arr) => sum + arr.length,
         0
       ),
+      markerItems: markerItemsSet.size,
       llmExtracted: (result.items || []).length,
-      validated: items.length,
+      llmValidated: llmValidated.length,
+      markerFiltered: markerFiltered.length,
+      hallucinationsRejected: llmValidated.length - markerFiltered.length,
     };
 
     logger.debug('Inline extraction complete', {
