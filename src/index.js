@@ -4,8 +4,7 @@ import { PrismaClient, PriceChange } from '@prisma/client';
 
 // Import all necessary functions from other modules
 import { cleanPostContent } from './contentCleaner.js';
-import { extractItemCandidates } from './itemExtractor.js';
-import { validateItemCandidates } from './itemValidator.js';
+import { hybridExtractWithVoting } from './hybridExtractor.js';
 import { predictPriceChange } from './pricePredictor.js';
 import { sendTelegramMessage } from './sendTelegram.js';
 import { getEconomicallySignificantItems } from './itemFilter.js';
@@ -182,33 +181,30 @@ export async function processOnePost(post) {
       cleanedLength: cleanedContent.length,
     });
 
-    // 2. Extract item candidates via LLM
-    const candidates = await extractItemCandidates(post.title, cleanedContent);
-    logger.info('Extracted item candidates', {
-      postId: post.id,
-      candidateCount: candidates.length,
-    });
-
-    if (candidates.length === 0) {
-      return { success: true, itemsProcessed: 0, itemsFailed: 0 };
-    }
-
-    // 3. Validate candidates against item database (cached)
+    // 2. Extract items using 5-run voting for consistency
     const allItems = await getAllItemsCached();
-    const validated = validateItemCandidates(candidates, allItems);
-    logger.info('Validated item candidates', {
+    const extractionResult = await hybridExtractWithVoting(
+      post.title,
+      cleanedContent,
+      allItems,
+      {}, // use default model config (o4-mini:medium)
+      5, // 5 parallel runs
+      0.6 // 60% voting threshold (3/5 agreement)
+    );
+    logger.info('Extracted items with voting', {
       postId: post.id,
-      validatedCount: validated.length,
+      itemCount: extractionResult.items.length,
+      votingStats: extractionResult.votingStats,
     });
 
-    if (validated.length === 0) {
+    if (extractionResult.items.length === 0) {
       return { success: true, itemsProcessed: 0, itemsFailed: 0 };
     }
 
-    // 4. Filter by economic significance (cached)
+    // 3. Filter by economic significance (cached)
     const significantItems = await getSignificantItemsCached();
     const significantIds = new Set(significantItems.map((i) => i.id));
-    const filtered = validated.filter((item) =>
+    const filtered = extractionResult.items.filter((item) =>
       significantIds.has(item.itemId)
     );
     logger.info('Filtered to economically significant items', {
@@ -220,40 +216,35 @@ export async function processOnePost(post) {
       return { success: true, itemsProcessed: 0, itemsFailed: 0 };
     }
 
-    // 5. Predict price direction for each item (parallel) and save
+    // 4. Predict price direction and send notifications immediately per item
     logger.debug('Starting parallel price predictions', {
       postId: post.id,
       itemCount: filtered.length,
     });
 
-    // Run all predictions in parallel
-    const predictions = await Promise.allSettled(
-      filtered.map((item) =>
-        predictPriceChange(item.itemName, item.snippet)
-          .then((prediction) => ({ item, prediction, success: true }))
-          .catch((err) => ({ item, error: err.message, success: false }))
-      )
+    // Run predictions in parallel - each sends its notification immediately when done
+    const results = await Promise.all(
+      filtered.map(async (item) => {
+        try {
+          const prediction = await predictPriceChange(
+            item.itemName,
+            item.snippet
+          );
+          // Save and notify immediately when this prediction completes
+          return await analyzeAndSaveItem(post, item, prediction);
+        } catch (err) {
+          logger.error('Price prediction failed for item', {
+            itemName: item.itemName,
+            error: err.message,
+          });
+          return {
+            success: false,
+            itemName: item.itemName,
+            error: err.message,
+          };
+        }
+      })
     );
-
-    // Process results sequentially (for Telegram rate limiting)
-    const results = [];
-    for (const settled of predictions) {
-      const { item, prediction, error, success } = settled.value;
-      if (success) {
-        const result = await analyzeAndSaveItem(post, item, prediction);
-        results.push(result);
-      } else {
-        logger.error('Price prediction failed for item', {
-          itemName: item.itemName,
-          error: error,
-        });
-        results.push({
-          success: false,
-          itemName: item.itemName,
-          error: error,
-        });
-      }
-    }
 
     const successes = results.filter((r) => r.success).length;
     const failures = results.filter((r) => !r.success).length;

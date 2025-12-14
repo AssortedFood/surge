@@ -6,6 +6,7 @@ import { load } from 'cheerio';
 import puppeteer from 'puppeteer';
 import logger from './utils/logger.js';
 import { withRetry } from './utils/retry.js';
+import { sendTelegramMessage } from './sendTelegram.js';
 
 const prisma = new PrismaClient();
 
@@ -160,6 +161,12 @@ export async function syncNewPosts(onPostSaved = null) {
           },
         });
         logger.info('Saved post', { postId: nextId, title });
+
+        // Send instant notification for new post
+        await sendTelegramMessage(
+          `<b>New Post Detected</b>\n\n${title}\n\n<a href="${link}">Read more</a>\n\n<i>Analyzing...</i>`
+        );
+        logger.info('Sent new post notification', { postId: nextId, title });
 
         // Process post immediately after saving
         if (onPostSaved) {
