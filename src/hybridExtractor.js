@@ -446,11 +446,18 @@ async function _hybridExtractInlineSinglePass(
 
   const inlineSystemPrompt = `You are an Old School RuneScape expert extracting tradeable items from a news post.
 
+## CRITICAL: NO HALLUCINATION
+- ONLY extract items whose EXACT NAME appears in the text or in [ITEM DETECTED]/[SUGGESTED ITEMS] markers
+- Do NOT infer items from related concepts (e.g., "Frost Dragons" does NOT mean "dragonfire shield")
+- Do NOT extract items associated with mentioned monsters/bosses unless the ITEM NAME is written
+- "dragonfire" as attack type ≠ "dragonfire shield" item
+- "Hydra bones" ≠ "hydra's claw", "hydra leather", "hydra tail"
+
 ## INLINE MARKERS
 The content contains two types of algorithmic markers (NOT part of the original text):
 
 **[ITEM DETECTED: X]** = Exact item name found. ACCEPT if the item is genuinely discussed:
-- "Dragon Bones [ITEM DETECTED: Dragon bones]" in "gives 72 XP like Dragon Bones" → ACCEPT (comparing items)
+- "Dragon Bones [ITEM DETECTED: Dragon bones]" in "gives 72 XP like Dragon Bones" → ACCEPT
 - "Dragon Bones [ITEM DETECTED: Dragon bones]" in "the dragon bones of the earth" → REJECT (metaphor)
 
 **[SUGGESTED ITEMS: X, Y, Z]** = Possible item set expansion. ACCEPT if trigger refers to ITEMS:
@@ -458,14 +465,15 @@ The content contains two types of algorithmic markers (NOT part of the original 
 - "Blood Moon [SUGGESTED ITEMS: Blood Moon helm, ...]" → BOSS name → REJECT
 
 ## WHEN TO ACCEPT
-- Item is being discussed as a tradeable item (stats, price, drop, comparison, requirement)
-- Item is mentioned as a reference point ("between X and Y")
-- Set name mentioned with set bonus or armor context
+- Item's EXACT NAME appears in text (via marker or written out)
+- Set name mentioned with set bonus or armor context → expand to pieces
 
 ## WHEN TO REJECT
+- Item name NOT explicitly written (no inference from related words)
 - Trigger is a boss, activity, location, or mechanic name
 - Word is used metaphorically or in a non-item context
 - "staff" = Jagex employees, NOT Staff of X items
+- Monster drops you associate with a boss (only extract if explicitly named)
 
 ## CONTEXT TYPES
 buff | nerf | supply_change | new_content | bug_fix | mention_only
