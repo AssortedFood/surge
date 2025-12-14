@@ -72,15 +72,18 @@ PRICE_VARIANCE_PERCENT="0.05"
 
 ### Model Benchmarks
 
-| Model | Reasoning | Precision | Recall | F1 | Latency |
-|-------|-----------|-----------|--------|-----|---------|
-| **o4-mini** | **medium** | **100%** | **95.5%** | **97.6%** | **26s** |
-| o4-mini | low | 100% | 84.1% | 91.4% | 13s |
-| gpt-5-mini | medium | 94.4% | 82.9% | 88.3% | 99s |
-| gpt-5-mini | low | 90.8% | 72.0% | 80.3% | 49s |
-| gpt-4.1-mini | - | 83.3% | 36.6% | 50.8% | 9s |
+Benchmarked on 7 diverse posts with 5 runs per configuration (December 2025):
 
-**Recommendation:** `o4-mini` with `medium` reasoning delivers the best accuracy (97.6% F1, 100% precision) with acceptable latency (~26s).
+| Model | Reasoning | F1 | Precision | Recall | Latency | Tokens/run | Cost/post |
+|-------|-----------|-----|-----------|--------|---------|------------|-----------|
+| **o4-mini** | **medium** | **94.2%** | **100%** | **89.1%** | **28s** | **99K** | **~$0.15** |
+| gpt-5-mini | low | 94.1% | 100% | 89.1% | 23s | 72K | ~$0.11 |
+| gpt-5-mini | medium | 94.0% | 100% | 89.1% | 57s | 108K | ~$0.17 |
+| o4-mini | low | 89.4% | 100% | 80.9% | 8s | 57K | ~$0.08 |
+
+*Latency = per post average. Tokens = prompt + completion + reasoning per post. Cost estimated at $1.10/M input + $4.40/M output.*
+
+**Recommendation:** `o4-mini:medium` offers the best accuracy/latency tradeoff (94.2% F1, 100% precision, 28s). Use `gpt-5-mini:low` if cost-sensitive with similar accuracy but lower latency.
 
 ### Extraction Pipeline
 
