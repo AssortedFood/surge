@@ -74,7 +74,6 @@ const MODEL_CONFIGS = {
 
 // Core files that define the algorithm - changes trigger new version
 const ALGORITHM_FILES = [
-  'src/itemExtractor.js',
   'src/contentCleaner.js',
   'src/itemValidator.js',
   'src/hybridExtractor.js',
