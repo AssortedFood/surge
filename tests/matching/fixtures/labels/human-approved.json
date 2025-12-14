@@ -18,8 +18,10 @@
       "postId": 3,
       "postTitle": "Poll 85 - Bridges, Boots, Ropes & Roots",
       "matches": [
-        {"itemName": "Teak plank", "context": "Bridge repair material - specifically named"},
-        {"itemName": "Rope", "context": "Permanent ropes at Baxtorian Falls - specifically named"}
+        {
+          "itemName": "Teak plank",
+          "context": "Bridge repair material - specifically named"
+        }
       ],
       "notes": "Post says '56 nails' (generic) and 'polish your pickaxes' (idiomatic). 'Impling jars' mentioned generically. 'anti-venom' mentioned idiomatically. No specific item types named."
     },
@@ -33,59 +35,81 @@
       "postId": 5,
       "postTitle": "Interface Uplift",
       "matches": [
-        {"itemName": "Virtus mask", "context": "Set Effect bonus coldfix"},
-        {"itemName": "Virtus robe top", "context": "Set Effect bonus coldfix"},
-        {"itemName": "Virtus robe bottom", "context": "Set Effect bonus coldfix"},
-        {"itemName": "Virtus armour set", "context": "Set Effect bonus coldfix"},
-        {"itemName": "Cannonball", "context": "Load-X option for cannons"},
-        {"itemName": "Chugging barrel", "context": "Can pull from bank + potion storage"},
-        {"itemName": "Red bandana eyepatch", "context": "Clue requirement and icon fix"},
-        {"itemName": "Blue bandana eyepatch", "context": "Clue requirement and icon fix"},
-        {"itemName": "White bandana eyepatch", "context": "Clue requirement and icon fix"},
-        {"itemName": "Purple bandana eyepatch", "context": "Clue requirement and icon fix"},
-        {"itemName": "Ring of stone", "context": "Tempoross tether fix"},
-        {"itemName": "Inquisitor's great helm", "context": "Set Effects menu example"},
-        {"itemName": "Inquisitor's hauberk", "context": "Set Effects menu example"},
-        {"itemName": "Inquisitor's plateskirt", "context": "Set Effects menu example"},
-        {"itemName": "Inquisitor's mace", "context": "Set Effects menu example"},
-        {"itemName": "Inquisitor's armour set", "context": "Set Effects menu example"},
-        {"itemName": "Graceful ornament kit", "context": "Set Effects menu example"}
+        {
+          "itemName": "Virtus mask",
+          "context": "Set Effect bonus coldfix"
+        },
+        {
+          "itemName": "Virtus robe top",
+          "context": "Set Effect bonus coldfix"
+        },
+        {
+          "itemName": "Virtus robe bottom",
+          "context": "Set Effect bonus coldfix"
+        },
+        {
+          "itemName": "Ring of stone",
+          "context": "Tempoross tether fix"
+        },
+        {
+          "itemName": "Inquisitor's great helm",
+          "context": "Set Effects menu example"
+        },
+        {
+          "itemName": "Inquisitor's hauberk",
+          "context": "Set Effects menu example"
+        },
+        {
+          "itemName": "Inquisitor's plateskirt",
+          "context": "Set Effects menu example"
+        },
+        {
+          "itemName": "Inquisitor's mace",
+          "context": "Set Effects menu example"
+        }
       ]
     },
     {
       "postId": 6,
       "postTitle": "Last Chance For Official Makeship Plushies!",
-      "matches": [
-        {"itemName": "Redberry pie", "context": "Thurgo plushie accessory"},
-        {"itemName": "Ham shirt", "context": "H.A.M. robes mentioned for Zanik"},
-        {"itemName": "Ham robe", "context": "H.A.M. robes"},
-        {"itemName": "Ham hood", "context": "H.A.M. robes"},
-        {"itemName": "Ham cloak", "context": "H.A.M. robes"},
-        {"itemName": "Ham logo", "context": "H.A.M. robes"},
-        {"itemName": "Ham gloves", "context": "H.A.M. robes"},
-        {"itemName": "Ham boots", "context": "H.A.M. robes"},
-        {"itemName": "Bones", "context": "Plushie bones for Stray Dog"}
-      ]
+      "matches": []
     },
     {
       "postId": 7,
       "postTitle": "Sailing Slayer Creatures, Unique Drops & More",
       "matches": [
-        {"itemName": "Twisted buckler", "context": "Aquanite Hopper comparison"},
-        {"itemName": "Bow of faerdhinen (inactive)", "context": "Ranged meta comparison"},
-        {"itemName": "Mithril bar", "context": "Aquanite Hopper crafting ingredient"},
-        {"itemName": "Dragon sword", "context": "Gleaming Rapier comparison (Tier 60)"},
-        {"itemName": "Zamorakian hasta", "context": "Gleaming Rapier comparison"},
-        {"itemName": "Osmumten's fang", "context": "Stab weapon comparison"},
-        {"itemName": "Dragon hunter lance", "context": "Value mention for Hasta"},
-        {"itemName": "Zombie axe", "context": "Gleaming Rapier comparison (Tier 65)"},
-        {"itemName": "Broken zombie axe", "context": "Same item variant"},
-        {"itemName": "Wyrm bones", "context": "Strykewyrm bones comparison"},
-        {"itemName": "Dragon bones", "context": "Bone XP comparison"},
-        {"itemName": "Lava dragon bones", "context": "Frost dragon bones comparison"},
-        {"itemName": "Hydra bones", "context": "Frost dragon bones comparison"},
-        {"itemName": "Monkey tail", "context": "Hunter activity mention"},
-        {"itemName": "Damaged monkey tail", "context": "Hunter activity mention"}
+        {
+          "itemName": "Mithril bar",
+          "context": "Aquanite Hopper crafting ingredient"
+        },
+        {
+          "itemName": "Dragon sword",
+          "context": "Gleaming Rapier comparison (Tier 60)"
+        },
+        {
+          "itemName": "Zamorakian hasta",
+          "context": "Gleaming Rapier comparison"
+        },
+        {
+          "itemName": "Dragon hunter lance",
+          "context": "Value mention for Hasta"
+        },
+        {
+          "itemName": "Wyrm bones",
+          "context": "Strykewyrm bones comparison"
+        },
+        {
+          "itemName": "Dragon bones",
+          "context": "Bone XP comparison"
+        },
+        {
+          "itemName": "Lava dragon bones",
+          "context": "Frost dragon bones comparison"
+        },
+        {
+          "itemName": "Hydra bones",
+          "context": "Frost dragon bones comparison"
+        }
       ],
       "notes": "Many NEW proposed items not in DB: Horn of Plenty, Gryphon Feathers, Gleaming Rapier, Aquanite Tendon/Hopper, Strykewyrm/Frost Dragon Bones, Dragon Sheet, Medallion of the Deep, Haemostatic Dressing, Jumbo Squid. Crossbows and bolts mentioned generically. 'Chinchompas' mentioned generically without color variants specified."
     },
@@ -93,17 +117,22 @@
       "postId": 8,
       "postTitle": "Interface Uplift Round 2",
       "matches": [
-        {"itemName": "Sunfire splinters", "context": "Removed from Doom's loot table - main topic"},
-        {"itemName": "Sunfire rune", "context": "Related Sunfire item"},
-        {"itemName": "Sunfire fanatic helm", "context": "Related Sunfire item"},
-        {"itemName": "Sunfire fanatic cuirass", "context": "Related Sunfire item"},
-        {"itemName": "Sunfire fanatic chausses", "context": "Related Sunfire item"},
-        {"itemName": "Sunfire fanatic armour set", "context": "Related Sunfire item"},
-        {"itemName": "Virtus mask", "context": "Set bonus display fix"},
-        {"itemName": "Virtus robe top", "context": "Set bonus display fix"},
-        {"itemName": "Virtus robe bottom", "context": "Set bonus display fix"},
-        {"itemName": "Virtus armour set", "context": "Set bonus display fix"},
-        {"itemName": "Rune pouch note", "context": "Loadout expansion feature"}
+        {
+          "itemName": "Sunfire splinters",
+          "context": "Removed from Doom's loot table - main topic"
+        },
+        {
+          "itemName": "Virtus mask",
+          "context": "Set bonus display fix"
+        },
+        {
+          "itemName": "Virtus robe top",
+          "context": "Set bonus display fix"
+        },
+        {
+          "itemName": "Virtus robe bottom",
+          "context": "Set bonus display fix"
+        }
       ],
       "notes": "Rune Pouch itself is untradeable (only note form tradeable). Chompy Hunting Hats, Slayer cape, Tithe Farm outfit are untradeable. Post mentions 'Chompy hat menu' which refers to Chompy Hunting Hats (untradeable), not Raw/Cooked chompy meat items."
     },
@@ -128,16 +157,7 @@
     {
       "postId": 12,
       "postTitle": "New Player Improvements - 2025 and Beyond",
-      "matches": [
-        {"itemName": "Shrimps", "context": "First cooking item on Tutorial Island"},
-        {"itemName": "Raw shrimps", "context": "First cooking item on Tutorial Island"},
-        {"itemName": "Bread", "context": "Tutorial Island bread making"},
-        {"itemName": "Bread dough", "context": "Tutorial Island bread making"},
-        {"itemName": "Copper ore", "context": "Tutorial Island mining/prospecting"},
-        {"itemName": "Tin ore", "context": "Tutorial Island mining/prospecting"},
-        {"itemName": "Logs", "context": "Tutorial Island woodcutting"},
-        {"itemName": "Bones", "context": "Early-game Prayer mention (bury option)"}
-      ],
+      "matches": [],
       "notes": "Generic mentions of sword, shield, arrows, runes without specific items. Many untradeable items mentioned (Quest Cape, etc)."
     },
     {
@@ -156,8 +176,10 @@
       "postId": 15,
       "postTitle": "Grid Master - Out Today!",
       "matches": [
-        {"itemName": "Games necklace(8)", "context": "Teleport to Corporeal Beast lair"},
-        {"itemName": "Rune pouch note", "context": "Loadout menu spelling fix"}
+        {
+          "itemName": "Games necklace(8)",
+          "context": "Teleport to Corporeal Beast lair"
+        }
       ],
       "notes": "Grid Master launch and Halloween event. Dramen Staff (untradeable), Grim Reaper outfit (untradeable), Max Cape (untradeable). Generic food mention."
     }
