@@ -4,3 +4,6 @@ package-lock.json
 data/
 *.db
 *.db-journal
+
+# Generated Prisma clients
+tests/matching/prisma/generated/
