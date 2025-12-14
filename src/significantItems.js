@@ -5,34 +5,17 @@
  * Caches results in benchmark.db to avoid repeated queries.
  */
 
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { PrismaClient } from '@prisma/client';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const MAIN_DB_PATH = join(__dirname, '../prisma/database.db');
-const BENCHMARK_DB_PATH = join(__dirname, '../prisma/benchmark.db');
+import { PrismaClient as BenchmarkPrismaClient } from '../tests/matching/prisma/generated/client/index.js';
 
 // Default threshold: 1M GP margin (value * limit)
 const DEFAULT_THRESHOLD = 1_000_000;
 
 // Prisma client for main database (where items live)
-const mainPrisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: `file:${MAIN_DB_PATH}`,
-    },
-  },
-});
+const mainPrisma = new PrismaClient();
 
-// Prisma client for benchmark database (for caching)
-const benchmarkPrisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: `file:${BENCHMARK_DB_PATH}`,
-    },
-  },
-});
+// Prisma client for benchmark database (for caching SignificantItems)
+const benchmarkPrisma = new BenchmarkPrismaClient();
 
 /**
  * Get the stored threshold from AppState

@@ -1,4 +1,4 @@
-// This is your Prisma schema file,
+// Production schema - price data and post analysis
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
@@ -10,7 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// NEW: Enum for strict type safety on analysis results
 enum PriceChange {
   PriceIncrease
   PriceDecrease
@@ -32,11 +31,10 @@ model Item {
   icon      String?
   highalch  Int?
   lowalch   Int?
-  prices    PriceSnapshot[] // MODIFIED: Changed to PriceSnapshot
+  prices    PriceSnapshot[]
   analyses  ItemAnalysis[]
 }
 
-// MODIFIED: This model is now purpose-built for periodic snapshots
 model PriceSnapshot {
   id           Int      @id @default(autoincrement())
   itemId       Int
@@ -56,9 +54,9 @@ model Post {
   content    String
   createdAt  DateTime @default(now())
   isAnalyzed Boolean  @default(false)
-  analyses ItemAnalysis[]
+  analyses   ItemAnalysis[]
 
-  @@index([isAnalyzed]) // Speed up queries for unprocessed posts
+  @@index([isAnalyzed])
 }
 
 model ItemAnalysis {
@@ -68,120 +66,8 @@ model ItemAnalysis {
   itemId              Int
   item                Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
   relevantTextSnippet String
-  expectedPriceChange PriceChange // MODIFIED: Using the enum for data integrity
+  expectedPriceChange PriceChange
   createdAt           DateTime    @default(now())
 
   @@unique([postId, itemId])
-}
-
-// ============================================================================
-// BENCHMARK TABLES - For tracking model performance over time
-// ============================================================================
-
-// Stores algorithm versions with a hash of core extraction components
-model BenchmarkAlgorithm {
-  id            Int      @id @default(autoincrement())
-  hash          String   @unique // SHA-256 of core component files
-  label         String?  // Human-readable label (e.g., "hybrid-v1", "llm-only")
-  createdAt     DateTime @default(now())
-
-  // Files included in hash (stored as JSON array)
-  hashedFiles   String   // e.g., ["src/itemExtractor.js", "src/contentCleaner.js"]
-
-  // Full source code snapshot for version restoration
-  sourceSnapshot String? // JSON: {"src/itemExtractor.js": "...", ...}
-
-  runs          BenchmarkRun[]
-}
-
-// Stores individual benchmark runs
-model BenchmarkRun {
-  id              Int       @id @default(autoincrement())
-  algorithmId     Int
-  algorithm       BenchmarkAlgorithm @relation(fields: [algorithmId], references: [id], onDelete: Cascade)
-
-  // Model configuration
-  model           String    // e.g., "o4-mini", "gpt-5-mini"
-  reasoningEffort String?   // e.g., "low", "medium", "high"
-  configKey       String    // Combined key e.g., "o4-mini:low"
-
-  // Run metadata
-  runNumber       Int       // Which run in the series (1-10, etc.)
-  startedAt       DateTime  @default(now())
-  completedAt     DateTime?
-
-  // Ground truth versioning
-  groundTruthHash String?   // Hash of human-approved.json for comparison validity
-
-  // Aggregate metrics for this run
-  totalTp         Int       @default(0)
-  totalFp         Int       @default(0)
-  totalFn         Int       @default(0)
-  precision       Float?
-  recall          Float?
-  f1              Float?
-
-  // Token usage
-  totalPromptTokens     Int @default(0)
-  totalCompletionTokens Int @default(0)
-  totalReasoningTokens  Int @default(0)
-
-  // Timing
-  totalLatencyMs  Int       @default(0)
-
-  results         BenchmarkPostResult[]
-
-  @@index([algorithmId, configKey])
-}
-
-// Stores per-post results for each run
-model BenchmarkPostResult {
-  id          Int           @id @default(autoincrement())
-  runId       Int
-  run         BenchmarkRun  @relation(fields: [runId], references: [id], onDelete: Cascade)
-
-  postId      Int           // References the test post ID
-  postTitle   String
-  postHash    String        // SHA-256 hash of post content (first 16 chars)
-
-  // Metrics for this post
-  tp          Int
-  fp          Int
-  fn          Int
-  precision   Float?
-  recall      Float?
-  f1          Float?
-
-  // Token usage for this post
-  promptTokens     Int @default(0)
-  completionTokens Int @default(0)
-  reasoningTokens  Int @default(0)
-
-  // Timing
-  latencyMs   Int
-
-  // Error tracking
-  error       String?
-
-  // Detailed extraction results for analysis (stored as JSON arrays)
-  extractedItems String?  // JSON: All items extracted by the algorithm
-  fpItems        String?  // JSON: False positive item names (extracted but not in ground truth)
-  fnItems        String?  // JSON: False negative item names (in ground truth but not extracted)
-
-  @@unique([runId, postId])
-}
-
-// ============================================================================
-// SIGNIFICANT ITEMS CACHE - Pre-computed economically significant items
-// ============================================================================
-
-model SignificantItem {
-  id        Int     @id @default(autoincrement())
-  itemId    Int     @unique  // Original item ID from items.json
-  name      String
-  value     Int
-  limit     Int
-  examine   String?
-  members   Boolean
-  icon      String?
 }

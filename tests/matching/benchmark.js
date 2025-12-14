@@ -27,7 +27,7 @@ import { readFileSync, readdirSync, existsSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from './prisma/generated/client/index.js';
 import { cleanPostContent } from '../../src/contentCleaner.js';
 import { hybridExtractInline as extractItems } from '../../src/hybridExtractor.js';
 import { getSignificantItems } from '../../src/significantItems.js';
@@ -39,15 +39,8 @@ const FIXTURES_DIR = join(__dirname, 'fixtures');
 // Hash truncation length for algorithm and content hashes
 const HASH_LENGTH = 16;
 
-// Use separate database for benchmarks
-const BENCHMARK_DB_PATH = join(__dirname, '../../prisma/benchmark.db');
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: `file:${BENCHMARK_DB_PATH}`,
-    },
-  },
-});
+// Benchmark database client (schema defines the db path)
+const prisma = new PrismaClient();
 
 /**
  * Computes SHA-256 hash of content (truncated to HASH_LENGTH chars)

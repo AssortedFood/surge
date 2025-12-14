@@ -1,0 +1,102 @@
+// Benchmark schema - tracking algorithm performance over time
+// Separate from production to keep concerns isolated
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:../../../prisma/benchmark.db"
+}
+
+model AppState {
+  key   String @id @unique
+  value String
+}
+
+// Pre-computed economically significant items for filtering
+model SignificantItem {
+  id        Int     @id @default(autoincrement())
+  itemId    Int     @unique
+  name      String
+  value     Int
+  limit     Int
+  examine   String?
+  members   Boolean
+  icon      String?
+}
+
+// Algorithm versions with hash of core extraction components
+model BenchmarkAlgorithm {
+  id             Int      @id @default(autoincrement())
+  hash           String   @unique
+  label          String?
+  description    String?
+  createdAt      DateTime @default(now())
+  hashedFiles    String
+  sourceSnapshot String?
+
+  runs BenchmarkRun[]
+}
+
+// Individual benchmark runs
+model BenchmarkRun {
+  id              Int                @id @default(autoincrement())
+  algorithmId     Int
+  algorithm       BenchmarkAlgorithm @relation(fields: [algorithmId], references: [id], onDelete: Cascade)
+
+  model           String
+  reasoningEffort String?
+  configKey       String
+  runNumber       Int
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  groundTruthHash String?
+
+  totalTp               Int   @default(0)
+  totalFp               Int   @default(0)
+  totalFn               Int   @default(0)
+  precision             Float?
+  recall                Float?
+  f1                    Float?
+  totalPromptTokens     Int   @default(0)
+  totalCompletionTokens Int   @default(0)
+  totalReasoningTokens  Int   @default(0)
+  totalLatencyMs        Int   @default(0)
+
+  results BenchmarkPostResult[]
+
+  @@index([algorithmId, configKey])
+}
+
+// Per-post results for each run
+model BenchmarkPostResult {
+  id       Int          @id @default(autoincrement())
+  runId    Int
+  run      BenchmarkRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  postId    Int
+  postTitle String
+  postHash  String
+
+  tp        Int
+  fp        Int
+  fn        Int
+  precision Float?
+  recall    Float?
+  f1        Float?
+
+  promptTokens     Int @default(0)
+  completionTokens Int @default(0)
+  reasoningTokens  Int @default(0)
+  latencyMs        Int
+  error            String?
+
+  extractedItems String?
+  fpItems        String?
+  fnItems        String?
+
+  @@unique([runId, postId])
+}

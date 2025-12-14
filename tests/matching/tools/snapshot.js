@@ -3,8 +3,7 @@
 // Exports posts and items from DB to JSON fixtures for testing
 
 import 'dotenv/config';
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
+import { PrismaClient } from '@prisma/client';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
