@@ -18,46 +18,10 @@
       "postId": 3,
       "postTitle": "Poll 85 - Bridges, Boots, Ropes & Roots",
       "matches": [
-        {"itemName": "Teak plank", "context": "Bridge repair material"},
-        {"itemName": "Rope", "context": "Permanent ropes at Baxtorian Falls"},
-        {"itemName": "Bronze nails", "context": "Bridge repair (56 nails needed)"},
-        {"itemName": "Iron nails", "context": "Bridge repair"},
-        {"itemName": "Steel nails", "context": "Bridge repair"},
-        {"itemName": "Black nails", "context": "Bridge repair"},
-        {"itemName": "Mithril nails", "context": "Bridge repair"},
-        {"itemName": "Adamantite nails", "context": "Bridge repair"},
-        {"itemName": "Rune nails", "context": "Bridge repair"},
-        {"itemName": "Baby impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Young impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Gourmet impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Earth impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Essence impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Eclectic impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Nature impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Magpie impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Ninja impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Crystal impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Dragon impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Lucky impling jar", "context": "Impling jar warning fix"},
-        {"itemName": "Bronze pickaxe", "context": "Hunter starter kit"},
-        {"itemName": "Iron pickaxe", "context": "Hunter starter kit"},
-        {"itemName": "Steel pickaxe", "context": "Hunter starter kit"},
-        {"itemName": "Black pickaxe", "context": "Hunter starter kit"},
-        {"itemName": "Mithril pickaxe", "context": "Hunter starter kit"},
-        {"itemName": "Adamant pickaxe", "context": "Hunter starter kit"},
-        {"itemName": "Rune pickaxe", "context": "Hunter starter kit"},
-        {"itemName": "Dragon pickaxe", "context": "Hunter starter kit"},
-        {"itemName": "Infernal pickaxe", "context": "Hunter starter kit"},
-        {"itemName": "Crystal pickaxe", "context": "Hunter starter kit"},
-        {"itemName": "Anti-venom(4)", "context": "Chambers mass event reminder"},
-        {"itemName": "Anti-venom(3)", "context": "Chambers mass event"},
-        {"itemName": "Anti-venom(2)", "context": "Chambers mass event"},
-        {"itemName": "Anti-venom(1)", "context": "Chambers mass event"},
-        {"itemName": "Anti-venom+(4)", "context": "Chambers mass event"},
-        {"itemName": "Anti-venom+(3)", "context": "Chambers mass event"},
-        {"itemName": "Anti-venom+(2)", "context": "Chambers mass event"},
-        {"itemName": "Anti-venom+(1)", "context": "Chambers mass event"}
-      ]
+        {"itemName": "Teak plank", "context": "Bridge repair material - specifically named"},
+        {"itemName": "Rope", "context": "Permanent ropes at Baxtorian Falls - specifically named"}
+      ],
+      "notes": "Post says '56 nails' (generic) and 'polish your pickaxes' (idiomatic). 'Impling jars' mentioned generically. 'anti-venom' mentioned idiomatically. No specific item types named."
     },
     {
       "postId": 4,
@@ -120,13 +84,10 @@
         {"itemName": "Dragon bones", "context": "Bone XP comparison"},
         {"itemName": "Lava dragon bones", "context": "Frost dragon bones comparison"},
         {"itemName": "Hydra bones", "context": "Frost dragon bones comparison"},
-        {"itemName": "Chinchompa", "context": "Hunter activity mention"},
-        {"itemName": "Red chinchompa", "context": "Hunter activity mention"},
-        {"itemName": "Black chinchompa", "context": "Hunter activity mention"},
         {"itemName": "Monkey tail", "context": "Hunter activity mention"},
         {"itemName": "Damaged monkey tail", "context": "Hunter activity mention"}
       ],
-      "notes": "Many NEW proposed items not in DB: Horn of Plenty, Gryphon Feathers, Gleaming Rapier, Aquanite Tendon/Hopper, Strykewyrm/Frost Dragon Bones, Dragon Sheet, Medallion of the Deep, Haemostatic Dressing, Jumbo Squid. Crossbows and bolts mentioned generically."
+      "notes": "Many NEW proposed items not in DB: Horn of Plenty, Gryphon Feathers, Gleaming Rapier, Aquanite Tendon/Hopper, Strykewyrm/Frost Dragon Bones, Dragon Sheet, Medallion of the Deep, Haemostatic Dressing, Jumbo Squid. Crossbows and bolts mentioned generically. 'Chinchompas' mentioned generically without color variants specified."
     },
     {
       "postId": 8,
@@ -142,11 +103,9 @@
         {"itemName": "Virtus robe top", "context": "Set bonus display fix"},
         {"itemName": "Virtus robe bottom", "context": "Set bonus display fix"},
         {"itemName": "Virtus armour set", "context": "Set bonus display fix"},
-        {"itemName": "Rune pouch note", "context": "Loadout expansion feature"},
-        {"itemName": "Raw chompy", "context": "Chompy hat menu"},
-        {"itemName": "Cooked chompy", "context": "Chompy hat menu"}
+        {"itemName": "Rune pouch note", "context": "Loadout expansion feature"}
       ],
-      "notes": "Rune Pouch itself is untradeable (only note form tradeable). Chompy Hunting Hats, Slayer cape, Tithe Farm outfit are untradeable."
+      "notes": "Rune Pouch itself is untradeable (only note form tradeable). Chompy Hunting Hats, Slayer cape, Tithe Farm outfit are untradeable. Post mentions 'Chompy hat menu' which refers to Chompy Hunting Hats (untradeable), not Raw/Cooked chompy meat items."
     },
     {
       "postId": 9,

@@ -19,6 +19,40 @@ const config = loadConfig();
 
 const prisma = new PrismaClient();
 
+// --- Item Database Cache ---
+const itemCache = {
+  items: null,
+  significantItems: null,
+  expiresAt: 0,
+};
+const CACHE_TTL_MS = 3600000; // 1 hour
+
+async function getAllItemsCached() {
+  const now = Date.now();
+  if (itemCache.items && now < itemCache.expiresAt) {
+    return itemCache.items;
+  }
+  itemCache.items = await prisma.item.findMany({
+    select: { id: true, name: true },
+  });
+  itemCache.expiresAt = now + CACHE_TTL_MS;
+  logger.debug('Item cache refreshed', { itemCount: itemCache.items.length });
+  return itemCache.items;
+}
+
+async function getSignificantItemsCached() {
+  const now = Date.now();
+  if (itemCache.significantItems && now < itemCache.expiresAt) {
+    return itemCache.significantItems;
+  }
+  itemCache.significantItems = await getEconomicallySignificantItems(prisma);
+  itemCache.expiresAt = now + CACHE_TTL_MS;
+  logger.debug('Significant items cache refreshed', {
+    count: itemCache.significantItems.length,
+  });
+  return itemCache.significantItems;
+}
+
 // --- Configuration from validated config ---
 const DATA_SYNC_INTERVAL_MINUTES = config.dataSyncIntervalMinutes;
 const RATE_LIMIT_SECONDS = config.rateLimitSeconds;
@@ -159,10 +193,8 @@ export async function processOnePost(post) {
       return { success: true, itemsProcessed: 0, itemsFailed: 0 };
     }
 
-    // 3. Validate candidates against item database
-    const allItems = await prisma.item.findMany({
-      select: { id: true, name: true },
-    });
+    // 3. Validate candidates against item database (cached)
+    const allItems = await getAllItemsCached();
     const validated = validateItemCandidates(candidates, allItems);
     logger.info('Validated item candidates', {
       postId: post.id,
@@ -173,8 +205,8 @@ export async function processOnePost(post) {
       return { success: true, itemsProcessed: 0, itemsFailed: 0 };
     }
 
-    // 4. Filter by economic significance
-    const significantItems = await getEconomicallySignificantItems(prisma);
+    // 4. Filter by economic significance (cached)
+    const significantItems = await getSignificantItemsCached();
     const significantIds = new Set(significantItems.map((i) => i.id));
     const filtered = validated.filter((item) =>
       significantIds.has(item.itemId)
@@ -188,25 +220,37 @@ export async function processOnePost(post) {
       return { success: true, itemsProcessed: 0, itemsFailed: 0 };
     }
 
-    // 5. Predict price direction for each item (1:1 calls) and save
+    // 5. Predict price direction for each item (parallel) and save
+    logger.debug('Starting parallel price predictions', {
+      postId: post.id,
+      itemCount: filtered.length,
+    });
+
+    // Run all predictions in parallel
+    const predictions = await Promise.allSettled(
+      filtered.map((item) =>
+        predictPriceChange(item.itemName, item.snippet)
+          .then((prediction) => ({ item, prediction, success: true }))
+          .catch((err) => ({ item, error: err.message, success: false }))
+      )
+    );
+
+    // Process results sequentially (for Telegram rate limiting)
     const results = [];
-    for (const item of filtered) {
-      try {
-        const prediction = await predictPriceChange(
-          item.itemName,
-          item.snippet
-        );
+    for (const settled of predictions) {
+      const { item, prediction, error, success } = settled.value;
+      if (success) {
         const result = await analyzeAndSaveItem(post, item, prediction);
         results.push(result);
-      } catch (err) {
+      } else {
         logger.error('Price prediction failed for item', {
           itemName: item.itemName,
-          error: err.message,
+          error: error,
         });
         results.push({
           success: false,
           itemName: item.itemName,
-          error: err.message,
+          error: error,
         });
       }
     }

@@ -14,10 +14,13 @@ CRITICAL: Only extract items that are actually discussed in the post. Do NOT spe
 
 Rules:
 - Only include items tradeable on the Grand Exchange
-- Only extract items that are NAMED or CLEARLY IMPLIED in the text
-- Do NOT expand generic words like "bones", "ores", "logs", "runes" into full lists
+- Extract items that are NAMED or CLEARLY IMPLIED in the text
+- If a specific item is named (e.g., "Dragon Bones", "Wyrm Bones"), extract it
+- Do NOT expand generic category words into full lists (e.g., "bones" alone → don't list all bone types)
 - Do NOT include: quest items, untradeable rewards, currencies (coins/gp), NPCs, locations, skills
-- When an armor SET is mentioned by name, include individual pieces (e.g., "Virtus" → Virtus mask, Virtus robe top, Virtus robe bottom)
+- When an armor SET is mentioned by name (e.g., "Virtus", "Inquisitor's"), include ALL individual pieces:
+  - Virtus → Virtus mask, Virtus robe top, Virtus robe bottom
+  - Inquisitor's → Inquisitor's great helm, Inquisitor's hauberk, Inquisitor's plateskirt, Inquisitor's mace
 
 COMMON ABBREVIATIONS - expand only when the abbreviation appears:
 - BP/blowpipe → Toxic blowpipe
@@ -43,6 +46,18 @@ FALSE POSITIVES TO AVOID:
 - Generic category words without specific items: "bones", "ores", "logs", "runes", "potions"
 - Untradeable: quest capes, skill capes, void equipment, graceful outfit
 - Currencies: coins, gp, gold pieces
+
+EDGE CASES - Extract these patterns:
+- Items in comparisons: "X is better than Dragon sword" → extract Dragon sword
+- Items in requirements: "requires 56 Teak planks" → extract Teak plank
+- Items in set bonuses: "Virtus set effect" → extract all Virtus pieces
+- Items as rewards/drops: "drops Wyrm bones" → extract Wyrm bones
+- Items with specific counts: "15 Cannonballs" → extract Cannonball
+
+DO NOT extract:
+- Items only mentioned as examples of what NOT to do
+- Items in hypothetical scenarios ("if you had a...")
+- Generic category words without specific types
 
 Context classifications:
 - buff: Item being made stronger

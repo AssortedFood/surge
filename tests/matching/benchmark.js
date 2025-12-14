@@ -12,18 +12,28 @@
 //   node tests/matching/benchmark.js --stats            # Show statistics from DB
 //   node tests/matching/benchmark.js --stats --config o4-mini:low
 //
+// Version Control:
+//   node tests/matching/benchmark.js --list-versions    # List all algorithm versions
+//   node tests/matching/benchmark.js --snapshot         # Snapshot current version
+//   node tests/matching/benchmark.js --diff <hash>      # Show diff vs stored version
+//   node tests/matching/benchmark.js --restore <hash>   # Restore a previous version
+//
+// Economic Threshold:
+//   node tests/matching/benchmark.js --threshold 500000 # Test with 500K GP threshold
+//
 // When a new algorithm version is detected (based on hash of core files),
 // you will be prompted to enter a label for this version.
 
 import 'dotenv/config';
 import { createHash } from 'crypto';
-import { readFileSync, readdirSync, existsSync } from 'fs';
+import { readFileSync, readdirSync, existsSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
 import { PrismaClient } from '@prisma/client';
 import { cleanPostContent } from '../../src/contentCleaner.js';
 import { hybridExtract } from '../../src/hybridExtractor.js';
+import { diffLines } from 'diff';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = join(__dirname, 'fixtures');
@@ -74,8 +84,8 @@ const ALGORITHM_FILES = [
   'schemas/ItemExtractionSchema.js',
 ];
 
-// Economic significance threshold from .env (matches production filter)
-const MARGIN_THRESHOLD = parseInt(process.env.MARGIN_THRESHOLD, 10) || 1000000;
+// Economic significance threshold - can be overridden via CLI --threshold
+let MARGIN_THRESHOLD = parseInt(process.env.MARGIN_THRESHOLD, 10) || 1000000;
 
 // ============================================================================
 // ALGORITHM VERSIONING
@@ -93,6 +103,20 @@ function computeAlgorithmHash() {
   }
 
   return hash.digest('hex').substring(0, HASH_LENGTH);
+}
+
+/**
+ * Reads all algorithm files and returns a snapshot object
+ */
+function createSourceSnapshot() {
+  const snapshot = {};
+  for (const file of ALGORITHM_FILES) {
+    const filePath = join(__dirname, '../../', file);
+    if (existsSync(filePath)) {
+      snapshot[file] = readFileSync(filePath, 'utf-8');
+    }
+  }
+  return snapshot;
 }
 
 /**
@@ -132,15 +156,28 @@ async function getOrCreateAlgorithm() {
 
     const label = await promptUser('Enter a label for this algorithm version (e.g., "hybrid-v1"): ');
 
+    // Create source snapshot for version restoration
+    const snapshot = createSourceSnapshot();
+
     algorithm = await prisma.benchmarkAlgorithm.create({
       data: {
         hash,
         label: label || null,
         hashedFiles: JSON.stringify(ALGORITHM_FILES),
+        sourceSnapshot: JSON.stringify(snapshot),
       },
     });
     console.log(`Created algorithm: ${hash}${label ? ` (${label})` : ''}\n`);
   } else {
+    // Backfill snapshot if missing (for existing algorithms)
+    if (!algorithm.sourceSnapshot) {
+      const snapshot = createSourceSnapshot();
+      await prisma.benchmarkAlgorithm.update({
+        where: { hash },
+        data: { sourceSnapshot: JSON.stringify(snapshot) },
+      });
+      console.log(`Backfilled snapshot for: ${hash}`);
+    }
     console.log(`Using existing algorithm: ${hash}${algorithm.label ? ` (${algorithm.label})` : ''}`);
   }
 
@@ -550,6 +587,179 @@ async function showStatistics(configFilter = null) {
 }
 
 // ============================================================================
+// VERSION CONTROL COMMANDS
+// ============================================================================
+
+async function listVersions() {
+  const algorithms = await prisma.benchmarkAlgorithm.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: {
+      runs: {
+        select: { f1: true, configKey: true },
+      },
+    },
+  });
+
+  if (algorithms.length === 0) {
+    console.log('No algorithm versions found.');
+    return;
+  }
+
+  console.log('\n' + '='.repeat(100));
+  console.log('ALGORITHM VERSIONS');
+  console.log('='.repeat(100));
+  console.log('\nHash             | Label                | Best F1  | Runs | Has Snapshot | Created');
+  console.log('-'.repeat(100));
+
+  for (const algo of algorithms) {
+    const f1Values = algo.runs.filter((r) => r.f1 !== null).map((r) => r.f1);
+    const bestF1 = f1Values.length > 0 ? Math.max(...f1Values) : null;
+    const bestF1Str = bestF1 !== null ? `${(bestF1 * 100).toFixed(1)}%` : 'N/A';
+    const hasSnapshot = algo.sourceSnapshot ? 'Yes' : 'No';
+    const label = (algo.label || '(none)').substring(0, 20).padEnd(20);
+    const date = algo.createdAt.toISOString().split('T')[0];
+
+    console.log(
+      `${algo.hash} | ${label} | ${bestF1Str.padStart(7)} | ${String(algo.runs.length).padStart(4)} | ${hasSnapshot.padStart(12)} | ${date}`
+    );
+  }
+
+  console.log('\n' + '='.repeat(100));
+}
+
+async function showDiff(targetHash) {
+  const algorithm = await prisma.benchmarkAlgorithm.findUnique({
+    where: { hash: targetHash },
+  });
+
+  if (!algorithm) {
+    console.error(`Algorithm not found: ${targetHash}`);
+    process.exit(1);
+  }
+
+  if (!algorithm.sourceSnapshot) {
+    console.error(`No snapshot available for: ${targetHash}`);
+    console.log('This algorithm was created before snapshots were implemented.');
+    process.exit(1);
+  }
+
+  const storedSnapshot = JSON.parse(algorithm.sourceSnapshot);
+  const currentSnapshot = createSourceSnapshot();
+
+  console.log(`\nDiff: current vs ${targetHash}${algorithm.label ? ` (${algorithm.label})` : ''}`);
+  console.log('='.repeat(80));
+
+  let hasChanges = false;
+
+  for (const file of ALGORITHM_FILES) {
+    const storedContent = storedSnapshot[file] || '';
+    const currentContent = currentSnapshot[file] || '';
+
+    if (storedContent === currentContent) {
+      console.log(`\n${file}: No changes`);
+      continue;
+    }
+
+    hasChanges = true;
+    console.log(`\n${file}: CHANGED`);
+    console.log('-'.repeat(80));
+
+    const diff = diffLines(storedContent, currentContent);
+    for (const part of diff) {
+      if (part.added) {
+        const lines = part.value.split('\n').filter((l) => l);
+        for (const line of lines.slice(0, 10)) {
+          console.log(`+ ${line}`);
+        }
+        if (lines.length > 10) console.log(`  ... and ${lines.length - 10} more added lines`);
+      } else if (part.removed) {
+        const lines = part.value.split('\n').filter((l) => l);
+        for (const line of lines.slice(0, 10)) {
+          console.log(`- ${line}`);
+        }
+        if (lines.length > 10) console.log(`  ... and ${lines.length - 10} more removed lines`);
+      }
+    }
+  }
+
+  if (!hasChanges) {
+    console.log('\nNo changes between current code and stored version.');
+  }
+}
+
+async function restoreVersion(targetHash) {
+  const algorithm = await prisma.benchmarkAlgorithm.findUnique({
+    where: { hash: targetHash },
+  });
+
+  if (!algorithm) {
+    console.error(`Algorithm not found: ${targetHash}`);
+    process.exit(1);
+  }
+
+  if (!algorithm.sourceSnapshot) {
+    console.error(`No snapshot available for: ${targetHash}`);
+    console.log('This algorithm was created before snapshots were implemented.');
+    process.exit(1);
+  }
+
+  const snapshot = JSON.parse(algorithm.sourceSnapshot);
+
+  console.log(`\nRestoring algorithm: ${targetHash}${algorithm.label ? ` (${algorithm.label})` : ''}`);
+  console.log('-'.repeat(60));
+
+  for (const [file, content] of Object.entries(snapshot)) {
+    const filePath = join(__dirname, '../../', file);
+    writeFileSync(filePath, content);
+    console.log(`Restored: ${file}`);
+  }
+
+  console.log(`\nSuccessfully restored ${Object.keys(snapshot).length} files.`);
+  console.log('Run benchmark to verify the restored version.');
+}
+
+async function snapshotCurrent() {
+  const hash = computeAlgorithmHash();
+
+  let algorithm = await prisma.benchmarkAlgorithm.findUnique({
+    where: { hash },
+  });
+
+  const snapshot = createSourceSnapshot();
+
+  if (algorithm) {
+    // Update existing with snapshot if missing
+    if (!algorithm.sourceSnapshot) {
+      await prisma.benchmarkAlgorithm.update({
+        where: { hash },
+        data: { sourceSnapshot: JSON.stringify(snapshot) },
+      });
+      console.log(`Snapshot saved for existing algorithm: ${hash}${algorithm.label ? ` (${algorithm.label})` : ''}`);
+    } else {
+      console.log(`Algorithm already has snapshot: ${hash}${algorithm.label ? ` (${algorithm.label})` : ''}`);
+    }
+  } else {
+    // Create new algorithm with snapshot
+    const label = await promptUser('Enter a label for this algorithm version (e.g., "hybrid-v1"): ');
+
+    algorithm = await prisma.benchmarkAlgorithm.create({
+      data: {
+        hash,
+        label: label || null,
+        hashedFiles: JSON.stringify(ALGORITHM_FILES),
+        sourceSnapshot: JSON.stringify(snapshot),
+      },
+    });
+    console.log(`Created algorithm with snapshot: ${hash}${label ? ` (${label})` : ''}`);
+  }
+
+  console.log('\nFiles in snapshot:');
+  for (const file of ALGORITHM_FILES) {
+    console.log(`  - ${file}`);
+  }
+}
+
+// ============================================================================
 // MAIN
 // ============================================================================
 
@@ -561,6 +771,10 @@ async function main() {
   let configFilter = null;
   let showStatsMode = false;
   let verboseMode = false;
+  let listVersionsMode = false;
+  let snapshotMode = false;
+  let diffHash = null;
+  let restoreHash = null;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--runs' && args[i + 1]) {
@@ -573,7 +787,48 @@ async function main() {
       showStatsMode = true;
     } else if (args[i] === '--verbose' || args[i] === '-v') {
       verboseMode = true;
+    } else if (args[i] === '--list-versions') {
+      listVersionsMode = true;
+    } else if (args[i] === '--snapshot') {
+      snapshotMode = true;
+    } else if (args[i] === '--diff' && args[i + 1]) {
+      diffHash = args[i + 1];
+      i++;
+    } else if (args[i] === '--restore' && args[i + 1]) {
+      restoreHash = args[i + 1];
+      i++;
+    } else if (args[i] === '--threshold' && args[i + 1]) {
+      const thresholdValue = parseInt(args[i + 1], 10);
+      if (!isNaN(thresholdValue) && thresholdValue > 0) {
+        MARGIN_THRESHOLD = thresholdValue;
+      }
+      i++;
     }
+  }
+
+  // Handle version control commands first
+  if (listVersionsMode) {
+    await listVersions();
+    await prisma.$disconnect();
+    return;
+  }
+
+  if (snapshotMode) {
+    await snapshotCurrent();
+    await prisma.$disconnect();
+    return;
+  }
+
+  if (diffHash) {
+    await showDiff(diffHash);
+    await prisma.$disconnect();
+    return;
+  }
+
+  if (restoreHash) {
+    await restoreVersion(restoreHash);
+    await prisma.$disconnect();
+    return;
   }
 
   // Validate --runs argument

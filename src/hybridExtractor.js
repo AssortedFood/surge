@@ -463,8 +463,136 @@ function filterByConfidence(hybridResults, minConfidence = 0.5) {
   return hybridResults.filter((item) => item.confidence >= minConfidence);
 }
 
+/**
+ * Multi-run voting extraction: runs hybridExtract N times and aggregates results
+ * Items that appear in at least votingThreshold% of runs are included
+ * This reduces variance by requiring consensus across multiple extractions
+ *
+ * @param {string} postTitle - The post title
+ * @param {string} cleanedContent - The cleaned post content
+ * @param {Array<{id: number, name: string}>} allItems - All items from database
+ * @param {object} modelConfig - Model configuration {model, reasoning}
+ * @param {number} numRuns - Number of extraction runs (default 3)
+ * @param {number} votingThreshold - Min appearance ratio to include (default 0.6 = 60%)
+ * @returns {Promise<{items: Array, votingStats: object, usage: object, latencyMs: number}>}
+ */
+async function hybridExtractWithVoting(
+  postTitle,
+  cleanedContent,
+  allItems,
+  modelConfig = {},
+  numRuns = 3,
+  votingThreshold = 0.6
+) {
+  const startTime = Date.now();
+
+  logger.debug('Starting voting extraction', {
+    postTitle,
+    numRuns,
+    votingThreshold,
+  });
+
+  // Run N extractions in parallel
+  const allRuns = await Promise.all(
+    Array(numRuns)
+      .fill()
+      .map(() =>
+        hybridExtract(postTitle, cleanedContent, allItems, modelConfig)
+      )
+  );
+
+  // Aggregate votes per item
+  const itemVotes = new Map(); // itemId -> { appearances, scores, sources, items }
+
+  for (const run of allRuns) {
+    for (const item of run.items) {
+      const vote = itemVotes.get(item.itemId) || {
+        appearances: 0,
+        scores: [],
+        sources: [],
+        items: [],
+      };
+      vote.appearances++;
+      vote.scores.push(item.confidence);
+      vote.sources.push(item.source);
+      vote.items.push(item);
+      itemVotes.set(item.itemId, vote);
+    }
+  }
+
+  // Filter by voting threshold and compute aggregated confidence
+  const votedItems = [];
+  for (const [, vote] of itemVotes) {
+    const appearanceRatio = vote.appearances / numRuns;
+    if (appearanceRatio >= votingThreshold) {
+      // Use the item with highest confidence as the representative
+      const bestItem = vote.items.reduce((a, b) =>
+        a.confidence > b.confidence ? a : b
+      );
+
+      // Compute aggregated confidence from voting results
+      const avgConfidence =
+        vote.scores.reduce((a, b) => a + b, 0) / vote.scores.length;
+
+      // Source consistency: 1.0 if all same, lower if varied
+      const uniqueSources = new Set(vote.sources).size;
+      const sourceConsistency = 1.0 / uniqueSources;
+
+      // Final score: weighted combination
+      const votingConfidence =
+        0.5 * appearanceRatio + 0.3 * avgConfidence + 0.2 * sourceConsistency;
+
+      votedItems.push({
+        ...bestItem,
+        confidence: Math.max(avgConfidence, votingConfidence),
+        votingStats: {
+          appearances: vote.appearances,
+          totalRuns: numRuns,
+          appearanceRatio,
+          avgConfidence,
+          sourceConsistency,
+        },
+      });
+    }
+  }
+
+  // Sort by confidence
+  votedItems.sort((a, b) => b.confidence - a.confidence);
+
+  // Aggregate usage across all runs
+  const totalUsage = {
+    promptTokens: allRuns.reduce((sum, r) => sum + r.usage.promptTokens, 0),
+    completionTokens: allRuns.reduce(
+      (sum, r) => sum + r.usage.completionTokens,
+      0
+    ),
+    reasoningTokens: allRuns.reduce(
+      (sum, r) => sum + r.usage.reasoningTokens,
+      0
+    ),
+  };
+
+  const latencyMs = Date.now() - startTime;
+
+  const votingStats = {
+    runsExecuted: numRuns,
+    votingThreshold,
+    uniqueItemsSeen: itemVotes.size,
+    itemsAfterVoting: votedItems.length,
+    itemsFiltered: itemVotes.size - votedItems.length,
+  };
+
+  logger.debug('Voting extraction complete', {
+    postTitle,
+    ...votingStats,
+  });
+
+  return { items: votedItems, votingStats, usage: totalUsage, latencyMs };
+}
+
 export {
   hybridExtract,
+  hybridExtractWithVoting,
   algorithmicSearch,
   filterByConfidence,
   validateAlgoCandidates,

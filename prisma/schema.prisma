@@ -57,6 +57,8 @@ model Post {
   createdAt  DateTime @default(now())
   isAnalyzed Boolean  @default(false)
   analyses ItemAnalysis[]
+
+  @@index([isAnalyzed]) // Speed up queries for unprocessed posts
 }
 
 model ItemAnalysis {
@@ -86,6 +88,9 @@ model BenchmarkAlgorithm {
 
   // Files included in hash (stored as JSON array)
   hashedFiles   String   // e.g., ["src/itemExtractor.js", "src/contentCleaner.js"]
+
+  // Full source code snapshot for version restoration
+  sourceSnapshot String? // JSON: {"src/itemExtractor.js": "...", ...}
 
   runs          BenchmarkRun[]
 }
