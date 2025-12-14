@@ -59,17 +59,16 @@ async function setStoredThreshold(threshold) {
  * Recalculate and store significant items in the benchmark database
  */
 async function recalculateSignificantItems(threshold) {
-  // Query all items from main database
+  // Query all items and filter in JS (Prisma doesn't support computed column filters)
+  // This is acceptable since it runs once and is cached
   const allItems = await mainPrisma.item.findMany();
+  const totalCount = allItems.length;
 
   // Filter by economic significance (value * limit >= threshold)
   const filtered = allItems.filter((item) => {
     const margin = (item.value || 0) * (item.limit || 0);
     return margin >= threshold;
   });
-
-  // Get total count for logging
-  const totalCount = await mainPrisma.item.count();
 
   // Clear existing cache
   await benchmarkPrisma.$executeRaw`DELETE FROM SignificantItem`;
@@ -154,4 +153,11 @@ export async function getSignificantItems(threshold = DEFAULT_THRESHOLD) {
 export async function forceRecalculate(threshold = DEFAULT_THRESHOLD) {
   const items = await recalculateSignificantItems(threshold);
   return { items, threshold };
+}
+
+/**
+ * Disconnect Prisma clients (call on process exit)
+ */
+export async function disconnect() {
+  await Promise.all([mainPrisma.$disconnect(), benchmarkPrisma.$disconnect()]);
 }

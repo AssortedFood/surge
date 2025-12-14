@@ -18,9 +18,6 @@
 //   node tests/matching/benchmark.js --diff <hash>      # Show diff vs stored version
 //   node tests/matching/benchmark.js --restore <hash>   # Restore a previous version
 //
-// Economic Threshold:
-//   node tests/matching/benchmark.js --threshold 500000 # Test with 500K GP threshold
-//
 // When a new algorithm version is detected (based on hash of core files),
 // you will be prompted to enter a label for this version.
 
@@ -82,6 +79,7 @@ const ALGORITHM_FILES = [
   'src/itemValidator.js',
   'src/hybridExtractor.js',
   'src/itemFilter.js',
+  'src/significantItems.js',
   'schemas/ItemExtractionSchema.js',
 ];
 
@@ -190,7 +188,7 @@ async function loadFixtures() {
   const postsDir = join(FIXTURES_DIR, 'posts');
   const labelsPath = join(FIXTURES_DIR, 'labels', 'human-approved.json');
 
-  // Load significant items from database cache (auto-recalculates if items.json changed)
+  // Load significant items from database cache (auto-recalculates if threshold changes)
   const { items: significantItems, fromCache, threshold } = await getSignificantItems();
   console.log(`Significant items: ${significantItems.length} items ${fromCache ? '(cached)' : '(recalculated)'} - threshold: ${threshold.toLocaleString()} GP`);
 
@@ -324,7 +322,7 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
         const extractionResult = await extractItems(post.title, cleanedContent, significantItems, modelConfig);
 
         // Algorithm is responsible for filtering - benchmark just measures output
-        const validatedNames = extractionResult.items.map((v) => v.itemName || v.name);
+        const validatedNames = extractionResult.items.map((v) => v.itemName);
         const metrics = evaluateExtraction(validatedNames, expected);
 
         return {
