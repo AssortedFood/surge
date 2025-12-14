@@ -32,7 +32,7 @@ import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
 import { PrismaClient } from '@prisma/client';
 import { cleanPostContent } from '../../src/contentCleaner.js';
-import { hybridExtract, hybridExtractSinglePass, hybridExtractInline } from '../../src/hybridExtractor.js';
+import { hybridExtractInline } from '../../src/hybridExtractor.js';
 import { diffLines } from 'diff';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -86,9 +86,6 @@ const ALGORITHM_FILES = [
 
 // Economic significance threshold - can be overridden via CLI --threshold
 let MARGIN_THRESHOLD = parseInt(process.env.MARGIN_THRESHOLD, 10) || 1000000;
-
-// Single-pass mode - use hybridExtractSinglePass instead of hybridExtract
-let SINGLE_PASS = false;
 
 // ============================================================================
 // ALGORITHM VERSIONING
@@ -269,7 +266,7 @@ function loadFixtures() {
   });
   console.log(`Significant items: ${significantItems.length}/${items.length} items cached`);
 
-  return { posts, items, significantItems, labelsByPostId, groundTruthHash };
+  return { posts, significantItems, labelsByPostId, groundTruthHash };
 }
 
 // ============================================================================
@@ -321,7 +318,7 @@ function evaluateExtraction(extracted, expected) {
 // BENCHMARK EXECUTION
 // ============================================================================
 
-async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, significantItems, labelsByPostId, groundTruthHash, verbose = false) {
+async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, significantItems, labelsByPostId, groundTruthHash, verbose = false) {
   const run = await prisma.benchmarkRun.create({
     data: {
       algorithmId: algorithm.id,
@@ -349,11 +346,9 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
 
     let result;
     try {
-      // Hybrid extraction: LLM + algorithmic search with LLM validation
+      // Hybrid extraction with inline embedding
       const modelConfig = { model: config.model, reasoning: config.reasoning };
-      const hybridResult = SINGLE_PASS
-        ? await hybridExtractInline(post.title, cleanedContent, significantItems, modelConfig)
-        : await hybridExtract(post.title, cleanedContent, items, modelConfig);
+      const hybridResult = await hybridExtractInline(post.title, cleanedContent, significantItems, modelConfig);
 
       // Algorithm is responsible for filtering - benchmark just measures output
       const validatedNames = hybridResult.items.map((v) => v.itemName || v.name);
@@ -813,8 +808,6 @@ async function main() {
         MARGIN_THRESHOLD = thresholdValue;
       }
       i++;
-    } else if (args[i] === '--single-pass') {
-      SINGLE_PASS = true;
     }
   }
 
@@ -868,8 +861,8 @@ async function main() {
 
   // Run benchmarks
   console.log('Loading fixtures...');
-  const { posts, items, significantItems, labelsByPostId, groundTruthHash } = loadFixtures();
-  console.log(`Loaded ${posts.length} posts, ${items.length} items`);
+  const { posts, significantItems, labelsByPostId, groundTruthHash } = loadFixtures();
+  console.log(`Loaded ${posts.length} posts, ${significantItems.length} significant items`);
   console.log(`Ground truth hash: ${groundTruthHash}`);
 
   const algorithm = await getOrCreateAlgorithm();
@@ -888,7 +881,7 @@ async function main() {
     for (let run = 1; run <= numRuns; run++) {
       process.stdout.write(`  Run ${run}/${numRuns}... `);
       try {
-        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, significantItems, labelsByPostId, groundTruthHash, verboseMode);
+        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, significantItems, labelsByPostId, groundTruthHash, verboseMode);
         runResults.push(result);
         console.log(`F1: ${(result.f1 * 100).toFixed(1)}%, Latency: ${(result.totalLatencyMs / 1000).toFixed(1)}s`);
       } catch (err) {
