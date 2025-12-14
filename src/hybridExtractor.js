@@ -185,9 +185,63 @@ function escapeRegex(str) {
  * @param {Array<{id: number, name: string}>} allItems - All items from database
  * @returns {Map<number, {item: object, matchType: string}>} - Map of itemId to match info
  */
-function algorithmicSearch(content, allItems) {
+// Greedy matching mode - also match items by their first word (e.g., "Virtus" → "Virtus mask")
+const GREEDY_MATCHING = process.env.GREEDY_MATCHING === 'true';
+
+// Additional blocklist for greedy prefix matching (common words that match too many items)
+const GREEDY_PREFIX_BLOCKLIST = new Set([
+  // Common words that appear in posts but match many items
+  'blighted',
+  'blood',
+  'combat',
+  'crystal',
+  'light',
+  'fire',
+  'energy',
+  'ancient',
+  'super',
+  'divine',
+  'small',
+  'large',
+  'blessed',
+  'holy',
+  'dark',
+  'soul',
+  'spirit',
+  'death',
+  'chaos',
+  'nature',
+  'earth',
+  'water',
+  'smoke',
+  'steam',
+  'dust',
+  'lava',
+  'mud',
+  'shadow',
+  'arcane',
+  'mystic',
+  'void',
+  'elite',
+  'master',
+  'team',
+  'bounty',
+  'hunter',
+  'fishing',
+  'slayer',
+  'cannon',
+  'infernal',
+  'barrows',
+]);
+
+function algorithmicSearch(content, allItems, greedy = GREEDY_MATCHING) {
   const found = new Map();
   const contentLower = content.toLowerCase();
+
+  // For greedy mode, extract all words from content for prefix matching
+  const contentWords = greedy
+    ? new Set(contentLower.match(/\b[a-z]{4,}\b/g) || [])
+    : null;
 
   for (const item of allItems) {
     const nameLower = item.name.toLowerCase();
@@ -201,21 +255,41 @@ function algorithmicSearch(content, allItems) {
     if (ALGO_BLOCKLIST.has(baseName)) continue;
 
     // Try exact substring match first (fast path)
-    if (!contentLower.includes(nameLower)) continue;
-
-    // Verify with word boundary regex (slower but accurate)
-    // This prevents "gold" matching inside "marigold"
-    try {
-      const pattern = new RegExp(`\\b${escapeRegex(nameLower)}\\b`, 'i');
-      if (pattern.test(content)) {
-        found.set(item.id, {
-          item,
-          matchType: 'exact',
-        });
+    let matchType = null;
+    if (contentLower.includes(nameLower)) {
+      // Verify with word boundary regex (slower but accurate)
+      // This prevents "gold" matching inside "marigold"
+      try {
+        const pattern = new RegExp(`\\b${escapeRegex(nameLower)}\\b`, 'i');
+        if (pattern.test(content)) {
+          matchType = 'exact';
+        }
+      } catch {
+        // If regex fails (shouldn't happen), skip this item
+        continue;
       }
-    } catch {
-      // If regex fails (shouldn't happen), skip this item
-      continue;
+    }
+
+    // Greedy mode: also match if first word of item name appears in content
+    // e.g., "Virtus" in content → match "Virtus mask", "Virtus robe top"
+    if (!matchType && greedy && contentWords) {
+      // Normalize: remove possessive "'s" to match "inquisitor's" → "inquisitor"
+      const firstWord = nameLower.split(/\s+/)[0].replace(/'s$/, '');
+      if (
+        firstWord.length >= 4 &&
+        !ALGO_BLOCKLIST.has(firstWord) &&
+        !GREEDY_PREFIX_BLOCKLIST.has(firstWord) &&
+        contentWords.has(firstWord)
+      ) {
+        matchType = 'greedy';
+      }
+    }
+
+    if (matchType) {
+      found.set(item.id, {
+        item,
+        matchType,
+      });
     }
   }
 
@@ -250,14 +324,13 @@ async function validateAlgoCandidates(
 
   const candidateNames = candidates.map((c) => c.name);
 
-  const systemPrompt = `You are an Old School RuneScape expert. You will be given a list of potential item names found in a news post. Your job is to determine which ones are ACTUALLY being mentioned as tradeable items in the context of the post.
+  const systemPrompt = `You are an Old School RuneScape expert. You will be given a list of potential item names found in a news post. Your job is to determine which ones are ACTUALLY being mentioned as real OSRS items.
 
 Rules:
-- Only mark items as relevant if they are genuinely being discussed as tradeable OSRS items
-- "Bones" appearing in "bare bones" or "backbone" is NOT relevant
+- Mark items as relevant if they refer to real tradeable OSRS items, even if just mentioned briefly (bug fixes, comparisons, requirements, etc.)
+- "Bones" appearing in "bare bones" or "backbone" is NOT relevant (not referring to the item)
 - Item names that are JMod names (Ash, Acorn, etc.) are NOT relevant
-- Items mentioned only as untradeable quest/skill rewards are NOT relevant
-- Items that are part of the actual game content discussion ARE relevant`;
+- Generic words that happen to match item names but aren't referring to items are NOT relevant`;
 
   const userMessage = `Post Title: "${postTitle}"
 
@@ -591,9 +664,276 @@ async function hybridExtractWithVoting(
   return { items: votedItems, votingStats, usage: totalUsage, latencyMs };
 }
 
+/**
+ * Single-pass hybrid extraction: runs algo search first, passes economically
+ * significant hints to LLM extraction (no separate validation call)
+ *
+ * @param {string} postTitle - The post title
+ * @param {string} cleanedContent - The cleaned post content
+ * @param {Array<{id: number, name: string, value?: number, limit?: number}>} allItems - All items from database
+ * @param {object} modelConfig - Optional model configuration {model, reasoning}
+ * @param {number} marginThreshold - Economic significance threshold (default 1M)
+ * @returns {Promise<{items: Array, stats: object, usage: object, latencyMs: number}>}
+ */
+async function hybridExtractSinglePass(
+  postTitle,
+  cleanedContent,
+  allItems,
+  modelConfig = {},
+  marginThreshold = 1000000
+) {
+  const startTime = Date.now();
+
+  // Build lookup for economic significance
+  const itemById = new Map(allItems.map((i) => [i.id, i]));
+  const isSignificant = (itemId) => {
+    const item = itemById.get(itemId);
+    if (!item) return false;
+    const margin = (item.value || 0) * (item.limit || 0);
+    return margin >= marginThreshold;
+  };
+
+  // Run algorithmic search first (with greedy mode)
+  const algoMatches = algorithmicSearch(cleanedContent, allItems, true);
+
+  // Filter to economically significant items only
+  const candidateHints = [...algoMatches.entries()]
+    .filter(([itemId]) => isSignificant(itemId))
+    .map(([, matchInfo]) => matchInfo.item.name);
+
+  logger.debug('Single-pass: algo candidates found', {
+    postTitle,
+    totalMatches: algoMatches.size,
+    significantHints: candidateHints.length,
+  });
+
+  // Run LLM extraction with hints
+  const llmResult = await extractItemCandidates(
+    postTitle,
+    cleanedContent,
+    modelConfig,
+    candidateHints
+  );
+
+  // Validate LLM candidates against database
+  const llmValidated = validateItemCandidates(llmResult.items, allItems);
+
+  // Build results with confidence scores
+  const items = llmValidated.map((item) => {
+    const wasAlgoMatch = algoMatches.has(item.itemId);
+    return {
+      ...item,
+      confidence: wasAlgoMatch
+        ? CONFIDENCE_SCORES.confirmed
+        : CONFIDENCE_SCORES.llmOnly,
+      source: wasAlgoMatch ? 'both' : 'llm',
+    };
+  });
+
+  const latencyMs = Date.now() - startTime;
+
+  const stats = {
+    algoCandidates: candidateHints.length,
+    llmExtracted: llmResult.items.length,
+    validated: items.length,
+    confirmed: items.filter((i) => i.source === 'both').length,
+  };
+
+  logger.debug('Single-pass extraction complete', {
+    postTitle,
+    ...stats,
+    latencyMs,
+  });
+
+  return { items, stats, usage: llmResult.usage, latencyMs };
+}
+
+/**
+ * Inline embedding extraction: embeds item hints directly next to their
+ * trigger keywords in the content using «» syntax.
+ *
+ * IMPORTANT: Pass pre-filtered economically significant items. This function
+ * uses the items list directly without additional filtering.
+ *
+ * @param {string} postTitle - The post title
+ * @param {string} cleanedContent - The cleaned post content
+ * @param {Array<{id: number, name: string}>} significantItems - Pre-filtered economically significant items
+ * @param {object} modelConfig - Optional model configuration {model, reasoning}
+ * @returns {Promise<{items: Array, stats: object, usage: object, latencyMs: number}>}
+ */
+async function hybridExtractInline(
+  postTitle,
+  cleanedContent,
+  significantItems,
+  modelConfig = {}
+) {
+  const startTime = Date.now();
+
+  // Run algorithmic search with greedy mode on significant items
+  const algoMatches = algorithmicSearch(cleanedContent, significantItems, true);
+
+  // Group items by their trigger keyword (first word, normalized)
+  const triggerToItems = new Map();
+  for (const [, matchInfo] of algoMatches) {
+    const itemName = matchInfo.item.name;
+    // Normalize: remove possessive "'s" to match content words
+    const trigger = itemName.split(/\s+/)[0].toLowerCase().replace(/'s$/, '');
+
+    if (!triggerToItems.has(trigger)) {
+      triggerToItems.set(trigger, []);
+    }
+    triggerToItems.get(trigger).push(itemName);
+  }
+
+  // Embed suggestions inline using «» syntax
+  let annotatedContent = cleanedContent;
+  for (const [trigger, itemNames] of triggerToItems) {
+    // Limit to 5 suggestions per trigger to avoid overwhelming the prompt
+    const suggestions = itemNames.slice(0, 5).join(', ');
+    // Replace first occurrence of trigger word with trigger + suggestions
+    const regex = new RegExp(`\\b(${escapeRegex(trigger)})\\b`, 'i');
+    annotatedContent = annotatedContent.replace(regex, `$1 «${suggestions}»`);
+  }
+
+  logger.debug('Inline embedding: annotated content', {
+    postTitle,
+    triggers: triggerToItems.size,
+    totalHints: [...triggerToItems.values()].reduce(
+      (sum, arr) => sum + arr.length,
+      0
+    ),
+  });
+
+  // Build custom system prompt with inline syntax explanation
+  const model = modelConfig.model || DEFAULT_MODEL;
+  const reasoning = modelConfig.reasoning || DEFAULT_REASONING_EFFORT;
+
+  const inlineSystemPrompt = `You are an Old School RuneScape expert. Extract tradeable items that are EXPLICITLY mentioned in this news post.
+
+INLINE SUGGESTIONS: The content contains hints in «item1, item2» format next to trigger words. These are algorithmically-detected item names that may be relevant. Use greedy matching:
+- If "Virtus" appears with «Virtus mask, Virtus robe top, Virtus robe bottom», extract ALL those items since "Virtus" refers to the set
+- If "cannonball" appears with «Cannonball», extract Cannonball
+- ONLY include suggestions if the trigger word genuinely refers to the item (not coincidental matches)
+
+CRITICAL: Only extract items that are actually discussed in the post. Do NOT speculatively expand categories or guess at items.
+
+Rules:
+- Only include items tradeable on the Grand Exchange
+- Extract items that are NAMED or CLEARLY IMPLIED in the text
+- If a specific item is named (e.g., "Dragon Bones", "Wyrm Bones"), extract it
+- Do NOT expand generic category words into full lists (e.g., "bones" alone → don't list all bone types)
+- Do NOT include: quest items, untradeable rewards, currencies (coins/gp), NPCs, locations, skills
+- When an armor SET is mentioned by name (e.g., "Virtus", "Inquisitor's"), include ALL individual pieces
+
+FALSE POSITIVES TO AVOID:
+- "staff" referring to Jagex employees (NOT Staff of X items)
+- JMod names that match items: Ash, Grace, Acorn, Pumpkin
+- Generic category words without specific items
+- Ignore «» suggestions if the trigger word isn't actually referring to an item
+
+Context classifications:
+- buff: Item being made stronger
+- nerf: Item being made weaker
+- supply_change: Drop rate or availability changing
+- new_content: New item being added
+- bug_fix: Bug fix related to item
+- mention_only: Item mentioned without gameplay change
+
+OUTPUT REQUIREMENTS:
+1. name: Exact item name as it appears in-game
+2. snippet: Text where item is mentioned (max 400 chars, exclude «» annotations)
+3. context: One of the classifications above
+4. confidence: 0.0-1.0 (0.9+ for explicit mentions, lower for implied)
+5. mentionType: "direct" (named), "implied" (referenced indirectly), or "category_expansion" (expanded from set name)
+6. variantCategory: Only if expanded from a set/category name, otherwise null`;
+
+  const userMessage = `Post Title: "${postTitle}"
+
+Content (with inline «suggestions»):
+"""
+${annotatedContent}
+"""
+
+Extract all tradeable OSRS items mentioned in this post. Use the «» suggestions as hints for greedy matching when the trigger word refers to item sets or variants.`;
+
+  try {
+    const rawResponse = await fetchStructuredResponse(
+      model,
+      inlineSystemPrompt,
+      userMessage,
+      (await import('../schemas/ItemExtractionSchema.js')).ItemExtractionSchema,
+      { reasoningEffort: reasoning }
+    );
+
+    const usage = {
+      promptTokens: rawResponse.usage?.prompt_tokens || 0,
+      completionTokens: rawResponse.usage?.completion_tokens || 0,
+      reasoningTokens:
+        rawResponse.usage?.completion_tokens_details?.reasoning_tokens || 0,
+    };
+
+    const message = rawResponse.choices?.[0]?.message;
+    let result;
+    if (message?.parsed) {
+      result = message.parsed;
+    } else if (message?.content) {
+      result = JSON.parse(message.content);
+    } else {
+      result = { items: [] };
+    }
+
+    // Validate LLM candidates against significant items only
+    // This ensures we only return items that pass the economic threshold
+    const llmValidated = validateItemCandidates(
+      result.items || [],
+      significantItems
+    );
+
+    // Build results with confidence scores
+    const items = llmValidated.map((item) => {
+      const wasAlgoMatch = algoMatches.has(item.itemId);
+      return {
+        ...item,
+        confidence: wasAlgoMatch
+          ? CONFIDENCE_SCORES.confirmed
+          : CONFIDENCE_SCORES.llmOnly,
+        source: wasAlgoMatch ? 'both' : 'llm',
+      };
+    });
+
+    const latencyMs = Date.now() - startTime;
+
+    const stats = {
+      triggers: triggerToItems.size,
+      totalHints: [...triggerToItems.values()].reduce(
+        (sum, arr) => sum + arr.length,
+        0
+      ),
+      llmExtracted: (result.items || []).length,
+      validated: items.length,
+    };
+
+    logger.debug('Inline extraction complete', {
+      postTitle,
+      ...stats,
+      latencyMs,
+    });
+
+    return { items, stats, usage, latencyMs };
+  } catch (err) {
+    logger.error('Inline extraction failed', {
+      error: err.message,
+      postTitle,
+    });
+    throw err;
+  }
+}
+
 export {
   hybridExtract,
   hybridExtractWithVoting,
+  hybridExtractSinglePass,
+  hybridExtractInline,
   algorithmicSearch,
   filterByConfidence,
   validateAlgoCandidates,

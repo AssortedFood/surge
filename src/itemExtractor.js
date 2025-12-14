@@ -80,17 +80,19 @@ OUTPUT REQUIREMENTS:
  * @param {string} postTitle - The title of the post
  * @param {string} cleanedContent - The cleaned post content (noise removed)
  * @param {object} modelConfig - Optional model configuration {model, reasoning}
+ * @param {Array<string>} candidateHints - Optional list of item names found algorithmically
  * @returns {Promise<{items: Array<{name: string, snippet: string, context: string}>, usage: object}>}
  */
 async function extractItemCandidates(
   postTitle,
   cleanedContent,
-  modelConfig = {}
+  modelConfig = {},
+  candidateHints = []
 ) {
   const model = modelConfig.model || DEFAULT_MODEL;
   const reasoning = modelConfig.reasoning || DEFAULT_REASONING_EFFORT;
 
-  const userMessage = `Post Title: "${postTitle}"
+  let userMessage = `Post Title: "${postTitle}"
 
 Content:
 """
@@ -98,6 +100,14 @@ ${cleanedContent}
 """
 
 Extract all tradeable OSRS items mentioned in this post.`;
+
+  // Add economically-filtered hints if available
+  if (candidateHints.length > 0) {
+    userMessage += `
+
+HINT: These item names were algorithmically detected in the text. Include them ONLY if they are genuinely being discussed as tradeable items (not coincidental word matches):
+${candidateHints.slice(0, 25).join(', ')}`;
+  }
 
   try {
     const rawResponse = await fetchStructuredResponse(

@@ -32,7 +32,7 @@ import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
 import { PrismaClient } from '@prisma/client';
 import { cleanPostContent } from '../../src/contentCleaner.js';
-import { hybridExtract } from '../../src/hybridExtractor.js';
+import { hybridExtract, hybridExtractSinglePass, hybridExtractInline } from '../../src/hybridExtractor.js';
 import { diffLines } from 'diff';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -86,6 +86,9 @@ const ALGORITHM_FILES = [
 
 // Economic significance threshold - can be overridden via CLI --threshold
 let MARGIN_THRESHOLD = parseInt(process.env.MARGIN_THRESHOLD, 10) || 1000000;
+
+// Single-pass mode - use hybridExtractSinglePass instead of hybridExtract
+let SINGLE_PASS = false;
 
 // ============================================================================
 // ALGORITHM VERSIONING
@@ -259,7 +262,14 @@ function loadFixtures() {
 
   console.log(`Economic filter: ${filteredLabels}/${totalLabels} ground truth items meet threshold (${MARGIN_THRESHOLD.toLocaleString()} GP margin)`);
 
-  return { posts, items, itemByName, labelsByPostId, groundTruthHash, isEconomicallySignificant };
+  // Pre-filter items once (cached for all algorithm calls)
+  const significantItems = items.filter((item) => {
+    const margin = (item.value || 0) * (item.limit || 0);
+    return margin >= MARGIN_THRESHOLD;
+  });
+  console.log(`Significant items: ${significantItems.length}/${items.length} items cached`);
+
+  return { posts, items, significantItems, labelsByPostId, groundTruthHash };
 }
 
 // ============================================================================
@@ -311,7 +321,7 @@ function evaluateExtraction(extracted, expected) {
 // BENCHMARK EXECUTION
 // ============================================================================
 
-async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, labelsByPostId, groundTruthHash, isEconomicallySignificant, verbose = false) {
+async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts, items, significantItems, labelsByPostId, groundTruthHash, verbose = false) {
   const run = await prisma.benchmarkRun.create({
     data: {
       algorithmId: algorithm.id,
@@ -341,12 +351,12 @@ async function runSingleBenchmark(algorithm, configKey, config, runNumber, posts
     try {
       // Hybrid extraction: LLM + algorithmic search with LLM validation
       const modelConfig = { model: config.model, reasoning: config.reasoning };
-      const hybridResult = await hybridExtract(post.title, cleanedContent, items, modelConfig);
+      const hybridResult = SINGLE_PASS
+        ? await hybridExtractInline(post.title, cleanedContent, significantItems, modelConfig)
+        : await hybridExtract(post.title, cleanedContent, items, modelConfig);
 
-      const allValidatedNames = hybridResult.items.map((v) => v.itemName || v.name);
-
-      // Apply economic filter to extracted items (matches production behavior)
-      const validatedNames = allValidatedNames.filter(isEconomicallySignificant);
+      // Algorithm is responsible for filtering - benchmark just measures output
+      const validatedNames = hybridResult.items.map((v) => v.itemName || v.name);
 
       const metrics = evaluateExtraction(validatedNames, expected);
 
@@ -803,6 +813,8 @@ async function main() {
         MARGIN_THRESHOLD = thresholdValue;
       }
       i++;
+    } else if (args[i] === '--single-pass') {
+      SINGLE_PASS = true;
     }
   }
 
@@ -856,7 +868,7 @@ async function main() {
 
   // Run benchmarks
   console.log('Loading fixtures...');
-  const { posts, items, labelsByPostId, groundTruthHash, isEconomicallySignificant } = loadFixtures();
+  const { posts, items, significantItems, labelsByPostId, groundTruthHash } = loadFixtures();
   console.log(`Loaded ${posts.length} posts, ${items.length} items`);
   console.log(`Ground truth hash: ${groundTruthHash}`);
 
@@ -876,7 +888,7 @@ async function main() {
     for (let run = 1; run <= numRuns; run++) {
       process.stdout.write(`  Run ${run}/${numRuns}... `);
       try {
-        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, labelsByPostId, groundTruthHash, isEconomicallySignificant, verboseMode);
+        const result = await runSingleBenchmark(algorithm, configKey, config, run, posts, items, significantItems, labelsByPostId, groundTruthHash, verboseMode);
         runResults.push(result);
         console.log(`F1: ${(result.f1 * 100).toFixed(1)}%, Latency: ${(result.totalLatencyMs / 1000).toFixed(1)}s`);
       } catch (err) {
