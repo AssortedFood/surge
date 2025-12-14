@@ -177,7 +177,7 @@ Schema has unused tables and columns.
 - [x] 6.1 Remove `description` column from BenchmarkAlgorithm (schema updated)
 - [x] 6.2 Keep Item/Post/PriceSnapshot/ItemAnalysis - all used by production
 - [x] 6.3 ItemAnalysis NOT deleted - it's used by index.js production pipeline
-- [ ] 6.4 Migration deferred - DB has drift, would require full reset and data loss
+- [x] 6.4 Migration complete - DB archived, reset applied, new migration created
 
 ---
 
@@ -197,7 +197,7 @@ Schema has unused tables and columns.
 
 ### Phase 4: Schema Cleanup
 7. [x] Remove unused DB columns/tables (Issue 6) - only description column was unused
-8. [ ] Run prisma migrate - DEFERRED (DB drift requires reset, would lose benchmark data)
+8. [x] Run prisma migrate ✓ DB archived to prisma/archive/, reset applied, new migration created
 
 ### Phase 5: Validation
 9. [ ] Run benchmark to verify nothing broke
