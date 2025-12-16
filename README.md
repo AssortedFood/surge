@@ -50,6 +50,7 @@ LATEST_API_URL="https://prices.runescape.wiki/api/v1/osrs/latest"
 RATE_LIMIT_SECONDS="60"
 DATA_SYNC_INTERVAL_MINUTES="360"
 OPENAI_API_KEY="sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+OPENAI_ADMIN_KEY="sk-admin-XXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 OPENAI_MODEL="gpt-5-mini"
 OPENAI_REASONING_EFFORT="medium"
 TELEGRAM_BOT_TOKEN="123456789:ABCDEFGHIJKLMNOPQRSTUVWX"
@@ -67,6 +68,7 @@ PRICE_VARIANCE_PERCENT="0.05"
 * `RATE_LIMIT_SECONDS`: Seconds between RSS/article fetches (shared rate limit).
 * `DATA_SYNC_INTERVAL_MINUTES`: Minutes between item & price data syncs.
 * `OPENAI_API_KEY`: Your OpenAI secret key.
+* `OPENAI_ADMIN_KEY`: (Optional) Admin API key with `api.usage.read` scope for benchmark token tracking.
 * `OPENAI_MODEL`: Model name for item extraction (see benchmark table below).
 * `OPENAI_REASONING_EFFORT`: Reasoning effort for `o4-mini`/`gpt-5-mini` models (`low`, `medium`, `high`). Omit for non-reasoning models.
 
