@@ -72,9 +72,9 @@ function hashContent(content) {
  * @returns {Promise<number>} Total tokens used today
  */
 async function fetchTodayUsage() {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENAI_ADMIN_KEY;
   if (!apiKey) {
-    throw new Error('OPENAI_API_KEY environment variable is not set.');
+    throw new Error('OPENAI_ADMIN_KEY environment variable is not set (required for usage check).');
   }
 
   // Get today's time range in Unix seconds
