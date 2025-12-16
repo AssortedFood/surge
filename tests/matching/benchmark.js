@@ -39,6 +39,19 @@ const FIXTURES_DIR = join(__dirname, 'fixtures');
 // Hash truncation length for algorithm and content hashes
 const HASH_LENGTH = 16;
 
+// Daily token usage safety limit
+const DAILY_TOKEN_LIMIT = 9_500_000;
+
+// Estimated tokens per extraction by config (based on benchmark data)
+// Prompt tokens are similar across configs, completion varies with reasoning effort
+const TOKENS_PER_EXTRACTION = {
+  'o4-mini:low': { prompt: 6800, completion: 1300 },
+  'o4-mini:medium': { prompt: 6800, completion: 3400 },
+  'gpt-5-mini:low': { prompt: 6900, completion: 1700 },
+  'gpt-5-mini:medium': { prompt: 6600, completion: 4400 },
+  default: { prompt: 6800, completion: 2700 },
+};
+
 // Benchmark database client (schema defines the db path)
 const prisma = new PrismaClient();
 
@@ -47,6 +60,117 @@ const prisma = new PrismaClient();
  */
 function hashContent(content) {
   return createHash('sha256').update(content).digest('hex').substring(0, HASH_LENGTH);
+}
+
+// ============================================================================
+// TOKEN USAGE SAFETY
+// ============================================================================
+
+/**
+ * Fetches today's token usage from OpenAI API
+ * @returns {Promise<number>} Total tokens used today
+ */
+async function fetchTodayUsage() {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY environment variable is not set.');
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  const url = `https://api.openai.com/v1/usage?date=${today}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Failed to fetch usage: ${response.status} ${response.statusText}\n${text}`);
+  }
+
+  const data = await response.json();
+  let totalTokens = 0;
+  if (Array.isArray(data.data)) {
+    for (const entry of data.data) {
+      totalTokens += (entry.n_context_tokens_total || 0) + (entry.n_generated_tokens_total || 0);
+    }
+  }
+  return totalTokens;
+}
+
+/**
+ * Reads the voting count (numRuns) from hybridExtractor.js
+ * @returns {number} The voting count
+ */
+function getVotingCountFromSource() {
+  const extractorPath = join(__dirname, '../../src/hybridExtractor.js');
+  const content = readFileSync(extractorPath, 'utf-8');
+  const match = content.match(/numRuns\s*=\s*(\d+)/);
+  return match ? parseInt(match[1], 10) : 3;
+}
+
+/**
+ * Estimates total tokens for a benchmark run
+ * @param {number} numPosts - Number of posts to process
+ * @param {string[]} configKeys - Config keys to run
+ * @param {number} numRuns - Number of benchmark runs per config
+ * @param {number} votingCount - Internal voting runs per extraction
+ * @returns {number} Estimated total tokens
+ */
+function estimateBenchmarkTokens(numPosts, configKeys, numRuns, votingCount) {
+  let totalTokens = 0;
+  for (const configKey of configKeys) {
+    const rates = TOKENS_PER_EXTRACTION[configKey] || TOKENS_PER_EXTRACTION.default;
+    const extractionsForConfig = numPosts * numRuns * votingCount;
+    totalTokens += extractionsForConfig * (rates.prompt + rates.completion);
+  }
+  return totalTokens;
+}
+
+/**
+ * Checks if the benchmark can run within daily token limits
+ * Prompts user for confirmation if limit would be exceeded
+ * @param {number} estimatedTokens - Estimated tokens for the benchmark
+ * @returns {Promise<boolean>} True if safe to proceed
+ */
+async function checkUsageSafety(estimatedTokens) {
+  let currentUsage = 0;
+  try {
+    currentUsage = await fetchTodayUsage();
+  } catch (err) {
+    console.warn(`Warning: Could not fetch current usage: ${err.message}`);
+    console.warn('Proceeding without usage check.\n');
+    return true;
+  }
+
+  const projectedTotal = currentUsage + estimatedTokens;
+  const currentUsageM = (currentUsage / 1_000_000).toFixed(2);
+  const estimatedM = (estimatedTokens / 1_000_000).toFixed(2);
+  const projectedM = (projectedTotal / 1_000_000).toFixed(2);
+  const limitM = (DAILY_TOKEN_LIMIT / 1_000_000).toFixed(1);
+
+  console.log('\n--- Token Usage Check ---');
+  console.log(`Current daily usage:  ${currentUsageM}M tokens`);
+  console.log(`Estimated for run:    ${estimatedM}M tokens`);
+  console.log(`Projected total:      ${projectedM}M tokens`);
+  console.log(`Daily limit:          ${limitM}M tokens`);
+
+  if (projectedTotal > DAILY_TOKEN_LIMIT) {
+    console.log(`\n⚠️  WARNING: This benchmark would exceed the daily limit!`);
+    const answer = await promptUser('Do you want to proceed anyway? (yes/no): ');
+    if (answer.toLowerCase() !== 'yes' && answer.toLowerCase() !== 'y') {
+      console.log('Benchmark cancelled.');
+      return false;
+    }
+  } else {
+    console.log(`✓ Within daily limit\n`);
+  }
+
+  return true;
 }
 
 // ============================================================================
@@ -823,6 +947,17 @@ async function main() {
   }
 
   const configsToRun = configFilter ? { [configFilter]: MODEL_CONFIGS[configFilter] } : MODEL_CONFIGS;
+
+  // Check token usage safety before running
+  const votingCount = getVotingCountFromSource();
+  const configKeys = Object.keys(configsToRun);
+  const estimatedTokens = estimateBenchmarkTokens(BENCHMARK_POST_IDS.length, configKeys, numRuns, votingCount);
+
+  const safeToRun = await checkUsageSafety(estimatedTokens);
+  if (!safeToRun) {
+    await prisma.$disconnect();
+    return;
+  }
 
   // Run benchmarks
   console.log('Loading fixtures...');
