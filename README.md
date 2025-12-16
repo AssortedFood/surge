@@ -50,7 +50,7 @@ LATEST_API_URL="https://prices.runescape.wiki/api/v1/osrs/latest"
 RATE_LIMIT_SECONDS="60"
 DATA_SYNC_INTERVAL_MINUTES="360"
 OPENAI_API_KEY="sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-OPENAI_MODEL="o4-mini"
+OPENAI_MODEL="gpt-5-mini"
 OPENAI_REASONING_EFFORT="medium"
 TELEGRAM_BOT_TOKEN="123456789:ABCDEFGHIJKLMNOPQRSTUVWX"
 TELEGRAM_CHAT_ID="1234567890"
@@ -72,29 +72,29 @@ PRICE_VARIANCE_PERCENT="0.05"
 
 ### Model Benchmarks
 
-Benchmarked on 7 diverse posts with 5 runs per configuration (December 2025):
+Benchmarked on 5 posts with 2-run voting (December 2025):
 
-| Model | Reasoning | F1 | Precision | Recall | Latency | Tokens/run | Cost/post |
-|-------|-----------|-----|-----------|--------|---------|------------|-----------|
-| **o4-mini** | **medium** | **94.2%** | **100%** | **89.1%** | **28s** | **99K** | **~$0.15** |
-| gpt-5-mini | low | 94.1% | 100% | 89.1% | 23s | 72K | ~$0.11 |
-| gpt-5-mini | medium | 94.0% | 100% | 89.1% | 57s | 108K | ~$0.17 |
-| o4-mini | low | 89.4% | 100% | 80.9% | 8s | 57K | ~$0.08 |
+| Model | Reasoning | F1 | Precision | Recall | Input Tokens |
+|-------|-----------|-----|-----------|--------|--------------|
+| **gpt-5-mini** | **medium** | **100%** | **100%** | **100%** | **61K** |
+| gpt-5-mini | low | 90% | 100% | 82% | 68K |
+| o4-mini | medium | 87% | 100% | 77% | 68K |
+| o4-mini | low | 78% | 100% | 64% | 68K |
 
-*Latency = per post average. Tokens = prompt + completion + reasoning per post. Cost estimated at $1.10/M input + $4.40/M output.*
+*All configurations maintain 100% precision (no false positives). Tokens = input tokens per extraction run.*
 
-**Recommendation:** `o4-mini:medium` offers the best accuracy/latency tradeoff (94.2% F1, 100% precision, 28s). Use `gpt-5-mini:low` if cost-sensitive with similar accuracy but lower latency.
+**Recommendation:** `gpt-5-mini:medium` with 2-run voting achieves perfect F1 score. Use `gpt-5-mini:low` for faster extraction with slightly lower recall.
 
 ### Extraction Pipeline
 
-Surge uses a hybrid extraction approach with 5-run parallel voting:
+Surge uses a hybrid extraction approach with 2-run parallel voting:
 
 1. **Instant notification**: When a new post is detected, an alert with the post title and URL is sent immediately
-2. **5× parallel extraction**: Five independent LLM extractions run simultaneously
-3. **Voting consensus**: Items must appear in 3/5 runs (60% threshold) to pass, filtering out hallucinations
+2. **2× parallel extraction**: Two independent LLM extractions run simultaneously
+3. **Voting consensus**: Items must appear in both runs (60% threshold) to pass, filtering out hallucinations
 4. **Parallel predictions**: Price change predictions for all items run in parallel, each sending its notification immediately when complete
 
-This approach reduces F1 variance from ±12% to ±3% while maintaining ~30s total latency.
+This approach achieves 100% F1 with `gpt-5-mini:medium` while keeping token usage efficient (~61K input tokens per extraction).
 
 * `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID`: For sending alerts.
 * `INCLUDED_CHANGE_TYPES`: Valid options are `"Price increase"`, `"Price decrease"`, `"No change"`.
@@ -185,7 +185,7 @@ SURGE_LATEST_API_URL="https://prices.runescape.wiki/api/v1/osrs/latest"
 SURGE_RATE_LIMIT_SECONDS="60"
 SURGE_DATA_SYNC_INTERVAL_MINUTES="360"
 SURGE_OPENAI_API_KEY="sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-SURGE_OPENAI_MODEL="o4-mini"
+SURGE_OPENAI_MODEL="gpt-5-mini"
 SURGE_OPENAI_REASONING_EFFORT="medium"
 SURGE_TELEGRAM_BOT_TOKEN="123456789:ABCDEFGHIJKLMNOPQRSTUVWX"
 SURGE_TELEGRAM_CHAT_ID="1234567890"

@@ -482,7 +482,7 @@ async function hybridExtractWithVoting(
   cleanedContent,
   allItems,
   modelConfig = {},
-  numRuns = 3,
+  numRuns = 2,
   votingThreshold = 0.6
 ) {
   const startTime = Date.now();
