@@ -594,6 +594,7 @@ async function hybridExtractWithVoting(
 export {
   hybridExtract,
   hybridExtractWithVoting,
+  hybridExtractWithVoting as hybridExtractInline,
   algorithmicSearch,
   filterByConfidence,
   validateAlgoCandidates,
