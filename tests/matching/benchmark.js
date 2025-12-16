@@ -42,14 +42,14 @@ const HASH_LENGTH = 16;
 // Daily token usage safety limit
 const DAILY_TOKEN_LIMIT = 9_500_000;
 
-// Estimated tokens per extraction by config (based on benchmark data)
-// Prompt tokens are similar across configs, completion varies with reasoning effort
+// Estimated input tokens per extraction by config (based on benchmark data)
+// Input/prompt tokens are similar across configs (~6.8K per extraction)
 const TOKENS_PER_EXTRACTION = {
-  'o4-mini:low': { prompt: 6800, completion: 1300 },
-  'o4-mini:medium': { prompt: 6800, completion: 3400 },
-  'gpt-5-mini:low': { prompt: 6900, completion: 1700 },
-  'gpt-5-mini:medium': { prompt: 6600, completion: 4400 },
-  default: { prompt: 6800, completion: 2700 },
+  'o4-mini:low': 6800,
+  'o4-mini:medium': 6800,
+  'gpt-5-mini:low': 6900,
+  'gpt-5-mini:medium': 6600,
+  default: 6800,
 };
 
 // Benchmark database client (schema defines the db path)
@@ -105,7 +105,7 @@ async function fetchTodayUsage() {
     for (const bucket of data.data) {
       if (Array.isArray(bucket.results)) {
         for (const result of bucket.results) {
-          totalTokens += (result.input_tokens || 0) + (result.output_tokens || 0);
+          totalTokens += result.input_tokens || 0;
         }
       }
     }
@@ -135,9 +135,9 @@ function getVotingCountFromSource() {
 function estimateBenchmarkTokens(numPosts, configKeys, numRuns, votingCount) {
   let totalTokens = 0;
   for (const configKey of configKeys) {
-    const rates = TOKENS_PER_EXTRACTION[configKey] || TOKENS_PER_EXTRACTION.default;
+    const tokensPerExtraction = TOKENS_PER_EXTRACTION[configKey] || TOKENS_PER_EXTRACTION.default;
     const extractionsForConfig = numPosts * numRuns * votingCount;
-    totalTokens += extractionsForConfig * (rates.prompt + rates.completion);
+    totalTokens += extractionsForConfig * tokensPerExtraction;
   }
   return totalTokens;
 }
