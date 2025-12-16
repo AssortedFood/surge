@@ -3,25 +3,45 @@
 // for improved precision (catch hallucinations) and recall (catch misses)
 
 import 'dotenv/config';
+import { extractItemCandidates } from './itemExtractor.js';
 import { validateItemCandidates } from './itemValidator.js';
 import { fetchStructuredResponse } from './fetchStructuredResponse.js';
-import { ItemExtractionSchema } from '../schemas/ItemExtractionSchema.js';
 import logger from './utils/logger.js';
+import { z } from 'zod';
 
 // Default model config from env vars (used when no config passed)
 const DEFAULT_MODEL = process.env.OPENAI_MODEL || 'o4-mini';
 const DEFAULT_REASONING_EFFORT =
   process.env.OPENAI_REASONING_EFFORT || 'medium';
 
-// Voting configuration - set VOTING_RUNS > 0 to enable voting
-const VOTING_RUNS = parseInt(process.env.VOTING_RUNS, 10) || 5;
-const VOTING_THRESHOLD = parseFloat(process.env.VOTING_THRESHOLD) || 0.6;
-
 // Confidence scores for different extraction sources
+// These can be tuned based on benchmark results
 const CONFIDENCE_SCORES = {
   confirmed: 1.0, // Both LLM and algo found the item
   llmOnly: 0.8, // LLM found but algo didn't (context-aware)
+  algoValidated: 0.7, // Algo found and LLM confirmed relevance
 };
+
+// Schema for validating algo-found candidates
+const AlgoValidationSchema = z.object({
+  validItems: z
+    .array(
+      z.object({
+        name: z.string().describe('The item name exactly as provided'),
+        isRelevant: z
+          .boolean()
+          .describe(
+            'Whether this item is actually mentioned as a tradeable item in context'
+          ),
+        snippet: z
+          .string()
+          .describe(
+            'The text snippet where this item appears, or empty if not relevant'
+          ),
+      })
+    )
+    .describe('Validation results for each candidate item'),
+});
 
 // Minimum character length for algorithmic search (avoid short false positives)
 const MIN_ALGO_SEARCH_LENGTH = 4;
@@ -161,97 +181,11 @@ function escapeRegex(str) {
  * Performs lenient algorithmic search for item names in post content
  * Uses word boundary matching to avoid partial matches
  *
- * Greedy mode uses progressive prefix matching:
- * 1. Try exact full item name match first (least greedy)
- * 2. If no match, try N-1 words, N-2, etc.
- * 3. Fall back to single-word only if multi-word fails AND word not blocklisted
- *
- * Example: "Blue Moon tassets" in content with item "Blue Moon helm"
- * - Try "blue moon helm" → no match
- * - Try "blue moon" → MATCH! → include as greedy match
- *
- * Example: "Virtus set effect" in content with item "Virtus mask"
- * - Try "virtus mask" → no match
- * - Try "virtus" → MATCH! (specific word, not blocklisted)
- *
  * @param {string} content - The post content to search
  * @param {Array<{id: number, name: string}>} allItems - All items from database
- * @param {boolean} greedy - Enable progressive prefix matching (default: false)
- * @returns {Map<number, {item: object, matchType: string, matchedPrefix?: string}>}
+ * @returns {Map<number, {item: object, matchType: string}>} - Map of itemId to match info
  */
-const GREEDY_MATCHING = process.env.GREEDY_MATCHING === 'true';
-
-// Blocklist for single-word prefix matches only
-// These are common words that have non-item meanings and would cause false positives
-// Multi-word matches (2+ words) are NOT affected by this blocklist
-const SINGLE_WORD_BLOCKLIST = new Set([
-  // Common words with multiple meanings
-  'ancient',
-  'blood',
-  'chaos',
-  'combat',
-  'dark',
-  'demon',
-  'dragon',
-  'fire',
-  'holy',
-  'light',
-  'master',
-  'nature',
-  'shadow',
-  'soul',
-  'spirit',
-  'super',
-  'death',
-  'earth',
-  'water',
-  'smoke',
-  'steam',
-  'dust',
-  'lava',
-  'mud',
-  // Item category words
-  'long',
-  'short',
-  'small',
-  'large',
-  'bird',
-  'spotted',
-  // Equipment types that are too generic
-  'abyssal',
-  'blessed',
-  'crystal',
-  'divine',
-  'elite',
-  'infernal',
-  'mystic',
-  'arcane',
-  'barrows',
-  'bandos',
-  'twisted',
-  'eclipse',
-  // Equipment/mechanic words that match item names
-  'cannon',
-  'ring',
-  'necklace',
-  'bracelet',
-  'amulet',
-  'games',
-  'skills',
-]);
-
-// Blocklist for multi-word prefix matches
-// These phrases have meanings beyond item names (bosses, activities, locations)
-const MULTI_WORD_BLOCKLIST = new Set([
-  'blood moon', // Boss/activity name
-  'eclipse moon', // Boss/activity name
-  'blue moon', // Boss/activity name
-  'ring of', // Too generic prefix
-  'necklace of', // Too generic prefix
-  'old school', // Refers to the game, not items
-]);
-
-function algorithmicSearch(content, allItems, greedy = GREEDY_MATCHING) {
+function algorithmicSearch(content, allItems) {
   const found = new Map();
   const contentLower = content.toLowerCase();
 
@@ -267,65 +201,21 @@ function algorithmicSearch(content, allItems, greedy = GREEDY_MATCHING) {
     if (ALGO_BLOCKLIST.has(baseName)) continue;
 
     // Try exact substring match first (fast path)
-    let matchType = null;
-    let matchedPrefix = null;
+    if (!contentLower.includes(nameLower)) continue;
 
-    if (contentLower.includes(nameLower)) {
-      // Verify with word boundary regex (slower but accurate)
-      // This prevents "gold" matching inside "marigold"
-      try {
-        const pattern = new RegExp(`\\b${escapeRegex(nameLower)}\\b`, 'i');
-        if (pattern.test(content)) {
-          matchType = 'exact';
-        }
-      } catch {
-        // If regex fails (shouldn't happen), skip this item
-        continue;
+    // Verify with word boundary regex (slower but accurate)
+    // This prevents "gold" matching inside "marigold"
+    try {
+      const pattern = new RegExp(`\\b${escapeRegex(nameLower)}\\b`, 'i');
+      if (pattern.test(content)) {
+        found.set(item.id, {
+          item,
+          matchType: 'exact',
+        });
       }
-    }
-
-    // Greedy mode: progressive prefix matching
-    // Try progressively shorter prefixes: full name → 2 words → 1 word
-    // Only fall back to single-word if all multi-word prefixes fail
-    if (!matchType && greedy) {
-      // Extract words from item name (normalize possessives)
-      const words = baseName
-        .replace(/'s\b/g, '') // Remove possessives
-        .split(/\s+/)
-        .filter((w) => w.length > 0);
-
-      // Try progressively shorter prefixes, including single word as last resort
-      for (let len = words.length - 1; len >= 1 && !matchType; len--) {
-        const prefix = words.slice(0, len).join(' ');
-
-        // Skip if prefix is too short
-        if (prefix.length < 4) continue;
-        if (ALGO_BLOCKLIST.has(prefix)) continue;
-
-        // For single-word prefixes, check SINGLE_WORD_BLOCKLIST
-        if (len === 1 && SINGLE_WORD_BLOCKLIST.has(prefix)) continue;
-
-        // For multi-word prefixes, check MULTI_WORD_BLOCKLIST
-        if (len >= 2 && MULTI_WORD_BLOCKLIST.has(prefix)) continue;
-
-        // Check if this prefix appears in content with word boundaries
-        try {
-          const prefixPattern = new RegExp(`\\b${escapeRegex(prefix)}\\b`, 'i');
-          if (prefixPattern.test(content)) {
-            matchType = 'greedy';
-            matchedPrefix = prefix;
-            break; // Use longest matching prefix
-          }
-        } catch {
-          continue;
-        }
-      }
-    }
-
-    if (matchType) {
-      const matchInfo = { item, matchType };
-      if (matchedPrefix) matchInfo.matchedPrefix = matchedPrefix;
-      found.set(item.id, matchInfo);
+    } catch {
+      // If regex fails (shouldn't happen), skip this item
+      continue;
     }
   }
 
@@ -333,310 +223,282 @@ function algorithmicSearch(content, allItems, greedy = GREEDY_MATCHING) {
 }
 
 /**
- * Inline embedding extraction: embeds item hints directly next to their
- * trigger keywords in the content using «» syntax.
- *
- * IMPORTANT: Pass pre-filtered economically significant items. This function
- * uses the items list directly without additional filtering.
+ * Validates algo-only candidates with a single LLM call
+ * Asks the LLM to confirm which candidates are actually relevant items
  *
  * @param {string} postTitle - The post title
- * @param {string} cleanedContent - The cleaned post content
- * @param {Array<{id: number, name: string}>} significantItems - Pre-filtered economically significant items
- * @param {object} modelConfig - Optional model configuration {model, reasoning}
- * @returns {Promise<{items: Array, stats: object, usage: object, latencyMs: number}>}
+ * @param {string} content - The post content
+ * @param {Array<{id: number, name: string}>} candidates - Algo-found items to validate
+ * @param {object} modelConfig - Model configuration {model, reasoning}
+ * @returns {Promise<{items: Array, usage: object}>}
  */
-async function hybridExtractInline(
+async function validateAlgoCandidates(
   postTitle,
-  cleanedContent,
-  significantItems,
+  content,
+  candidates,
   modelConfig = {}
 ) {
-  // If voting is enabled, delegate to voting implementation
-  if (VOTING_RUNS > 0) {
-    return _hybridExtractInlineVoting(
-      postTitle,
-      cleanedContent,
-      significantItems,
-      modelConfig,
-      VOTING_RUNS,
-      VOTING_THRESHOLD
-    );
-  }
+  const emptyResult = {
+    items: [],
+    usage: { promptTokens: 0, completionTokens: 0, reasoningTokens: 0 },
+  };
 
-  // Single-pass extraction (no voting)
-  return _hybridExtractInlineSinglePass(
-    postTitle,
-    cleanedContent,
-    significantItems,
-    modelConfig
-  );
-}
+  if (candidates.length === 0) return emptyResult;
 
-/**
- * Single-pass inline extraction (internal implementation)
- */
-async function _hybridExtractInlineSinglePass(
-  postTitle,
-  cleanedContent,
-  significantItems,
-  modelConfig = {}
-) {
-  const startTime = Date.now();
-
-  // Run algorithmic search with greedy mode on significant items
-  const algoMatches = algorithmicSearch(cleanedContent, significantItems, true);
-
-  // Group items by their matched prefix (2+ words for greedy, or exact match)
-  // For exact matches, use the full item name as the "trigger"
-  // For greedy matches, use the matchedPrefix (the 2+ word phrase found in content)
-  const triggerToItems = new Map();
-  for (const [, matchInfo] of algoMatches) {
-    const itemName = matchInfo.item.name;
-
-    // Use matchedPrefix if greedy match, otherwise use the base name for exact matches
-    let trigger;
-    if (matchInfo.matchType === 'greedy' && matchInfo.matchedPrefix) {
-      trigger = matchInfo.matchedPrefix.toLowerCase();
-    } else {
-      // For exact matches, use the base name (without parenthetical suffixes)
-      trigger = itemName
-        .toLowerCase()
-        .replace(/\s*\([^)]*\)\s*$/, '')
-        .trim();
-    }
-
-    if (!triggerToItems.has(trigger)) {
-      triggerToItems.set(trigger, []);
-    }
-    triggerToItems.get(trigger).push(itemName);
-  }
-
-  // Embed suggestions inline with clear labeling
-  // Format: trigger [SUGGESTED ITEMS: item1, item2, item3]
-  // For single exact matches: trigger [ITEM DETECTED: item1]
-  let annotatedContent = cleanedContent;
-  let suggestionCount = 0;
-
-  for (const [trigger, itemNames] of triggerToItems) {
-    // Limit to 5 suggestions per trigger
-    const suggestions = itemNames.slice(0, 5).join(', ');
-    // Use different labels for single vs multiple items
-    const label = itemNames.length === 1 ? 'ITEM DETECTED' : 'SUGGESTED ITEMS';
-    // Replace first occurrence with clearly labeled suggestion
-    const regex = new RegExp(`\\b(${escapeRegex(trigger)})\\b`, 'i');
-    annotatedContent = annotatedContent.replace(
-      regex,
-      `$1 [${label}: ${suggestions}]`
-    );
-    suggestionCount++;
-  }
-
-  // Collect ALL items from markers for hard validation later
-  // This is the whitelist - LLM output MUST be in this set
-  const markerItemsSet = new Set();
-  for (const itemNames of triggerToItems.values()) {
-    for (const name of itemNames) {
-      markerItemsSet.add(name.toLowerCase());
-    }
-  }
-
-  logger.debug('Inline suggestions embedded', {
-    postTitle,
-    suggestionCount,
-    totalHints: [...triggerToItems.values()].reduce(
-      (sum, arr) => sum + arr.length,
-      0
-    ),
-    markerItems: markerItemsSet.size,
-  });
-
-  // Build custom system prompt with strict anti-hallucination rules
   const model = modelConfig.model || DEFAULT_MODEL;
   const reasoning = modelConfig.reasoning || DEFAULT_REASONING_EFFORT;
 
-  const inlineSystemPrompt = `You are an Old School RuneScape expert extracting tradeable items from a news post.
+  const candidateNames = candidates.map((c) => c.name);
 
-## CRITICAL OUTPUT CONSTRAINT
-You may ONLY output items that appear in [ITEM DETECTED] or [SUGGESTED ITEMS] markers.
-If an item is NOT in a marker, do NOT extract it - even if you think it's relevant.
-This is a HARD CONSTRAINT to prevent hallucinations.
+  const systemPrompt = `You are an Old School RuneScape expert. You will be given a list of potential item names found in a news post. Your job is to determine which ones are ACTUALLY being mentioned as tradeable items in the context of the post.
 
-## INLINE MARKERS
-The content contains algorithmic markers (NOT part of the original text):
-
-**[ITEM DETECTED: X]** = Exact item name found in text.
-- ACCEPT if the item is genuinely discussed as a tradeable item
-- REJECT if metaphorical, idiomatic, or refers to something else
-
-**[SUGGESTED ITEMS: X, Y, Z]** = Possible item set expansion from a trigger word.
-- ACCEPT if trigger word refers to ITEMS (armor set, item category)
-- REJECT if trigger is a boss name, activity, location, or mechanic
-
-## ACCEPTANCE RULES
-- Item appears in a marker AND is genuinely discussed as tradeable
-- Set name with armor/set bonus context → accept all pieces from marker
-- Specific item named in requirements/drops/comparisons → accept
-
-## REJECTION RULES (from voting-5run-v1)
-- Item NOT in any marker → REJECT (no exceptions)
-- Trigger word is boss/activity name (Blood Moon, Eclipse Moon, Blue Moon) → REJECT suggestions
-- "staff" referring to Jagex employees → NOT Staff of X items
-- JMod names that match items: Ash, Grace, Acorn, Pumpkin → REJECT
-- Generic category without specifics: "bones", "ores", "logs" → only accept if SPECIFIC item in marker
-- Untradeable items: quest capes, skill capes, void, graceful → REJECT
-- Monster drops you associate mentally → only extract if the ITEM NAME is in a marker
-
-## COMMON FALSE POSITIVE TRAPS
-- "polish your pickaxes" = idiomatic, not item reference
-- "bare bones" / "backbone" = metaphor, not Bones item
-- "dragonfire" attack type ≠ "Dragonfire shield" item
-- Boss names suggesting drops: "Hydra" ≠ hydra's claw/leather/tail unless those items are in markers
-
-## SET EXPANSIONS (only when trigger refers to armor/items)
-- "Virtus" with set bonus context → Virtus mask, Virtus robe top, Virtus robe bottom
-- "Inquisitor's" armor → all pieces from marker
-- But "Blood Moon" (boss) → REJECT even if items suggested
-
-## CONTEXT TYPES
-buff | nerf | supply_change | new_content | bug_fix | mention_only
-
-## OUTPUT FORMAT
-- name: EXACT in-game item name (must be from a marker)
-- snippet: Text where mentioned (max 400 chars, EXCLUDE markers from snippet)
-- context: One of the types above
-- confidence: 0.9+ for direct mentions, lower for implied
-- mentionType: "direct" | "implied" | "category_expansion"
-- variantCategory: Set name if expanded from set, else null`;
+Rules:
+- Only mark items as relevant if they are genuinely being discussed as tradeable OSRS items
+- "Bones" appearing in "bare bones" or "backbone" is NOT relevant
+- Item names that are JMod names (Ash, Acorn, etc.) are NOT relevant
+- Items mentioned only as untradeable quest/skill rewards are NOT relevant
+- Items that are part of the actual game content discussion ARE relevant`;
 
   const userMessage = `Post Title: "${postTitle}"
 
 Content:
 """
-${annotatedContent}
+${content}
 """
 
-Extract tradeable OSRS items. For [SUGGESTED ITEMS] markers, only accept if the preceding word genuinely refers to items (not bosses, mechanics, or metaphors).`;
+Candidate items to validate:
+${candidateNames.map((n, i) => `${i + 1}. ${n}`).join('\n')}
+
+For each candidate, determine if it's actually mentioned as a tradeable item in this post.`;
 
   try {
-    const rawResponse = await fetchStructuredResponse(
+    const response = await fetchStructuredResponse(
       model,
-      inlineSystemPrompt,
+      systemPrompt,
       userMessage,
-      ItemExtractionSchema,
+      AlgoValidationSchema,
       { reasoningEffort: reasoning }
     );
 
     const usage = {
-      promptTokens: rawResponse.usage?.prompt_tokens || 0,
-      completionTokens: rawResponse.usage?.completion_tokens || 0,
+      promptTokens: response.usage?.prompt_tokens || 0,
+      completionTokens: response.usage?.completion_tokens || 0,
       reasoningTokens:
-        rawResponse.usage?.completion_tokens_details?.reasoning_tokens || 0,
+        response.usage?.completion_tokens_details?.reasoning_tokens || 0,
     };
 
-    const message = rawResponse.choices?.[0]?.message;
+    const message = response.choices?.[0]?.message;
     let result;
+
     if (message?.parsed) {
       result = message.parsed;
     } else if (message?.content) {
       result = JSON.parse(message.content);
     } else {
-      result = { items: [] };
+      return { items: [], usage };
     }
 
-    // Validate LLM candidates against significant items only
-    // This ensures we only return items that pass the economic threshold
-    const llmValidated = validateItemCandidates(
-      result.items || [],
-      significantItems
+    // Filter to only relevant items and map back to full item info
+    const validatedItems = [];
+    const candidateMap = new Map(
+      candidates.map((c) => [c.name.toLowerCase(), c])
     );
 
-    // HARD VALIDATION: Filter to ONLY items that appeared in markers
-    // This is the nuclear option against hallucinations
-    const markerFiltered = llmValidated.filter((item) => {
-      const inMarker = markerItemsSet.has(item.itemName.toLowerCase());
-      if (!inMarker) {
-        logger.debug('Rejected hallucination (not in marker)', {
-          postTitle,
-          item: item.itemName,
-        });
+    for (const item of result.validItems || []) {
+      if (item.isRelevant) {
+        const original = candidateMap.get(item.name.toLowerCase());
+        if (original) {
+          validatedItems.push({
+            name: original.name,
+            snippet: item.snippet || '[Validated by LLM]',
+            context: 'mention_only',
+            confidence: 0.8, // High confidence since LLM validated the algo match
+            mentionType: 'direct',
+            itemId: original.id,
+            itemName: original.name,
+          });
+        }
       }
-      return inMarker;
-    });
+    }
 
-    // Build results with confidence scores
-    const items = markerFiltered.map((item) => {
-      const wasAlgoMatch = algoMatches.has(item.itemId);
-      return {
-        ...item,
-        confidence: wasAlgoMatch
-          ? CONFIDENCE_SCORES.confirmed
-          : CONFIDENCE_SCORES.llmOnly,
-        source: wasAlgoMatch ? 'both' : 'llm',
-      };
-    });
-
-    const latencyMs = Date.now() - startTime;
-
-    const stats = {
-      triggers: triggerToItems.size,
-      totalHints: [...triggerToItems.values()].reduce(
-        (sum, arr) => sum + arr.length,
-        0
-      ),
-      markerItems: markerItemsSet.size,
-      llmExtracted: (result.items || []).length,
-      llmValidated: llmValidated.length,
-      markerFiltered: markerFiltered.length,
-      hallucinationsRejected: llmValidated.length - markerFiltered.length,
-    };
-
-    logger.debug('Inline extraction complete', {
+    logger.debug('Validated algo candidates', {
       postTitle,
-      ...stats,
-      latencyMs,
+      candidates: candidates.length,
+      validated: validatedItems.length,
     });
 
-    return { items, stats, usage, latencyMs };
+    return { items: validatedItems, usage };
   } catch (err) {
-    logger.error('Inline extraction failed', {
+    logger.error('Algo candidate validation failed', {
       error: err.message,
       postTitle,
     });
-    throw err;
+    return emptyResult;
   }
 }
 
 /**
- * Voting-based inline extraction (internal implementation)
- * Runs multiple single-pass extractions in parallel and uses voting to filter noise.
+ * Hybrid extraction: runs LLM and algorithmic search in parallel,
+ * then validates algo-only candidates with a second LLM call
+ *
+ * @param {string} postTitle - The post title
+ * @param {string} cleanedContent - The cleaned post content
+ * @param {Array<{id: number, name: string}>} allItems - All items from database
+ * @param {object} modelConfig - Optional model configuration {model, reasoning}
+ * @returns {Promise<{items: Array, stats: object, usage: object, latencyMs: number}>}
  */
-async function _hybridExtractInlineVoting(
+async function hybridExtract(
   postTitle,
   cleanedContent,
-  significantItems,
+  allItems,
+  modelConfig = {}
+) {
+  const startTime = Date.now();
+
+  // Run LLM extraction and algorithmic search in parallel
+  const [llmResult, algoMatches] = await Promise.all([
+    extractItemCandidates(postTitle, cleanedContent, modelConfig),
+    Promise.resolve(algorithmicSearch(cleanedContent, allItems)),
+  ]);
+
+  // Extract items and usage from LLM result
+  const llmCandidates = llmResult.items;
+  let totalUsage = { ...llmResult.usage };
+
+  // Validate LLM candidates against database
+  const llmValidated = validateItemCandidates(llmCandidates, allItems);
+
+  // Build set of LLM-found item IDs for comparison
+  const llmItemIds = new Set(llmValidated.map((v) => v.itemId));
+
+  // Categorize results
+  const confirmed = []; // LLM + Algo
+  const llmOnly = []; // LLM only (trust LLM context awareness)
+  const algoOnly = []; // Algo only (potential misses)
+
+  // Process LLM results
+  for (const item of llmValidated) {
+    // Use LLM's confidence if provided, otherwise use source-based defaults
+    const llmConfidence = item.confidence ?? 0.9;
+
+    if (algoMatches.has(item.itemId)) {
+      confirmed.push({
+        ...item,
+        confidence: Math.max(llmConfidence, CONFIDENCE_SCORES.confirmed),
+        source: 'both',
+      });
+    } else {
+      llmOnly.push({
+        ...item,
+        confidence: Math.min(llmConfidence, CONFIDENCE_SCORES.llmOnly),
+        source: 'llm',
+      });
+    }
+  }
+
+  // Collect algo-only candidates for LLM validation
+  const algoOnlyCandidates = [];
+  for (const [itemId, matchInfo] of algoMatches) {
+    if (!llmItemIds.has(itemId)) {
+      algoOnlyCandidates.push(matchInfo.item);
+    }
+  }
+
+  // Validate algo-only candidates with a second LLM call
+  if (algoOnlyCandidates.length > 0) {
+    const validationResult = await validateAlgoCandidates(
+      postTitle,
+      cleanedContent,
+      algoOnlyCandidates,
+      modelConfig
+    );
+
+    // Aggregate token usage from second LLM call
+    totalUsage.promptTokens += validationResult.usage.promptTokens;
+    totalUsage.completionTokens += validationResult.usage.completionTokens;
+    totalUsage.reasoningTokens += validationResult.usage.reasoningTokens;
+
+    for (const item of validationResult.items) {
+      algoOnly.push({
+        ...item,
+        confidence: CONFIDENCE_SCORES.algoValidated,
+        source: 'algo_validated',
+      });
+    }
+  }
+
+  const latencyMs = Date.now() - startTime;
+
+  // Combine all results, sorted by confidence
+  const allResults = [...confirmed, ...llmOnly, ...algoOnly].sort(
+    (a, b) => b.confidence - a.confidence
+  );
+
+  const stats = {
+    llmCandidates: llmCandidates.length,
+    llmValidated: llmValidated.length,
+    algoMatches: algoMatches.size,
+    confirmed: confirmed.length,
+    llmOnly: llmOnly.length,
+    algoOnly: algoOnly.length,
+    total: allResults.length,
+  };
+
+  logger.debug('Hybrid extraction complete', {
+    postTitle,
+    ...stats,
+  });
+
+  return { items: allResults, stats, usage: totalUsage, latencyMs };
+}
+
+/**
+ * Validates hybrid extraction results, returning only high-confidence items
+ * Use this for production to filter out low-confidence algo-only matches
+ *
+ * @param {Array} hybridResults - Results from hybridExtract
+ * @param {number} minConfidence - Minimum confidence threshold (default 0.5)
+ * @returns {Array}
+ */
+function filterByConfidence(hybridResults, minConfidence = 0.5) {
+  return hybridResults.filter((item) => item.confidence >= minConfidence);
+}
+
+/**
+ * Multi-run voting extraction: runs hybridExtract N times and aggregates results
+ * Items that appear in at least votingThreshold% of runs are included
+ * This reduces variance by requiring consensus across multiple extractions
+ *
+ * @param {string} postTitle - The post title
+ * @param {string} cleanedContent - The cleaned post content
+ * @param {Array<{id: number, name: string}>} allItems - All items from database
+ * @param {object} modelConfig - Model configuration {model, reasoning}
+ * @param {number} numRuns - Number of extraction runs (default 3)
+ * @param {number} votingThreshold - Min appearance ratio to include (default 0.6 = 60%)
+ * @returns {Promise<{items: Array, votingStats: object, usage: object, latencyMs: number}>}
+ */
+async function hybridExtractWithVoting(
+  postTitle,
+  cleanedContent,
+  allItems,
   modelConfig = {},
-  numRuns = 5,
+  numRuns = 3,
   votingThreshold = 0.6
 ) {
   const startTime = Date.now();
 
-  logger.debug('Starting inline voting extraction', {
+  logger.debug('Starting voting extraction', {
     postTitle,
     numRuns,
     votingThreshold,
   });
 
-  // Run N single-pass extractions in parallel
+  // Run N extractions in parallel
   const allRuns = await Promise.all(
     Array(numRuns)
       .fill()
       .map(() =>
-        _hybridExtractInlineSinglePass(
-          postTitle,
-          cleanedContent,
-          significantItems,
-          modelConfig
-        )
+        hybridExtract(postTitle, cleanedContent, allItems, modelConfig)
       )
   );
 
@@ -713,42 +575,27 @@ async function _hybridExtractInlineVoting(
 
   const latencyMs = Date.now() - startTime;
 
-  // Aggregate stats
-  const avgStats = {
-    triggers: Math.round(
-      allRuns.reduce((sum, r) => sum + r.stats.triggers, 0) / numRuns
-    ),
-    totalHints: Math.round(
-      allRuns.reduce((sum, r) => sum + r.stats.totalHints, 0) / numRuns
-    ),
-    llmExtracted: Math.round(
-      allRuns.reduce((sum, r) => sum + r.stats.llmExtracted, 0) / numRuns
-    ),
-    validated: Math.round(
-      allRuns.reduce((sum, r) => sum + r.stats.validated, 0) / numRuns
-    ),
-  };
-
   const votingStats = {
     runsExecuted: numRuns,
     votingThreshold,
-    candidatesSeen: itemVotes.size,
+    uniqueItemsSeen: itemVotes.size,
     itemsAfterVoting: votedItems.length,
-    avgLatencyPerRun: Math.round(latencyMs / numRuns),
+    itemsFiltered: itemVotes.size - votedItems.length,
   };
 
-  logger.debug('Inline voting extraction complete', {
+  logger.debug('Voting extraction complete', {
     postTitle,
     ...votingStats,
-    latencyMs,
   });
 
-  return {
-    items: votedItems,
-    stats: { ...avgStats, voting: votingStats },
-    usage: totalUsage,
-    latencyMs,
-  };
+  return { items: votedItems, votingStats, usage: totalUsage, latencyMs };
 }
 
-export { hybridExtractInline, algorithmicSearch, MIN_ALGO_SEARCH_LENGTH };
+export {
+  hybridExtract,
+  hybridExtractWithVoting,
+  algorithmicSearch,
+  filterByConfidence,
+  validateAlgoCandidates,
+  MIN_ALGO_SEARCH_LENGTH,
+};

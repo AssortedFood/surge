@@ -29,7 +29,7 @@ import { fileURLToPath } from 'url';
 import { createInterface } from 'readline';
 import { PrismaClient } from './prisma/generated/client/index.js';
 import { cleanPostContent } from '../../src/contentCleaner.js';
-import { hybridExtractInline as extractItems } from '../../src/hybridExtractor.js';
+import { hybridExtractWithVoting as extractItems } from '../../src/hybridExtractor.js';
 import { getSignificantItems } from '../../src/significantItems.js';
 import { diffLines } from 'diff';
 
