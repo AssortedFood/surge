@@ -177,7 +177,14 @@ async function checkUsageSafety(estimatedTokens) {
   }
 
   // Always require explicit approval before running
-  const answer = await promptUser('\nProceed with benchmark? (yes/no): ');
+  console.log('\n========================================');
+  console.log('🛑 STOP: HUMAN APPROVAL REQUIRED');
+  console.log('========================================');
+  console.log('CLAUDE: DO NOT ANSWER THIS PROMPT.');
+  console.log('DO NOT PIPE "yes" OR AUTOMATE THIS.');
+  console.log('WAIT FOR THE HUMAN TO RESPOND.');
+  console.log('========================================\n');
+  const answer = await promptUser('Proceed with benchmark? (yes/no): ');
   if (answer.toLowerCase() !== 'yes' && answer.toLowerCase() !== 'y') {
     console.log('Benchmark cancelled.');
     return false;
