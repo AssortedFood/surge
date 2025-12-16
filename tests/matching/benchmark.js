@@ -68,6 +68,7 @@ function hashContent(content) {
 
 /**
  * Fetches today's token usage from OpenAI API
+ * Requires an admin API key with api.usage.read scope
  * @returns {Promise<number>} Total tokens used today
  */
 async function fetchTodayUsage() {
@@ -76,8 +77,14 @@ async function fetchTodayUsage() {
     throw new Error('OPENAI_API_KEY environment variable is not set.');
   }
 
-  const today = new Date().toISOString().split('T')[0];
-  const url = `https://api.openai.com/v1/usage?date=${today}`;
+  // Get today's time range in Unix seconds
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+  const startTime = Math.floor(startOfDay.getTime() / 1000);
+  const endTime = Math.floor(endOfDay.getTime() / 1000);
+
+  const url = `https://api.openai.com/v1/organization/usage/completions?start_time=${startTime}&end_time=${endTime}`;
 
   const response = await fetch(url, {
     method: 'GET',
@@ -95,8 +102,12 @@ async function fetchTodayUsage() {
   const data = await response.json();
   let totalTokens = 0;
   if (Array.isArray(data.data)) {
-    for (const entry of data.data) {
-      totalTokens += (entry.n_context_tokens_total || 0) + (entry.n_generated_tokens_total || 0);
+    for (const bucket of data.data) {
+      if (Array.isArray(bucket.results)) {
+        for (const result of bucket.results) {
+          totalTokens += (result.input_tokens || 0) + (result.output_tokens || 0);
+        }
+      }
     }
   }
   return totalTokens;
@@ -161,13 +172,15 @@ async function checkUsageSafety(estimatedTokens) {
 
   if (projectedTotal > DAILY_TOKEN_LIMIT) {
     console.log(`\n⚠️  WARNING: This benchmark would exceed the daily limit!`);
-    const answer = await promptUser('Do you want to proceed anyway? (yes/no): ');
-    if (answer.toLowerCase() !== 'yes' && answer.toLowerCase() !== 'y') {
-      console.log('Benchmark cancelled.');
-      return false;
-    }
   } else {
-    console.log(`✓ Within daily limit\n`);
+    console.log(`✓ Within daily limit`);
+  }
+
+  // Always require explicit approval before running
+  const answer = await promptUser('\nProceed with benchmark? (yes/no): ');
+  if (answer.toLowerCase() !== 'yes' && answer.toLowerCase() !== 'y') {
+    console.log('Benchmark cancelled.');
+    return false;
   }
 
   return true;
