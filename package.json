@@ -46,7 +46,7 @@
   "dependencies": {
     "@prisma/client": "^6.17.1",
     "cheerio": "^1.0.0",
-    "diff": "^8.0.2",
+    "diff": "^8.0.3",
     "dotenv": "^16.5.0",
     "grammy": "^1.38.4",
     "node-fetch": "^3.3.2",
