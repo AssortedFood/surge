@@ -114,8 +114,21 @@ function toPriceChangeEnum(changeString) {
 
 async function analyzeAndSaveItem(post, validatedItem, prediction) {
   try {
-    await prisma.itemAnalysis.create({
-      data: {
+    // Use upsert to handle retries gracefully - if this item was already analyzed
+    // for this post (e.g., previous run failed after DB write but before Telegram),
+    // just update it instead of failing on unique constraint
+    await prisma.itemAnalysis.upsert({
+      where: {
+        postId_itemId: {
+          postId: post.id,
+          itemId: validatedItem.itemId,
+        },
+      },
+      update: {
+        relevantTextSnippet: validatedItem.snippet,
+        expectedPriceChange: toPriceChangeEnum(prediction.direction),
+      },
+      create: {
         postId: post.id,
         itemId: validatedItem.itemId,
         relevantTextSnippet: validatedItem.snippet,
@@ -153,13 +166,19 @@ async function analyzeAndSaveItem(post, validatedItem, prediction) {
 
     return { success: true, itemName: validatedItem.itemName };
   } catch (err) {
-    const errMsg = `Analysis failed for item "${validatedItem.itemName}" (ID: ${validatedItem.itemId}):\n${err.message}`;
     logger.error('Item analysis failed', {
       itemName: validatedItem.itemName,
       itemId: validatedItem.itemId,
       error: err.message,
     });
-    await sendTelegramMessage(errMsg);
+
+    // Try to notify via Telegram, but don't fail if Telegram is down
+    try {
+      const errMsg = `Analysis failed for item "${validatedItem.itemName}" (ID: ${validatedItem.itemId}):\n${err.message}`;
+      await sendTelegramMessage(errMsg);
+    } catch {
+      logger.warn('Failed to send error notification to Telegram');
+    }
 
     return {
       success: false,
