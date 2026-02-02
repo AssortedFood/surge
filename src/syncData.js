@@ -13,6 +13,17 @@ const USER_AGENT = process.env.USER_AGENT || 'default-agent';
 const apiHeaders = { 'User-Agent': USER_AGENT };
 
 const PRICE_FETCH_INTERVAL = process.env.PRICE_FETCH_INTERVAL || 'daily';
+const BATCH_SIZE = 1000;
+
+async function executeInBatches(operations, batchSize = BATCH_SIZE) {
+  const results = [];
+  for (let i = 0; i < operations.length; i += batchSize) {
+    const batch = operations.slice(i, i + batchSize);
+    const batchResults = await prisma.$transaction(batch);
+    results.push(...batchResults);
+  }
+  return results;
+}
 
 function getSnapshotTime(now = new Date()) {
   const year = now.getUTCFullYear();
@@ -61,12 +72,13 @@ export async function syncItemsAndPrices() {
     const pricesData = pricesResponse.data;
 
     const priceMap = new Map(Object.entries(pricesData));
-    const dbOperations = [];
+    const itemOperations = [];
+    const priceOperations = [];
 
     for (const item of mappingData) {
       if (!item.id || !item.name) continue;
 
-      dbOperations.push(
+      itemOperations.push(
         prisma.item.upsert({
           where: { id: item.id },
           update: {
@@ -93,7 +105,7 @@ export async function syncItemsAndPrices() {
 
       const priceInfo = priceMap.get(String(item.id));
       if (priceInfo) {
-        dbOperations.push(
+        priceOperations.push(
           prisma.priceSnapshot.create({
             data: {
               itemId: item.id,
@@ -106,9 +118,17 @@ export async function syncItemsAndPrices() {
       }
     }
 
-    const result = await prisma.$transaction(dbOperations);
+    // Phase 1: Upsert all items in batches
+    const itemResults = await executeInBatches(itemOperations);
+    logger.debug('Items synchronized', { count: itemResults.length });
+
+    // Phase 2: Create price snapshots in batches (items guaranteed to exist)
+    const priceResults = await executeInBatches(priceOperations);
+    logger.debug('Price snapshots created', { count: priceResults.length });
+
     logger.info('Data synchronization complete', {
-      operationCount: result.length,
+      itemCount: itemResults.length,
+      priceCount: priceResults.length,
     });
   } catch (err) {
     if (err.code === 'P2002') {
