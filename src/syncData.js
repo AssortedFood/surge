@@ -104,13 +104,15 @@ export async function syncItemsAndPrices() {
       );
 
       const priceInfo = priceMap.get(String(item.id));
-      if (priceInfo) {
+      if (priceInfo?.high != null || priceInfo?.low != null) {
+        const highPrice = priceInfo.high ?? priceInfo.low;
+        const lowPrice = priceInfo.low ?? priceInfo.high;
         priceOperations.push(
           prisma.priceSnapshot.create({
             data: {
               item: { connect: { id: item.id } },
-              highPrice: priceInfo.high,
-              lowPrice: priceInfo.low,
+              highPrice,
+              lowPrice,
               snapshotTime: snapshotTime,
             },
           })
