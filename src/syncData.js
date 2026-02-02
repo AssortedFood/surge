@@ -108,7 +108,7 @@ export async function syncItemsAndPrices() {
         priceOperations.push(
           prisma.priceSnapshot.create({
             data: {
-              itemId: item.id,
+              item: { connect: { id: item.id } },
               highPrice: priceInfo.high,
               lowPrice: priceInfo.low,
               snapshotTime: snapshotTime,
