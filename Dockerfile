@@ -46,4 +46,7 @@ RUN npx prisma@6 generate
 COPY src ./src
 COPY schemas ./schemas
 
+RUN chown -R 1000:1000 /usr/src/app
+USER 1000
+
 CMD ["pnpm", "start"]
