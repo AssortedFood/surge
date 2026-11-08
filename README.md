@@ -32,7 +32,7 @@ Alternatively, you can use Docker Compose instead of installing locally:
    docker compose up -d
    ```
 
-   This will pull `0xidising/surge:latest` and start Surge in a container.
+   This will pull `localhost:5000/surge:latest` and start Surge in a container.
 
 > [!TIP]
 > If you're only testing, installing locally with `pnpm install` is usually faster. Use Docker Compose for a more consistent, isolated environment (e.g. on a server).
@@ -142,7 +142,7 @@ Below is a template for running Surge via Docker Compose. Adjust the environment
 # docker-compose.yml
 services:
   surge:
-    image: 0xidising/surge:latest
+    image: localhost:5000/surge:latest
     container_name: surge
     pull_policy: always
     restart: unless-stopped
