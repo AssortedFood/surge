@@ -37,7 +37,7 @@ Run the deployment script:
 - Format check passes
 - Tests pass (20 tests)
 - Docker image builds successfully
-- Image pushes to `0xidising/surge:latest`
+- Image pushes to `localhost:5000/surge:latest`
 - Container restarts
 
 **If build fails:** Check Dockerfile syntax, dependencies, or Prisma generation issues.
@@ -210,7 +210,7 @@ SURGE_PRICE_VARIANCE_PERCENT="0.05"
 ```yaml
 surge:
   <<: *defaults
-  image: 0xidising/surge:latest
+  image: localhost:5000/surge:latest
   container_name: surge
   pull_policy: always
   environment:
