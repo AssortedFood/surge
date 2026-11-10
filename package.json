@@ -48,7 +48,7 @@
     "cheerio": "^1.0.0",
     "diff": "^8.0.3",
     "dotenv": "^16.5.0",
-    "grammy": "^1.38.4",
+    "grammy": "^1.39.3",
     "node-fetch": "^3.3.2",
     "openai": "^5.0.1",
     "puppeteer": "^24.22.3",
